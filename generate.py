@@ -478,7 +478,8 @@ def generateMakefiles(ctx, source):
 		ctx["platform"]=platform
 		conf={ "libraries": [], "tools": [], "platforms": {} }
 		parseConfiguration(conf, source, ctx)
-#		print conf
+		if not ctx["platform"] in conf["platforms"]:			
+			conf["platforms"][ctx["platform"]]={'cppflags': '', 'cflags_c': '-std=c99', 'cc': 'gcc', 'ar': 'ar', 'cflags_cpp': '-fno-rtti', 'cflags': '-g -fno-exceptions', 'libs': [], 'exclude': {}}
 		if ctx["platform"] in conf["platforms"]:			
 			generateMakefile(conf, ctx, "Makefile."+ctx["platform"])
 		else:

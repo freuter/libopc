@@ -33,7 +33,7 @@
 
 
   <include path="sample/Makefile.xml"/>
-
+<!--
   <platform name="i686-apple-darwin10" 
             cc="gcc"
             ar="ar"
@@ -41,4 +41,5 @@
             cflags_c="-std=c99" 
             cflags_cpp="-fno-rtti"
             cppflags=""/>
+-->
 </project>
