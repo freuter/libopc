@@ -1,0 +1,157 @@
+<?xml version="1.0"?>
+<project>
+  <library name="zlib">
+    <header root="/{config}/{platform}/zlib-1.2.5">
+      <file path="zconf.h" install="yes"/>
+    </header>
+    <header root="zlib-1.2.5">
+      <file path="crc32.h"/>
+      <file path="deflate.h"/>
+      <file path="inffast.h"/>
+      <file path="inffixed.h"/>
+      <file path="inflate.h"/>
+      <file path="inftrees.h"/>
+      <file path="trees.h"/>
+      <file path="zlib.h" install="yes"/>
+      <file path="zutil.h" install="yes"/>
+    </header>
+    <source root="zlib-1.2.5">
+      <file path="adler32.c"/>
+      <file path="compress.c"/>
+      <file path="crc32.c"/>
+      <file path="deflate.c"/>
+      <file path="gzread.c"/>
+      <file path="gzwrite.c"/>
+      <file path="gzclose.c"/>
+      <file path="infback.c"/>
+      <file path="inffast.c"/>
+      <file path="inflate.c"/>
+      <file path="inftrees.c"/>
+      <file path="trees.c"/>
+      <file path="uncompr.c"/>
+      <file path="zutil.c"/>
+    </source>
+  </library>
+  <library name="xml" dep="zlib">
+    <settings>
+      <!-- define name="LIBXML_STATIC"/ -->
+    </settings>
+    <export>
+      <!-- define name="LIBXML_STATIC"/ -->
+    </export>
+    <header root="/{config}/{platform}/libxml2-2.7.7">
+      <file path="config.h"/>
+      <file path="libxml/xmlversion.h" install="yes"/>
+    </header>
+    <header root="libxml2-2.7.7/include/libxml">
+      <file path="DOCBparser.h" install="yes"/>
+      <file path="HTMLparser.h" install="yes"/>
+      <file path="HTMLtree.h" install="yes"/>
+      <file path="SAX.h" install="yes"/>
+      <file path="SAX2.h" install="yes"/>
+      <file path="c14n.h" install="yes"/>
+      <file path="catalog.h" install="yes"/>
+      <file path="chvalid.h" install="yes"/>
+      <file path="debugXML.h" install="yes"/>
+      <file path="dict.h" install="yes"/>
+      <file path="encoding.h" install="yes"/>
+      <file path="entities.h" install="yes"/>
+      <file path="globals.h" install="yes"/>
+      <file path="hash.h" install="yes"/>
+      <file path="list.h" install="yes"/>
+      <file path="nanoftp.h" install="yes"/>
+      <file path="nanohttp.h" install="yes"/>
+      <file path="parser.h" install="yes"/>
+      <file path="parserInternals.h" install="yes"/>
+      <file path="pattern.h" install="yes"/>
+      <file path="relaxng.h" install="yes"/>
+      <file path="schemasInternals.h" install="yes"/>
+      <file path="schematron.h" install="yes"/>
+      <file path="threads.h" install="yes"/>
+      <file path="tree.h" install="yes"/>
+      <file path="uri.h" install="yes"/>
+      <file path="valid.h" install="yes"/>
+      <file path="xinclude.h" install="yes"/>
+      <file path="xlink.h" install="yes"/>
+      <file path="xmlIO.h" install="yes"/>
+      <file path="xmlautomata.h" install="yes"/>
+      <file path="xmlerror.h" install="yes"/>
+      <file path="xmlexports.h" install="yes"/>
+      <file path="xmlmemory.h" install="yes"/>
+      <file path="xmlmodule.h" install="yes"/>
+      <file path="xmlreader.h" install="yes"/>
+      <file path="xmlregexp.h" install="yes"/>
+      <file path="xmlsave.h" install="yes"/>
+      <file path="xmlschemas.h" install="yes"/>
+      <file path="xmlschemastypes.h" install="yes"/>
+      <file path="xmlstring.h" install="yes"/>
+      <file path="xmlunicode.h" install="yes"/>
+      <file path="xmlwriter.h" install="yes"/>
+      <file path="xpath.h" install="yes"/>
+      <file path="xpathInternals.h" install="yes"/>
+      <file path="xpointer.h" install="yes"/>
+    </header>
+    <header root="libxml2-2.7.7/include">
+      <file path="win32config.h" install="yes"/>
+      <file path="wsockcompat.h" install="yes"/>
+    </header>
+    <header root="libxml2-2.7.7">
+      <file path="acconfig.h"/>
+      <file path="elfgcchack.h"/>
+      <file path="libxml.h"/>
+      <file path="trio.h"/>
+      <file path="triodef.h"/>
+      <file path="trionan.h"/>
+      <file path="triop.h"/>
+      <file path="triostr.h"/>
+    </header>
+    <source root="libxml2-2.7.7">
+      <file path="DOCBparser.c"/>
+      <file path="HTMLparser.c"/>
+      <file path="HTMLtree.c"/>
+      <file path="SAX.c"/>
+      <file path="SAX2.c"/>
+      <file path="c14n.c"/>
+      <file path="catalog.c"/>
+      <file path="chvalid.c"/>
+      <file path="debugXML.c"/>
+      <file path="dict.c"/>
+      <file path="encoding.c"/>
+      <file path="entities.c"/>
+      <file path="error.c"/>
+      <file path="globals.c"/>
+      <file path="hash.c"/>
+      <file path="legacy.c"/>
+      <file path="list.c"/>
+      <file path="nanoftp.c"/>
+      <file path="nanohttp.c"/>
+      <file path="parser.c"/>
+      <file path="parserInternals.c"/>
+      <file path="pattern.c"/>
+      <file path="relaxng.c"/>
+      <file path="schematron.c"/>
+      <file path="threads.c"/>
+      <file path="tree.c"/>
+      <file path="trionan.c"/>
+      <file path="triostr.c"/>
+      <file path="uri.c"/>
+      <file path="valid.c"/>
+      <file path="xinclude.c"/>
+      <file path="xlink.c"/>
+      <file path="xmlIO.c"/>
+      <file path="xmlcatalog.c"/>
+      <file path="xmlmemory.c"/>
+      <file path="xmlmodule.c"/>
+      <file path="xmlreader.c"/>
+      <file path="xmlregexp.c"/>
+      <file path="xmlsave.c"/>
+      <file path="xmlschemas.c"/>
+      <file path="xmlschemastypes.c"/>
+      <file path="xmlstring.c"/>
+      <file path="xmlunicode.c"/>
+      <file path="xmlwriter.c"/>
+      <file path="xpath.c"/>
+      <file path="xpointer.c"/>
+    </source>
+  </library>
+</project>
