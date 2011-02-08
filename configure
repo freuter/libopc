@@ -1,0 +1,4 @@
+#! /bin/sh
+BUILDDIR="../Debug/config" make -C third_party -f Makefile.config all clean
+MACHINE=`gcc -dumpmachine`
+./generate.py Makefile.xml $MACHINE

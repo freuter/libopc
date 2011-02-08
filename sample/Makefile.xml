@@ -1,0 +1,7 @@
+<project>
+  <tool name="opc_helloworld" dep="opc" mode="c99">
+    <source root=".">
+      <file path="opc_helloworld.c"/>
+    </source>
+  </tool>
+</project>
