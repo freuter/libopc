@@ -1,0 +1,31 @@
+<project>
+  <library name="opc" dep="zlib xml" mode="c99">
+    <header root="config">
+      <file path="opc/config.h" install="yes"/>
+    </header>
+    <header root=".">
+      <file path="opc/opc.h" install="yes"/>
+    </header>
+    <source root="opc">
+      <file path="opc.c"/>
+    </source>
+  </library>
+  <tool name="opcmain" dep="opc" mode="c99">
+    <source root="opc">
+      <file path="main.c"/>
+    </source>
+  </tool>
+  <library name="mce" dep="opc" mode="c99">
+    <header root="config">
+      <file path="mce/config.h" install="yes"/>
+    </header>
+    <header root=".">
+      <file path="mce/textreader.h" install="yes"/>
+      <file path="mce/textwriter.h" install="yes"/>
+    </header>
+    <source root="mce">
+      <file path="textreader.c"/>
+      <file path="textwriter.c"/>
+    </source>
+  </library>
+</project>
