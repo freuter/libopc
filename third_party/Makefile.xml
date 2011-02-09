@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <project>
   <library name="zlib">
-    <header root="/{config}/{platform}/zlib-1.2.5">
+    <header root="{config}/{platform}/zlib-1.2.5">
       <file path="zconf.h" install="yes"/>
     </header>
     <header root="zlib-1.2.5">
@@ -39,7 +39,7 @@
     <export>
       <!-- define name="LIBXML_STATIC"/ -->
     </export>
-    <header root="/{config}/{platform}/libxml2-2.7.7">
+    <header root="{config}/{platform}/libxml2-2.7.7">
       <file path="config.h"/>
       <file path="libxml/xmlversion.h" install="yes"/>
     </header>

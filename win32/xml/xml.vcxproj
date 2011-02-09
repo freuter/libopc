@@ -1,0 +1,214 @@
+<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<ItemGroup Label="ProjectConfigurations">
+ <ProjectConfiguration Include="Debug|Win32">
+   <Configuration>Debug</Configuration>
+   <Platform>Win32</Platform>
+ </ProjectConfiguration>
+<ProjectConfiguration Include="Release|Win32">
+   <Configuration>Release</Configuration>
+   <Platform>Win32</Platform>
+</ProjectConfiguration>
+</ItemGroup>
+<PropertyGroup Label="Globals">
+    <ProjectGuid>{c1949314-bf17-551a-a7a5-8c1e2b999681}</ProjectGuid>
+    <Keyword>Win32Proj</Keyword>
+    <RootNamespace>xml</RootNamespace>
+</PropertyGroup>
+<Import Project="$(VCTargetsPath)\Microsoft.Cpp.default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+<Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+<ImportGroup Label="ExtensionSettings" />
+<ImportGroup Label="PropertySheets" />
+<PropertyGroup Label="UserMacros" />
+<PropertyGroup />
+<ItemDefinitionGroup>
+<ClCompile>
+<PreprocessorDefinitions>WIN32;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+<AdditionalIncludeDirectories>..\..\config\x86-msvc-win32\libxml2-2.7.7;..\..\third_party\libxml2-2.7.7\include\libxml;..\..\third_party\libxml2-2.7.7\include;..\..\third_party\libxml2-2.7.7;..\..\config\x86-msvc-win32\zlib-1.2.5;..\..\third_party\zlib-1.2.5;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+</ClCompile>
+</ItemDefinitionGroup>
+<ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+<ClCompile>
+<WarningLevel>Level3</WarningLevel>
+<Optimization>Disabled</Optimization>
+</ClCompile>
+</ItemDefinitionGroup>
+<ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+<ClCompile>
+<Optimization>MaxSpeed</Optimization>
+<FunctionLevelLinking>true</FunctionLevelLinking> 
+<IntrinsicFunctions>true</IntrinsicFunctions> 
+</ClCompile>
+</ItemDefinitionGroup>
+<ItemGroup>
+  <ClInclude Include="..\..\config\x86-msvc-win32\libxml2-2.7.7\config.h"/>
+  <ClInclude Include="..\..\config\x86-msvc-win32\libxml2-2.7.7\libxml\xmlversion.h"/>
+  <ClInclude Include="..\..\third_party\libxml2-2.7.7\include\libxml\DOCBparser.h"/>
+  <ClInclude Include="..\..\third_party\libxml2-2.7.7\include\libxml\HTMLparser.h"/>
+  <ClInclude Include="..\..\third_party\libxml2-2.7.7\include\libxml\HTMLtree.h"/>
+  <ClInclude Include="..\..\third_party\libxml2-2.7.7\include\libxml\SAX.h"/>
+  <ClInclude Include="..\..\third_party\libxml2-2.7.7\include\libxml\SAX2.h"/>
+  <ClInclude Include="..\..\third_party\libxml2-2.7.7\include\libxml\c14n.h"/>
+  <ClInclude Include="..\..\third_party\libxml2-2.7.7\include\libxml\catalog.h"/>
+  <ClInclude Include="..\..\third_party\libxml2-2.7.7\include\libxml\chvalid.h"/>
+  <ClInclude Include="..\..\third_party\libxml2-2.7.7\include\libxml\debugXML.h"/>
+  <ClInclude Include="..\..\third_party\libxml2-2.7.7\include\libxml\dict.h"/>
+  <ClInclude Include="..\..\third_party\libxml2-2.7.7\include\libxml\encoding.h"/>
+  <ClInclude Include="..\..\third_party\libxml2-2.7.7\include\libxml\entities.h"/>
+  <ClInclude Include="..\..\third_party\libxml2-2.7.7\include\libxml\globals.h"/>
+  <ClInclude Include="..\..\third_party\libxml2-2.7.7\include\libxml\hash.h"/>
+  <ClInclude Include="..\..\third_party\libxml2-2.7.7\include\libxml\list.h"/>
+  <ClInclude Include="..\..\third_party\libxml2-2.7.7\include\libxml\nanoftp.h"/>
+  <ClInclude Include="..\..\third_party\libxml2-2.7.7\include\libxml\nanohttp.h"/>
+  <ClInclude Include="..\..\third_party\libxml2-2.7.7\include\libxml\parser.h"/>
+  <ClInclude Include="..\..\third_party\libxml2-2.7.7\include\libxml\parserInternals.h"/>
+  <ClInclude Include="..\..\third_party\libxml2-2.7.7\include\libxml\pattern.h"/>
+  <ClInclude Include="..\..\third_party\libxml2-2.7.7\include\libxml\relaxng.h"/>
+  <ClInclude Include="..\..\third_party\libxml2-2.7.7\include\libxml\schemasInternals.h"/>
+  <ClInclude Include="..\..\third_party\libxml2-2.7.7\include\libxml\schematron.h"/>
+  <ClInclude Include="..\..\third_party\libxml2-2.7.7\include\libxml\threads.h"/>
+  <ClInclude Include="..\..\third_party\libxml2-2.7.7\include\libxml\tree.h"/>
+  <ClInclude Include="..\..\third_party\libxml2-2.7.7\include\libxml\uri.h"/>
+  <ClInclude Include="..\..\third_party\libxml2-2.7.7\include\libxml\valid.h"/>
+  <ClInclude Include="..\..\third_party\libxml2-2.7.7\include\libxml\xinclude.h"/>
+  <ClInclude Include="..\..\third_party\libxml2-2.7.7\include\libxml\xlink.h"/>
+  <ClInclude Include="..\..\third_party\libxml2-2.7.7\include\libxml\xmlIO.h"/>
+  <ClInclude Include="..\..\third_party\libxml2-2.7.7\include\libxml\xmlautomata.h"/>
+  <ClInclude Include="..\..\third_party\libxml2-2.7.7\include\libxml\xmlerror.h"/>
+  <ClInclude Include="..\..\third_party\libxml2-2.7.7\include\libxml\xmlexports.h"/>
+  <ClInclude Include="..\..\third_party\libxml2-2.7.7\include\libxml\xmlmemory.h"/>
+  <ClInclude Include="..\..\third_party\libxml2-2.7.7\include\libxml\xmlmodule.h"/>
+  <ClInclude Include="..\..\third_party\libxml2-2.7.7\include\libxml\xmlreader.h"/>
+  <ClInclude Include="..\..\third_party\libxml2-2.7.7\include\libxml\xmlregexp.h"/>
+  <ClInclude Include="..\..\third_party\libxml2-2.7.7\include\libxml\xmlsave.h"/>
+  <ClInclude Include="..\..\third_party\libxml2-2.7.7\include\libxml\xmlschemas.h"/>
+  <ClInclude Include="..\..\third_party\libxml2-2.7.7\include\libxml\xmlschemastypes.h"/>
+  <ClInclude Include="..\..\third_party\libxml2-2.7.7\include\libxml\xmlstring.h"/>
+  <ClInclude Include="..\..\third_party\libxml2-2.7.7\include\libxml\xmlunicode.h"/>
+  <ClInclude Include="..\..\third_party\libxml2-2.7.7\include\libxml\xmlwriter.h"/>
+  <ClInclude Include="..\..\third_party\libxml2-2.7.7\include\libxml\xpath.h"/>
+  <ClInclude Include="..\..\third_party\libxml2-2.7.7\include\libxml\xpathInternals.h"/>
+  <ClInclude Include="..\..\third_party\libxml2-2.7.7\include\libxml\xpointer.h"/>
+  <ClInclude Include="..\..\third_party\libxml2-2.7.7\include\win32config.h"/>
+  <ClInclude Include="..\..\third_party\libxml2-2.7.7\include\wsockcompat.h"/>
+  <ClInclude Include="..\..\third_party\libxml2-2.7.7\acconfig.h"/>
+  <ClInclude Include="..\..\third_party\libxml2-2.7.7\elfgcchack.h"/>
+  <ClInclude Include="..\..\third_party\libxml2-2.7.7\libxml.h"/>
+  <ClInclude Include="..\..\third_party\libxml2-2.7.7\trio.h"/>
+  <ClInclude Include="..\..\third_party\libxml2-2.7.7\triodef.h"/>
+  <ClInclude Include="..\..\third_party\libxml2-2.7.7\trionan.h"/>
+  <ClInclude Include="..\..\third_party\libxml2-2.7.7\triop.h"/>
+  <ClInclude Include="..\..\third_party\libxml2-2.7.7\triostr.h"/>
+</ItemGroup>
+<ItemGroup>
+  <ClCompile Include="..\..\third_party\libxml2-2.7.7\DOCBparser.c">
+  </ClCompile>
+  <ClCompile Include="..\..\third_party\libxml2-2.7.7\HTMLparser.c">
+  </ClCompile>
+  <ClCompile Include="..\..\third_party\libxml2-2.7.7\HTMLtree.c">
+  </ClCompile>
+  <ClCompile Include="..\..\third_party\libxml2-2.7.7\SAX.c">
+  </ClCompile>
+  <ClCompile Include="..\..\third_party\libxml2-2.7.7\SAX2.c">
+  </ClCompile>
+  <ClCompile Include="..\..\third_party\libxml2-2.7.7\c14n.c">
+  </ClCompile>
+  <ClCompile Include="..\..\third_party\libxml2-2.7.7\catalog.c">
+  </ClCompile>
+  <ClCompile Include="..\..\third_party\libxml2-2.7.7\chvalid.c">
+  </ClCompile>
+  <ClCompile Include="..\..\third_party\libxml2-2.7.7\debugXML.c">
+  </ClCompile>
+  <ClCompile Include="..\..\third_party\libxml2-2.7.7\dict.c">
+  </ClCompile>
+  <ClCompile Include="..\..\third_party\libxml2-2.7.7\encoding.c">
+  </ClCompile>
+  <ClCompile Include="..\..\third_party\libxml2-2.7.7\entities.c">
+  </ClCompile>
+  <ClCompile Include="..\..\third_party\libxml2-2.7.7\error.c">
+  </ClCompile>
+  <ClCompile Include="..\..\third_party\libxml2-2.7.7\globals.c">
+  </ClCompile>
+  <ClCompile Include="..\..\third_party\libxml2-2.7.7\hash.c">
+  </ClCompile>
+  <ClCompile Include="..\..\third_party\libxml2-2.7.7\legacy.c">
+  </ClCompile>
+  <ClCompile Include="..\..\third_party\libxml2-2.7.7\list.c">
+  </ClCompile>
+  <ClCompile Include="..\..\third_party\libxml2-2.7.7\nanoftp.c">
+  </ClCompile>
+  <ClCompile Include="..\..\third_party\libxml2-2.7.7\nanohttp.c">
+  </ClCompile>
+  <ClCompile Include="..\..\third_party\libxml2-2.7.7\parser.c">
+  </ClCompile>
+  <ClCompile Include="..\..\third_party\libxml2-2.7.7\parserInternals.c">
+  </ClCompile>
+  <ClCompile Include="..\..\third_party\libxml2-2.7.7\pattern.c">
+  </ClCompile>
+  <ClCompile Include="..\..\third_party\libxml2-2.7.7\relaxng.c">
+  </ClCompile>
+  <ClCompile Include="..\..\third_party\libxml2-2.7.7\schematron.c">
+  </ClCompile>
+  <ClCompile Include="..\..\third_party\libxml2-2.7.7\threads.c">
+  </ClCompile>
+  <ClCompile Include="..\..\third_party\libxml2-2.7.7\tree.c">
+  </ClCompile>
+  <ClCompile Include="..\..\third_party\libxml2-2.7.7\trionan.c">
+  </ClCompile>
+  <ClCompile Include="..\..\third_party\libxml2-2.7.7\triostr.c">
+  </ClCompile>
+  <ClCompile Include="..\..\third_party\libxml2-2.7.7\uri.c">
+  </ClCompile>
+  <ClCompile Include="..\..\third_party\libxml2-2.7.7\valid.c">
+  </ClCompile>
+  <ClCompile Include="..\..\third_party\libxml2-2.7.7\xinclude.c">
+  </ClCompile>
+  <ClCompile Include="..\..\third_party\libxml2-2.7.7\xlink.c">
+  </ClCompile>
+  <ClCompile Include="..\..\third_party\libxml2-2.7.7\xmlIO.c">
+  </ClCompile>
+  <ClCompile Include="..\..\third_party\libxml2-2.7.7\xmlcatalog.c">
+  </ClCompile>
+  <ClCompile Include="..\..\third_party\libxml2-2.7.7\xmlmemory.c">
+  </ClCompile>
+  <ClCompile Include="..\..\third_party\libxml2-2.7.7\xmlmodule.c">
+  </ClCompile>
+  <ClCompile Include="..\..\third_party\libxml2-2.7.7\xmlreader.c">
+  </ClCompile>
+  <ClCompile Include="..\..\third_party\libxml2-2.7.7\xmlregexp.c">
+  </ClCompile>
+  <ClCompile Include="..\..\third_party\libxml2-2.7.7\xmlsave.c">
+  </ClCompile>
+  <ClCompile Include="..\..\third_party\libxml2-2.7.7\xmlschemas.c">
+  </ClCompile>
+  <ClCompile Include="..\..\third_party\libxml2-2.7.7\xmlschemastypes.c">
+  </ClCompile>
+  <ClCompile Include="..\..\third_party\libxml2-2.7.7\xmlstring.c">
+  </ClCompile>
+  <ClCompile Include="..\..\third_party\libxml2-2.7.7\xmlunicode.c">
+  </ClCompile>
+  <ClCompile Include="..\..\third_party\libxml2-2.7.7\xmlwriter.c">
+  </ClCompile>
+  <ClCompile Include="..\..\third_party\libxml2-2.7.7\xpath.c">
+  </ClCompile>
+  <ClCompile Include="..\..\third_party\libxml2-2.7.7\xpointer.c">
+  </ClCompile>
+</ItemGroup>
+<ItemGroup>
+<ProjectReference Include="../zlib/zlib.vcxproj">
+<Project>{e49ff4af-766a-598f-91a2-99f255aad4a8}</Project>
+</ProjectReference>
+</ItemGroup>
+<Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+<ImportGroup Label="ExtensionTargets" />
+</Project>
