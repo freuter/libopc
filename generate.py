@@ -123,8 +123,11 @@ def parseLibrary(conf, node, ctx, seq_type):
 
 def isExcluded(conf, ctx, lib):
 #	print conf["platforms"]
-	platform=conf["platforms"][ctx["platform"]]
-	return lib in platform["exclude"]
+	if ctx["platform"] in conf["platforms"]:
+		platform=conf["platforms"][ctx["platform"]]
+		return lib in platform["exclude"]
+	else:
+		return False
 
 def parsePlatform(conf, node, ctx):
 	if "name" in node.attrib:
@@ -316,7 +319,10 @@ def generateVCXPROJ(conf, ctx, lib, type):
 	if "Application"==type:
 		out.write("<Link>\n");
 		out.write("<AdditionalDependencies>")
-		ext_libs=conf["platforms"][ctx["platform"]]["libs"]
+		if ctx["platform"] in conf["platforms"]:
+			ext_libs=conf["platforms"][ctx["platform"]]["libs"]
+		else:
+			ext_libs={}
 #		print ext_libs
 		for ext_lib in ext_libs:
 #			print ext_lib
@@ -390,7 +396,9 @@ def generateWin32(ctx, source):
 	for lib in conf["libraries"]:
 		if not isExcluded(conf, ctx, lib["name"]):
 			generateVCXPROJ(conf, ctx, lib, "StaticLibrary")
-	generateVCXPROJ(conf, ctx, conf["tools"][4], "Application")
+	for tool in conf["tools"]:
+		if not isExcluded(conf, ctx, tool["name"]):
+			generateVCXPROJ(conf, ctx, tool, "Application")
 	solution_file=os.path.abspath("win32\\solution.sln")
 	solution_uuid=uuid.uuid5(uuid.NAMESPACE_URL, solution_file)
 	out=open(solution_file, "w")
@@ -399,13 +407,15 @@ def generateWin32(ctx, source):
 	for lib in conf["libraries"]:
 		if not isExcluded(conf, ctx, lib["name"]):
 			writeProject(out, solution_uuid, lib)
-	writeProject(out, solution_uuid, conf["tools"][4])
+	for tool in conf["tools"]:
+		if not isExcluded(conf, ctx, tool["name"]):
+			writeProject(out, solution_uuid, tool)
 	out.write("\n")
 	out.close()
 
 def generateMakefile(conf, ctx, filename):
 	print("generating "+filename);
-	obj_dir="Debug/"+ctx["platform"]+"/"
+	obj_dir=os.path.join("Debug", ctx["platform"])
 	out=open(filename, "w")
 	out.write("# Generated.\n")
 	# compiler flags
@@ -504,14 +514,15 @@ def generateMakefiles(ctx, source):
 if __name__ == "__main__":	
 	if len(sys.argv)>=2:
 		ctx={ "base": os.path.abspath(os.curdir), "root": os.path.abspath(os.curdir), "platform": "?-?-?", "platforms": [] }
-		ctx["config"]=os.path.join(ctx["base"], "Debug/config")
 		for i in range(2, len(sys.argv)):
 			ctx["platforms"].append(sys.argv[i])
                 if 1==len(ctx["platforms"]) and platformSubseteqTest(ctx["platforms"][0], "*-msvc-*"):
-                     generateWin32(ctx, sys.argv[1])
+			ctx["config"]=os.path.join(ctx["base"], "config")
+			generateWin32(ctx, sys.argv[1])
 		else:
-	                generateMakefiles(ctx, sys.argv[1])	
+			ctx["config"]=os.path.join(ctx["base"], "Debug", "config")
 
+	                generateMakefiles(ctx, sys.argv[1])	
 	else:
 		print("arg needed:\n Makefile.xml [platform=arm-apple-darwin]\n")
 

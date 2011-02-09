@@ -1,0 +1,99 @@
+<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<ItemGroup Label="ProjectConfigurations">
+ <ProjectConfiguration Include="Debug|Win32">
+   <Configuration>Debug</Configuration>
+   <Platform>Win32</Platform>
+ </ProjectConfiguration>
+<ProjectConfiguration Include="Release|Win32">
+   <Configuration>Release</Configuration>
+   <Platform>Win32</Platform>
+</ProjectConfiguration>
+</ItemGroup>
+<PropertyGroup Label="Globals">
+    <ProjectGuid>{e49ff4af-766a-598f-91a2-99f255aad4a8}</ProjectGuid>
+    <Keyword>Win32Proj</Keyword>
+    <RootNamespace>zlib</RootNamespace>
+</PropertyGroup>
+<Import Project="$(VCTargetsPath)\Microsoft.Cpp.default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+<Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+<ImportGroup Label="ExtensionSettings" />
+<ImportGroup Label="PropertySheets" />
+<PropertyGroup Label="UserMacros" />
+<PropertyGroup />
+<ItemDefinitionGroup>
+<ClCompile>
+<PreprocessorDefinitions>WIN32;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+<AdditionalIncludeDirectories>..\..\config\x86-msvc-win32\zlib-1.2.5;..\..\third_party\zlib-1.2.5;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+</ClCompile>
+</ItemDefinitionGroup>
+<ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+<ClCompile>
+<WarningLevel>Level3</WarningLevel>
+<Optimization>Disabled</Optimization>
+</ClCompile>
+</ItemDefinitionGroup>
+<ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+<ClCompile>
+<Optimization>MaxSpeed</Optimization>
+<FunctionLevelLinking>true</FunctionLevelLinking> 
+<IntrinsicFunctions>true</IntrinsicFunctions> 
+</ClCompile>
+</ItemDefinitionGroup>
+<ItemGroup>
+  <ClInclude Include="..\..\config\x86-msvc-win32\zlib-1.2.5\zconf.h"/>
+  <ClInclude Include="..\..\third_party\zlib-1.2.5\crc32.h"/>
+  <ClInclude Include="..\..\third_party\zlib-1.2.5\deflate.h"/>
+  <ClInclude Include="..\..\third_party\zlib-1.2.5\inffast.h"/>
+  <ClInclude Include="..\..\third_party\zlib-1.2.5\inffixed.h"/>
+  <ClInclude Include="..\..\third_party\zlib-1.2.5\inflate.h"/>
+  <ClInclude Include="..\..\third_party\zlib-1.2.5\inftrees.h"/>
+  <ClInclude Include="..\..\third_party\zlib-1.2.5\trees.h"/>
+  <ClInclude Include="..\..\third_party\zlib-1.2.5\zlib.h"/>
+  <ClInclude Include="..\..\third_party\zlib-1.2.5\zutil.h"/>
+</ItemGroup>
+<ItemGroup>
+  <ClCompile Include="..\..\third_party\zlib-1.2.5\adler32.c">
+  </ClCompile>
+  <ClCompile Include="..\..\third_party\zlib-1.2.5\compress.c">
+  </ClCompile>
+  <ClCompile Include="..\..\third_party\zlib-1.2.5\crc32.c">
+  </ClCompile>
+  <ClCompile Include="..\..\third_party\zlib-1.2.5\deflate.c">
+  </ClCompile>
+  <ClCompile Include="..\..\third_party\zlib-1.2.5\gzread.c">
+  </ClCompile>
+  <ClCompile Include="..\..\third_party\zlib-1.2.5\gzwrite.c">
+  </ClCompile>
+  <ClCompile Include="..\..\third_party\zlib-1.2.5\gzclose.c">
+  </ClCompile>
+  <ClCompile Include="..\..\third_party\zlib-1.2.5\infback.c">
+  </ClCompile>
+  <ClCompile Include="..\..\third_party\zlib-1.2.5\inffast.c">
+  </ClCompile>
+  <ClCompile Include="..\..\third_party\zlib-1.2.5\inflate.c">
+  </ClCompile>
+  <ClCompile Include="..\..\third_party\zlib-1.2.5\inftrees.c">
+  </ClCompile>
+  <ClCompile Include="..\..\third_party\zlib-1.2.5\trees.c">
+  </ClCompile>
+  <ClCompile Include="..\..\third_party\zlib-1.2.5\uncompr.c">
+  </ClCompile>
+  <ClCompile Include="..\..\third_party\zlib-1.2.5\zutil.c">
+  </ClCompile>
+</ItemGroup>
+<ItemGroup>
+</ItemGroup>
+<Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+<ImportGroup Label="ExtensionTargets" />
+</Project>
