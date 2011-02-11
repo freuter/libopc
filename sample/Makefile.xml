@@ -4,4 +4,14 @@
       <file path="opc_helloworld.c"/>
     </source>
   </tool>
+  <tool name="opc_zipread" dep="opc" mode="c99">
+    <source root=".">
+      <file path="opc_zipread.c"/>
+    </source>
+  </tool>
+  <tool name="opc_zipread2" dep="opc" mode="c99">
+    <source root=".">
+      <file path="opc_zipread2.c"/>
+    </source>
+  </tool>
 </project>

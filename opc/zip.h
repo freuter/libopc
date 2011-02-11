@@ -34,6 +34,7 @@
  
  */
 #include <opc/config.h>
+#include <zlib.h>
 
 #ifndef OPC_ZIP_H
 #define OPC_ZIP_H
@@ -44,17 +45,48 @@ extern "C" {
 
 	typedef struct OPC_ZIP_STRUCT opcZip;
 	typedef struct OPC_ZIPPARTINFO_STRUCT {
-		const xmlChar *partName;
+		xmlChar *partName;
+		opc_uint16_t compression_method;
+		opc_ofs_t stream_ofs;
+		opc_ofs_t stream_compressed_size;
+		opc_ofs_t stream_uncompressed_size;
 	} opcZipPartInfo;
-	typedef struct OPC_ZIPREADINFO_STRUCT {
-		
-	} opcZipReadInfo;
-	
+
+	typedef struct OPC_ZIPDEFLATESTREAM_STRUCT {
+		opc_uint8_t buf[1024];
+		z_stream stream;
+		opc_ofs_t stream_ofs;
+		opc_uint16_t compression_method;
+		opc_uint32_t stream_state;
+		opc_uint32_t inflate_state;
+		opc_uint32_t stream_size;
+	} opcZipDeflateStream;
+
+	int opcZipInitDeflateStream(opcZipPartInfo *partInfo, opcZipDeflateStream *stream);
+	int opcZipOpenDeflateStream(opcZipPartInfo *partInfo, opcZipDeflateStream *stream);
+	int opcZipReadDeflateStream(opcZip *zip, opcZipDeflateStream *stream, char *buf, int len);
+	int opcZipCloseDeflateStream(opcZipPartInfo *partInfo, opcZipDeflateStream *stream);
+
+	typedef enum OPC_ZIPSEEKMODE_ENUM {
+		opcZipSeekSet = SEEK_SET,
+		opcZipSeekCur = SEEK_CUR,
+		opcZipSeekEnd = SEEK_END
+	} opcZipSeekMode;
+
+	typedef int opcZipReadCallback(void *iocontext, char *buffer, int len);
+	typedef int opcZipCloseCallback(void *iocontext);
+	typedef opc_ofs_t opcZipSeekCallback(void *iocontext, opc_ofs_t ofs, opcZipSeekMode whence);
+
 #define OPC_ZIP_READ  0x1
 #define OPC_ZIP_WRITE 0x2
 #define OPC_ZIP_STREAM  0x4
 	
 	opcZip *opcZipOpenFile(const xmlChar *fileName, int flags);
+	opcZip *opcZipOpenIO(opcZipReadCallback *ioread,
+						 opcZipCloseCallback *ioclose,
+						 opcZipSeekCallback *ioseek,
+						 void *iocontext,
+						 int flags);
 	int opcZipClose(opcZip *zip);
 	
 	int opcZipWriteStart(opcZip *zip);
@@ -68,12 +100,27 @@ extern "C" {
 	int opcZipWriteDirectoryEntry(opcZip *zip, opcZipPartInfo *partInfo);
 	int opcZipWriteEndDirectory(opcZip *zip);
 
+	int opcZipReadLocalFileHeader(opcZip *zip);	
+	int opcZipReadDataDescriptor(opcZip *zip);
+	int opcZipSkipLocalFileData(opcZip *zip);
+
+	int opcZipReadEndOfCentralDirectory(opcZip *zip);
+
+	int opcZipReadDirectoryFileHeader(opcZip *zip);
+	int opcZipNextDirectoyFileHeader(opcZip *zip);
+
+	int opcZipInitPartInfo(opcZip *zip, opcZipPartInfo *partInfo);
+	int opcZipCleanupPartInfo(opcZipPartInfo *partInfo);
+
+	typedef int opcZipPartInfoCallback(void *callbackCtx, opcZip *zip);
+	int opZipScan(opcZip *zip, void *callbackCtx, opcZipPartInfoCallback *partInfoCallback);
+
+	/*
 	int opcZipReadStart(opcZip *zip);	
 	int opcZipReadPartInfo(opcZip *zip, opcZipPartInfo *partInfo);
 	int opcZipReadSkipPart(opcZip *zip, opcZipPartInfo *partInfo);
 	int opcZipReadEnd(opcZip *zip);	
 	
-	int opcZipCleanupPartInfo(opcZipPartInfo *partInfo);
 
 	int opcZipReadDataStart(opcZip *zip, opcZipPartInfo *partInfo, opcZipReadInfo *readInfo);
 	int opcZipReadData(opcZip *zip, opcZipPartInfo *partInfo, opcZipReadInfo *readInfo, char *buf, int bufLen);
@@ -84,7 +131,7 @@ extern "C" {
 	int opcZipReadDirectoryEnd(opcZip *zip);	
 	
 	int opcZipIsStreamMode(opcZip *zip);
-	
+	*/
 	int opcZipMovePart(opcZip *zip, opcZipPartInfo *partInfo, int delta);
 	int opcZipCopyPart(opcZip *zip, opcZipPartInfo *partInfo, opcZip *target);
 	int opcZipSwapPart(opcZip *zip, opcZipPartInfo *partInfo, int minGapSize);

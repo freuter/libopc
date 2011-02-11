@@ -30,14 +30,431 @@
  OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 #include <opc/opc.h>
+#include <libxml/xmlmemory.h>
+#include <libxml/globals.h>
+#include <string.h>
+
+struct OPC_ZIP_STRUCT {
+	opcZipReadCallback *ioread;
+	opcZipCloseCallback *ioclose;
+	opcZipSeekCallback *ioseek;
+	void *iocontext;
+	int flags;
+	int read_state; // state of last read action
+	opc_uint32_t header_signature;
+	opc_uint16_t version_needed;
+	opc_uint16_t bit_flag;
+	opc_uint16_t compression_method;
+	opc_uint16_t last_mod_time;
+	opc_uint16_t last_mod_date;
+	opc_uint32_t crc32;
+	opc_uint32_t compressed_size;
+	opc_uint32_t uncompressed_size;
+	opc_uint16_t filename_length;
+	opc_uint16_t extra_length;
+	opc_uint16_t comment_length;
+	opc_uint32_t rel_ofs;
+	opc_uint8_t filename[260];
+};
+
+static int opcZipFileRead(void *iocontext, char *buffer, int len) {
+	return fread(buffer, sizeof(char), len, (FILE*)iocontext);
+}
+
+static int opcZipFileClose(void *iocontext) {
+	return fclose((FILE*)iocontext);
+}
+
+static opc_ofs_t opcZipFileSeek(void *iocontext, opc_ofs_t ofs, opcZipSeekMode whence) {
+	int ret=fseek((FILE*)iocontext, ofs, whence);
+	if (ret>=0) {
+		return ftell((FILE*)iocontext);
+	} else {
+		return ret;
+	}
+}
+
+static inline int opcZipReadU8(opcZip *zip, opc_uint8_t *val) {
+	return zip->ioread(zip->iocontext, (char*)val, sizeof(*val));
+}
+
+static inline int opcZipRead8(opcZip *zip, opc_int8_t *val) {
+	return zip->ioread(zip->iocontext, (char*)val, sizeof(*val));
+}
+
+static inline int opcZipReadString(opcZip *zip, opc_uint8_t *buffer, int buffer_size, int len) {
+	int ret=zip->ioread(zip->iocontext, (char*)buffer, len<buffer_size?len:buffer_size);
+	if (ret>=0 && ret<buffer_size) buffer[ret]=0; else buffer[buffer_size-1]=0;
+	return ret;
+}
+
+static inline int opcZipSkipBytes(opcZip *zip, int len) {
+	if (NULL==zip->ioseek) {
+		int ret=0;
+		int i=0;
+		opc_uint8_t val;
+		while(i<len && (1==(ret=opcZipReadU8(zip, &val)))) i++;
+		return (i==len?i:ret);
+	} else {
+		opc_ofs_t ofs=zip->ioseek(zip->iocontext, len, opcZipSeekCur);
+		return (ofs>=0?len:0);
+	}
+}
+
+#define OPC_READ_LITTLE_ENDIAN(zip, type, val) \
+	opc_uint8_t aux;\
+	int ret;\
+	int i=0;\
+	if (NULL!=val) {\
+		*val=0;\
+	}\
+	while(i<sizeof(type) && (1==(ret=opcZipReadU8(zip, &aux)))) {\
+		if (NULL!=val) {\
+			*val|=((type)aux)<<(i<<3);\
+		}\
+		i++;\
+	}\
+	return (i==sizeof(type)?i:ret);\
+
+static inline int opcZipReadU64(opcZip *zip, opc_uint64_t *val) {
+	OPC_READ_LITTLE_ENDIAN(zip, opc_uint64_t, val);
+}
+
+static inline int opcZipReadU32(opcZip *zip, opc_uint32_t *val) {
+	OPC_READ_LITTLE_ENDIAN(zip, opc_uint32_t, val);
+}
+
+static inline int opcZipReadU16(opcZip *zip, opc_uint16_t *val) {
+	OPC_READ_LITTLE_ENDIAN(zip, opc_uint16_t, val);
+}
+
+static inline int opcZipRead64(opcZip *zip, opc_int64_t *val) {
+	OPC_READ_LITTLE_ENDIAN(zip, opc_int64_t, val);
+}
+
+static inline int opcZipRead32(opcZip *zip, opc_int32_t *val) {
+	OPC_READ_LITTLE_ENDIAN(zip, opc_int32_t, val);
+}
+
+static inline int opcZipRead16(opcZip *zip, opc_int16_t *val) {
+	OPC_READ_LITTLE_ENDIAN(zip, opc_int16_t, val);
+}
+
 
 opcZip *opcZipOpenFile(const xmlChar *fileName, int flags) {
-	return NULL;
+	opcZip *ret=NULL;
+	char mode[4];
+	int mode_ofs=0;
+	if (flags & OPC_ZIP_READ) {
+		mode[mode_ofs++]='r';
+	}
+	if (flags & OPC_ZIP_WRITE) {
+		mode[mode_ofs++]='w';
+	}
+	mode[mode_ofs++]='b';
+	mode[mode_ofs++]='\0';
+	FILE *file=fopen(_X2C(fileName), mode);
+	if (file!=NULL) {
+		ret=opcZipOpenIO(opcZipFileRead, opcZipFileClose, opcZipFileSeek, file, flags);
+	}
+	return ret;
+}
+
+opcZip *opcZipOpenIO(opcZipReadCallback *ioread,
+					 opcZipCloseCallback *ioclose,
+					 opcZipSeekCallback *ioseek,
+					 void *iocontext,
+					 int flags) {
+	opcZip *zip=(opcZip*)xmlMalloc(sizeof(opcZip));
+	memset(zip, 0, sizeof(*zip));
+	zip->ioread=ioread;
+	zip->ioclose=ioclose;
+	zip->ioseek=ioseek;
+	zip->iocontext=iocontext;
+	zip->flags=flags;
+	zip->read_state=opcZipReadU32(zip, &zip->header_signature); // read first header signature
+	return zip;
 }
 
 int opcZipClose(opcZip *zip) {
-	return 0;
+	int ret=0;
+	if (NULL!=zip) {
+		ret=zip->ioclose(zip->iocontext);
+		xmlFree(zip);
+	}
+	return ret;
 }
+
+int opcZipReadDirectoryFileHeader(opcZip *zip) {
+	int ret=0;
+	if (NULL!=zip && 0x02014b50==zip->header_signature) {
+		if (2==(zip->read_state=opcZipReadU16(zip, NULL))) // version made by
+		if (2==(zip->read_state=opcZipReadU16(zip, &zip->version_needed)))
+		if (2==(zip->read_state=opcZipReadU16(zip, &zip->bit_flag)))
+		if (2==(zip->read_state=opcZipReadU16(zip, &zip->compression_method)))
+		if (2==(zip->read_state=opcZipReadU16(zip, &zip->last_mod_time)))
+		if (2==(zip->read_state=opcZipReadU16(zip, &zip->last_mod_date)))
+		if (4==(zip->read_state=opcZipReadU32(zip, &zip->crc32)))
+		if (4==(zip->read_state=opcZipReadU32(zip, &zip->compressed_size)))
+		if (4==(zip->read_state=opcZipReadU32(zip, &zip->uncompressed_size)))
+		if (2==(zip->read_state=opcZipReadU16(zip, &zip->filename_length)))
+		if (2==(zip->read_state=opcZipReadU16(zip, &zip->extra_length)))
+		if (2==(zip->read_state=opcZipReadU16(zip, &zip->comment_length)))
+		if (2==(zip->read_state=opcZipReadU16(zip, NULL))) // disk number start
+		if (2==(zip->read_state=opcZipReadU16(zip, NULL))) // internal file attributes
+		if (4==(zip->read_state=opcZipReadU32(zip, NULL))) // external file attributes
+		if (4==(zip->read_state=opcZipReadU32(zip, &zip->rel_ofs)))
+		if (zip->filename_length==(zip->read_state=opcZipReadString(zip, zip->filename, sizeof(zip->filename), zip->filename_length))) {
+			while(zip->read_state>0 && zip->extra_length>0) {
+				opc_uint16_t extra_id;
+				opc_uint16_t extra_size;
+				if (2==(zip->read_state=opcZipReadU16(zip, &extra_id))
+					&& 2==(zip->read_state=opcZipReadU16(zip, &extra_size))) {
+						switch(extra_id) {
+						default: // just ignore
+							printf("%02X %02X\n", extra_id, extra_size);
+							// no break;
+						case 0xa220: // Microsoft Open Packaging Growth Hint => ignore
+							if (extra_size==(zip->read_state=opcZipSkipBytes(zip, extra_size))) {
+								zip->extra_length-=4+extra_size;
+							}
+							break;
+						}
+				}
+			}
+			if (zip->read_state>0 && zip->comment_length>0) {
+				opcZipSkipBytes(zip, zip->comment_length);
+			}
+			ret=(zip->read_state>0 && 0==zip->extra_length);
+		}
+	}
+	return ret;
+}
+
+int opcZipNextDirectoyFileHeader(opcZip *zip) {
+	int ret=0;
+	if (NULL!=zip) {
+		zip->read_state=opcZipReadU32(zip, &zip->header_signature); // read next header signature
+		ret=(zip->read_state>=0);
+	} 
+	return ret;
+}
+
+int opcZipReadLocalFileHeader(opcZip *zip) {
+	int ret=0;
+	if (NULL!=zip && 0x04034b50==zip->header_signature) {
+		if (2==(zip->read_state=opcZipReadU16(zip, &zip->version_needed)))
+		if (2==(zip->read_state=opcZipReadU16(zip, &zip->bit_flag)))
+		if (2==(zip->read_state=opcZipReadU16(zip, &zip->compression_method)))
+		if (2==(zip->read_state=opcZipReadU16(zip, &zip->last_mod_time)))
+		if (2==(zip->read_state=opcZipReadU16(zip, &zip->last_mod_date)))
+		if (4==(zip->read_state=opcZipReadU32(zip, &zip->crc32)))
+		if (4==(zip->read_state=opcZipReadU32(zip, &zip->compressed_size)))
+		if (4==(zip->read_state=opcZipReadU32(zip, &zip->uncompressed_size)))
+		if (2==(zip->read_state=opcZipReadU16(zip, &zip->filename_length)))
+		if (2==(zip->read_state=opcZipReadU16(zip, &zip->extra_length)))
+		if (zip->filename_length==(zip->read_state=opcZipReadString(zip, zip->filename, sizeof(zip->filename), zip->filename_length))) {
+			while(zip->read_state>0 && zip->extra_length>0) {
+				opc_uint16_t extra_id;
+				opc_uint16_t extra_size;
+				if (2==(zip->read_state=opcZipReadU16(zip, &extra_id))
+					&& 2==(zip->read_state=opcZipReadU16(zip, &extra_size))) {
+						switch(extra_id) {
+						default: // just ignore
+							printf("%02X %02X\n", extra_id, extra_size);
+							// no break;
+						case 0xa220: // Microsoft Open Packaging Growth Hint => ignore
+							if (extra_size==(zip->read_state=opcZipSkipBytes(zip, extra_size))) {
+								zip->extra_length-=4+extra_size;
+							}
+							break;
+						}
+				}
+				
+			}
+			ret=(zip->read_state>0 && 0==zip->extra_length);
+		}
+	}
+	return ret;
+}
+
+int opcZipInitDeflateStream(opcZipPartInfo *partInfo, opcZipDeflateStream *stream) {
+	memset(stream, 0, sizeof(*stream));
+	stream->stream.zalloc = Z_NULL;
+	stream->stream.zfree = Z_NULL;
+	stream->stream.opaque = Z_NULL;
+	stream->stream.next_in = Z_NULL;
+	stream->stream.avail_in = 0;
+	stream->stream_size=partInfo->stream_compressed_size;
+	stream->stream_ofs=partInfo->stream_ofs; 
+	stream->compression_method=partInfo->compression_method;
+	return 8==stream->compression_method || 0==stream->compression_method; // either DEFLATE or STORE
+}
+
+int opcZipOpenDeflateStream(opcZipPartInfo *partInfo, opcZipDeflateStream *stream) {
+	if (8==stream->compression_method) {
+		return Z_OK==inflateInit2(&stream->stream, -MAX_WBITS);
+	} else if (0==stream->compression_method) {
+		return 1;
+	} else {
+		// unsupported compression
+		return 0;
+	}
+}
+static inline int _opcZipFillBuffer(opcZip *zip, opcZipDeflateStream *stream) {
+	int ret=0;
+	OPC_ASSERT(stream->stream.avail_in<=sizeof(stream->buf));
+	if (Z_OK==stream->stream_state && 
+		0==stream->stream.avail_in &&
+		stream->stream.total_in+stream->stream.avail_in<stream->stream_size) {
+		OPC_ASSERT(stream->stream.total_in<=stream->stream_size);
+		if (NULL!=zip->ioseek) {
+			OPC_ENSURE(stream->stream_ofs+stream->stream.total_in==zip->ioseek(zip->iocontext, stream->stream_ofs+stream->stream.total_in, opcZipSeekSet));
+		}
+		OPC_ASSERT(NULL==zip->ioseek || zip->ioseek(zip->iocontext, 0, opcZipSeekCur)==stream->stream_ofs+stream->stream.total_in);
+		int const max_stream=stream->stream_size-stream->stream.total_in;
+		int const max_buf=sizeof(stream->buf)-stream->stream.avail_in;
+		int const max=(max_buf<max_stream?max_buf:max_stream);
+		stream->stream.next_in=(Bytef*)stream->buf;
+		ret=zip->ioread(zip->iocontext, ((char*)stream->stream.next_in), max);
+		if (ret>0) {
+			OPC_ASSERT(stream->stream.avail_in<=sizeof(stream->buf));
+			stream->stream.avail_in=ret;
+			OPC_ASSERT(stream->stream.avail_in<=sizeof(stream->buf));
+		} else if (0==ret) {
+			stream->stream_state=Z_STREAM_END;
+		} else {
+			stream->stream_state=Z_STREAM_ERROR;
+		}
+	}
+	OPC_ASSERT(stream->stream.avail_in<=sizeof(stream->buf));
+	return (Z_OK==stream->stream_state?stream->stream.avail_in:0);
+}
+
+static inline int _opcZipInflateBuffer(opcZip *zip, opcZipDeflateStream *stream, char *buf, int len) {
+	int ret=0;
+	stream->stream.next_out=(Bytef*)buf;
+	stream->stream.avail_out=len;
+	if (Z_OK==stream->inflate_state && 
+		(Z_OK==(stream->inflate_state=inflate(&stream->stream, Z_SYNC_FLUSH)) || Z_STREAM_END==stream->inflate_state)) {
+			OPC_ASSERT(stream->stream.avail_out<=(uInt)len);
+			ret=len-stream->stream.avail_out;
+	}
+	return ret;
+}
+
+int opcZipReadDeflateStream(opcZip *zip, opcZipDeflateStream *stream, char *buf, int len) {
+	int ofs=0;
+	if (8==stream->compression_method) {
+		int bytes=0;
+		while(ofs<len && 
+			_opcZipFillBuffer(zip, stream)>0 && 
+			(bytes=_opcZipInflateBuffer(zip, stream, buf+ofs, len-ofs))>0) {
+				ofs+=bytes;
+		}
+	} else {
+		int const max_stream=stream->stream_size-stream->stream.total_in;
+		int const max=(len<max_stream?len:max_stream);
+		int bytes=zip->ioread(zip->iocontext, buf, max);
+		if (bytes>0) {
+			ofs=bytes;
+			stream->stream.total_in+=bytes;
+			stream->stream.total_out+=bytes;
+		} else {
+			ofs=0;
+		}
+	}
+	return ofs;
+}
+
+int opcZipCloseDeflateStream(opcZipPartInfo *partInfo, opcZipDeflateStream *stream) {
+	OPC_ASSERT(stream->stream.total_in==stream->stream_size);
+	OPC_ASSERT(stream->stream.total_in==partInfo->stream_compressed_size);
+	OPC_ASSERT(stream->stream.total_out==partInfo->stream_uncompressed_size);
+	if (8==stream->compression_method) {
+		return Z_OK==inflateEnd(&stream->stream);
+	} else {
+		return 1;
+	}
+}
+
+int opcZipSkipLocalFileData(opcZip *zip) {
+	int ret=0;
+	if (NULL!=zip && 0x04034b50==zip->header_signature && 0==zip->extra_length) {
+		ret=(opcZipSkipBytes(zip, zip->compressed_size)==zip->compressed_size);
+	}
+	return ret;
+}
+
+
+
+int opcZipReadDataDescriptor(opcZip *zip) {
+	int ret=0;
+	if (NULL!=zip && 0x04034b50==zip->header_signature && 0==zip->extra_length) {
+		//@TODO implement me!
+		zip->read_state=opcZipReadU32(zip, &zip->header_signature); // read first header signature
+	}
+	return ret;
+}
+
+int opcZipReadEndOfCentralDirectory(opcZip *zip) {
+	int ret=0;
+	opc_uint16_t comment_length=0;
+	if (NULL!=zip && 0x06054b50==zip->header_signature) {
+		if (2==(zip->read_state=opcZipReadU16(zip, NULL))) // number of this disk
+		if (2==(zip->read_state=opcZipReadU16(zip, NULL))) // number of the disk with the start of the central directory  
+		if (2==(zip->read_state=opcZipReadU16(zip, NULL))) // total number of entries in the central directory on this disk
+		if (2==(zip->read_state=opcZipReadU16(zip, NULL))) // total number of entries in the central directory 
+		if (4==(zip->read_state=opcZipReadU32(zip, NULL))) // size of the central directory   
+		if (4==(zip->read_state=opcZipReadU32(zip, NULL))) // offset of start of central directory with respect to the starting disk number
+		if (2==(zip->read_state=opcZipReadU16(zip, &comment_length))) // .ZIP file comment len
+		if (comment_length==(opcZipSkipBytes(zip, comment_length))) {
+			char ch=0;
+			ret=(0==zip->ioread(zip->iocontext, &ch, sizeof(ch))); // if not, then we have trailing bytes...
+		}
+	}
+	return ret;
+}
+
+int opcZipInitPartInfo(opcZip *zip, opcZipPartInfo *partInfo) {
+	int ret=0;
+	if (NULL!=zip && 0x04034b50==zip->header_signature && NULL!=zip->ioseek) {
+		memset(partInfo, 0, sizeof(*partInfo));
+		partInfo->stream_ofs=zip->ioseek(zip->iocontext, 0, opcZipSeekCur);
+		partInfo->partName=xmlStrdup(_X(zip->filename)); //@TODO DECODE!!!!
+		partInfo->stream_compressed_size=zip->compressed_size;
+		partInfo->stream_uncompressed_size=zip->uncompressed_size;
+		partInfo->compression_method=zip->compression_method;
+		ret=(partInfo->partName!=NULL);
+	}
+	return ret;
+}
+
+int opcZipCleanupPartInfo(opcZipPartInfo *partInfo) {
+	if (NULL!=partInfo) {
+		xmlFree(partInfo->partName);
+	}
+	return 1;
+}
+
+
+int opZipScan(opcZip *zip, void *callbackCtx, opcZipPartInfoCallback *partInfoCallback) {
+	// Parts in ZIP (according to local file infos)
+	int ok=1;
+	while (ok && opcZipReadLocalFileHeader(zip)) {
+		if (NULL!=partInfoCallback) {
+			ok=partInfoCallback(callbackCtx, zip);
+		}
+		opcZipSkipLocalFileData(zip);
+		opcZipReadDataDescriptor(zip);
+	}
+	// Parts in ZIP (according to directory)
+	while(ok && opcZipReadDirectoryFileHeader(zip)) {
+		opcZipNextDirectoyFileHeader(zip);
+	}
+	return ok && opcZipReadEndOfCentralDirectory(zip);
+}
+
 
 int opcZipWriteStart(opcZip *zip) {
 	return 0;
@@ -73,9 +490,9 @@ int opcZipWriteEndDirectory(opcZip *zip) {
 }
 
 int opcZipReadStart(opcZip *zip) {
-	return 0;
+	return 1;
 }
-
+/*
 int opcZipReadPartInfo(opcZip *zip, opcZipPartInfo *partInfo) {
 	return 0;
 }
@@ -135,3 +552,4 @@ int opcZipSwapPart(opcZip *zip, opcZipPartInfo *partInfo, int minGapSize) {
 int opcZipGetPhysicalPartSize(opcZipPartInfo *partInfo) {
 	return 0;
 }
+*/
