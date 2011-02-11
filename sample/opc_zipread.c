@@ -33,6 +33,7 @@
 #include <opc/opc.h>
 #include <stdio.h>
 #include <string.h>
+#include <time.h>
 
 typedef struct ZIPPARTSSTRUCT {
 	opcZipPartInfo *partInfo_array;
@@ -58,8 +59,6 @@ static int dumpStream(opcZipPartInfo *partInfo, opcZip *zip, FILE *out) {
 				len=opcZipReadDeflateStream(zip, &stream, buf, sizeof(buf));
 				if (len>0 && NULL!=out) {
 					fwrite(buf, sizeof(char), len, out);
-//					printf("%i\n", len);
-//								printf("%4i %.*s\n", len, len, buf);
 				}
 			} while (len>0);
 			opcZipCloseDeflateStream(partInfo, &stream);
@@ -72,6 +71,7 @@ static int dumpStream(opcZipPartInfo *partInfo, opcZip *zip, FILE *out) {
 
 int main( int argc, const char* argv[] )
 {
+	time_t start_time=time(NULL);
 	if (opcInitLibrary()) {
 		for(int i=1;i<argc;i++) {
 			opcZip *zip=opcZipOpenFile(_X(argv[i]), OPC_ZIP_READ);
@@ -93,6 +93,8 @@ int main( int argc, const char* argv[] )
 		}
 		opcFreeLibrary();
 	}
+	time_t end_time=time(NULL);
+	printf("time %.2lfsec\n", difftime(end_time, start_time));
 	return 0;	
 }
 
