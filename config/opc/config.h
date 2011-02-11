@@ -36,7 +36,7 @@
 
 #include <libxml/xmlstring.h>
 #include <stdio.h>
-
+#include <assert.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -48,7 +48,25 @@ extern "C" {
 #ifndef _X
 #define _X(s) BAD_CAST(s) 
 #endif
-	
+#ifndef _X2C
+#define _X2C(s) ((char*)(s))
+#endif
+
+#define OPC_ASSERT(e) assert(e)
+#define OPC_ENSURE(e) assert(e)
+
+	typedef long opc_ofs_t;
+	typedef unsigned char opc_uint8_t;
+	typedef unsigned short opc_uint16_t;
+	typedef unsigned int opc_uint32_t;
+	typedef unsigned long opc_uint64_t;
+	typedef char opc_int8_t;
+	typedef short opc_int16_t;
+	typedef int opc_int32_t;
+	typedef long opc_int64_t;
+
+#define OPC_DEFLATE_BUFFER_SIZE 1024
+
 #ifdef __cplusplus
 } /* extern "C" */
 #endif  

@@ -32,27 +32,65 @@
 
 #include <opc/opc.h>
 #include <stdio.h>
+#include <string.h>
+
+typedef struct ZIPPARTSSTRUCT {
+	opcZipPartInfo *partInfo_array;
+	int partInfo_items;
+} ZipParts;
+
+static int partInfoCallback(void *callbackCtx, opcZip *zip) {
+	ZipParts *zipParts=(ZipParts*)callbackCtx;
+	zipParts->partInfo_array=(opcZipPartInfo *)xmlRealloc(zipParts->partInfo_array, (zipParts->partInfo_items+1)*sizeof(opcZipPartInfo));
+	if (NULL!=zipParts->partInfo_array && opcZipInitPartInfo(zip, zipParts->partInfo_array+zipParts->partInfo_items)) {
+		zipParts->partInfo_items++;
+	}
+	return 1;
+}
+
+static int dumpStream(opcZipPartInfo *partInfo, opcZip *zip, FILE *out) {
+	opcZipDeflateStream stream;
+	if (opcZipInitDeflateStream(partInfo, &stream)) {
+		if (opcZipOpenDeflateStream(partInfo, &stream)) {
+			int len=0;
+			char buf[OPC_DEFLATE_BUFFER_SIZE];
+			do {
+				len=opcZipReadDeflateStream(zip, &stream, buf, sizeof(buf));
+				if (len>0 && NULL!=out) {
+					fwrite(buf, sizeof(char), len, out);
+//					printf("%i\n", len);
+//								printf("%4i %.*s\n", len, len, buf);
+				}
+			} while (len>0);
+			opcZipCloseDeflateStream(partInfo, &stream);
+		}
+	}
+	return 1;
+}
+
+
 
 int main( int argc, const char* argv[] )
 {
 	if (opcInitLibrary()) {
-		opcZip *zip=opcZipOpenFile(_X("sample.zip"), OPC_ZIP_READ);
-		opcZipReadDirectoryStart(zip);
-		opcZipPartInfo info;
-		printf("Parts in ZIP (according to directory):\n");
-		while(opcZipReadDirectoryInfo(zip, &info)) {
-			printf("%s\n", info.partName);
-			opcZipCleanupPartInfo(&info);
+		for(int i=1;i<argc;i++) {
+			opcZip *zip=opcZipOpenFile(_X(argv[i]), OPC_ZIP_READ);
+			if (NULL!=zip) {
+				ZipParts zipParts;
+				memset(&zipParts, 0, sizeof(zipParts));
+				if (opZipScan(zip, &zipParts, partInfoCallback)) {
+					printf("scan ok.\n");
+					for(int i=0;i<zipParts.partInfo_items;i++) {
+						printf("%s[%li]\n", zipParts.partInfo_array[i].partName, zipParts.partInfo_array[i].stream_ofs);
+						dumpStream(&zipParts.partInfo_array[i], zip, NULL);
+					}
+				}
+				for(int i=0;i<zipParts.partInfo_items;i++) {
+					opcZipCleanupPartInfo(zipParts.partInfo_array+i);
+				}
+				opcZipClose(zip);
+			}
 		}
-		opcZipReadDirectoryEnd(zip);
-		printf("Parts in ZIP (according to local file infos):\n");
-		opcZipReadStart(zip);
-		for(;opcZipReadPartInfo(zip, &info);opcZipReadSkipPart(zip, &info)) {
-			printf("%s\n", info.partName);
-			opcZipCleanupPartInfo(&info);
-		}
-		opcZipReadEnd(zip);		
-		opcZipClose(zip);
 		opcFreeLibrary();
 	}
 	return 0;	

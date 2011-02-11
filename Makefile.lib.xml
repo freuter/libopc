@@ -5,9 +5,27 @@
     </header>
     <header root=".">
       <file path="opc/opc.h" install="yes"/>
+      <file path="opc/container.h" install="yes"/>
+      <file path="opc/inputstream.h" install="yes"/>
+      <file path="opc/outputstream.h" install="yes"/>
+      <file path="opc/part.h" install="yes"/>
+      <file path="opc/relation.h" install="yes"/>
+      <file path="opc/type.h" install="yes"/>
+      <file path="opc/xmlreader.h" install="yes"/>
+      <file path="opc/xmlwriter.h" install="yes"/>
+      <file path="opc/zip.h" install="yes"/>
     </header>
     <source root="opc">
       <file path="opc.c"/>
+      <file path="container.c"/>
+      <file path="inputstream.c"/>
+      <file path="outputstream.c"/>
+      <file path="part.c"/>
+      <file path="relation.c"/>
+      <file path="type.c"/>
+      <file path="xmlreader.c"/>
+      <file path="xmlwriter.c"/>
+      <file path="zip.c"/>
     </source>
   </library>
   <tool name="opcmain" dep="opc" mode="c99">
