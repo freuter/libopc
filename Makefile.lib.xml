@@ -28,11 +28,13 @@
       <file path="zip.c"/>
     </source>
   </library>
+<!--
   <tool name="opcmain" dep="opc" mode="c99">
     <source root="opc">
       <file path="main.c"/>
     </source>
   </tool>
+-->
   <library name="mce" dep="opc" mode="c99">
     <header root="config">
       <file path="mce/config.h" install="yes"/>

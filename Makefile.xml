@@ -2,13 +2,5 @@
   <include path="third_party/Makefile.xml"/>
   <include path="Makefile.lib.xml"/>
   <include path="sample/Makefile.xml"/>
-<!--
-  <platform name="i686-apple-darwin10" 
-            cc="gcc"
-            ar="ar"
-            cflags="-g -fno-exceptions"
-            cflags_c="-std=c99" 
-            cflags_cpp="-fno-rtti"
-            cppflags=""/>
--->
+  <include path="Makefile.platform.xml"/>
 </project>
