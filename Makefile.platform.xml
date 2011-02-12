@@ -1,0 +1,16 @@
+<project>
+  <platform name="*-debug-gcc" 
+            cc="gcc"
+            ar="ar"
+            cflags="-g -fno-exceptions"
+            cflags_c="-std=c99" 
+            cflags_cpp="-fno-rtti"
+            cppflags=""/>
+  <platform name="*-release-gcc" 
+            cc="gcc"
+            ar="ar"
+            cflags="-O3 -fno-exceptions"
+            cflags_c="-std=c99" 
+            cflags_cpp="-fno-rtti"
+            cppflags=""/>
+</project>

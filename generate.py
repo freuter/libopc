@@ -11,6 +11,10 @@ EXT_MAPPING = { ".c": "c", ".cc": "cpp", ".cpp": "cpp", ".h": "h", ".s": "s"}
 def parseError(str):
 	print("*** error: \""+str+"\"\n");
 
+def platformCompare(a, b):
+	return cmp(a.count('*'), b.count('*'))
+
+
 def platformSubseteqTest(a, b):
 	a3=a.split("-")
 	b3=b.split("-")
@@ -415,7 +419,7 @@ def generateWin32(ctx, source):
 
 def generateMakefile(conf, ctx, filename):
 	print("generating "+filename);
-	obj_dir=os.path.join("Debug", ctx["platform"])
+	obj_dir=os.path.join("build", ctx["platform"])
 	out=open(filename, "w")
 	out.write("# Generated.\n")
 	# compiler flags
@@ -488,8 +492,16 @@ def generateMakefiles(ctx, source):
 		ctx["platform"]=platform
 		conf={ "libraries": [], "tools": [], "platforms": {} }
 		parseConfiguration(conf, source, ctx)
-		if not ctx["platform"] in conf["platforms"]:			
-			conf["platforms"][ctx["platform"]]={'cppflags': '', 'cflags_c': '-std=c99', 'cc': 'gcc', 'ar': 'ar', 'cflags_cpp': '-fno-rtti', 'cflags': '-g -fno-exceptions', 'libs': [], 'exclude': {}}
+#		if not ctx["platform"] in conf["platforms"]:			
+#			conf["platforms"][ctx["platform"]]={'cppflags': '', 'cflags_c': '-std=c99', 'cc': 'gcc', 'ar': 'ar', 'cflags_cpp': '-fno-rtti', 'cflags': '-g -fno-exceptions', 'libs': [], 'exclude': {}}
+		if ctx["platform"] not in conf["platforms"]:	
+			add=[]
+			for platform in conf["platforms"]:
+				if platformSubseteqTest(ctx["platform"], platform):
+					add.append(platform)
+			add.sort(platformCompare)
+			if len(add)>0:
+				conf["platforms"][ctx["platform"]]=conf["platforms"][add[0]]
 		if ctx["platform"] in conf["platforms"]:			
 			generateMakefile(conf, ctx, "Makefile."+ctx["platform"])
 		else:
@@ -520,7 +532,7 @@ if __name__ == "__main__":
 			ctx["config"]=os.path.join(ctx["base"], "config")
 			generateWin32(ctx, sys.argv[1])
 		else:
-			ctx["config"]=os.path.join(ctx["base"], "Debug", "config")
+			ctx["config"]=os.path.join(ctx["base"], "build", "config")
 
 	                generateMakefiles(ctx, sys.argv[1])	
 	else:
