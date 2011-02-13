@@ -5,6 +5,7 @@ import os
 import copy
 import xml.etree.ElementTree as etree
 import uuid
+import getopt
 
 EXT_MAPPING = { ".c": "c", ".cc": "cpp", ".cpp": "cpp", ".h": "h", ".s": "s"}
 
@@ -523,18 +524,43 @@ def generateMakefiles(ctx, source):
 		out.write("\t@$(MAKE) -f Makefile."+platform+"\n");
 	out.close()
 
+def usage():
+	print("usage:")
+	print(" generate [--include \"Makefile.xml\"]")
+	print("          [--config-dir \"config/\"]")
+	print("          [--dump-env \"linux-release-gcc\"]")
+
 if __name__ == "__main__":	
-	if len(sys.argv)>=2:
-		ctx={ "base": os.path.abspath(os.curdir), "root": os.path.abspath(os.curdir), "platform": "?-?-?", "platforms": [] }
-		for i in range(2, len(sys.argv)):
-			ctx["platforms"].append(sys.argv[i])
-                if 1==len(ctx["platforms"]) and platformSubseteqTest(ctx["platforms"][0], "*-msvc-*"):
-			ctx["config"]=os.path.join(ctx["base"], "config")
-			generateWin32(ctx, sys.argv[1])
-		else:
-			ctx["config"]=os.path.join(ctx["base"], "build", "config")
+	try:
+		opts, args = getopt.getopt(sys.argv[1:], "h", ["help", "include=", "config-dir=", "dump-env="])
+	except getopt.GetoptError, err:
+		# print help information and exit:
+		print str(err) # will print something like "option -a not recognized"
+		usage()
+		sys.exit(2)
+	ctx={ "base": os.path.abspath(os.curdir), "root": os.path.abspath(os.curdir), "platform": "?-?-?", "platforms": [] }
+	ctx["config"]=os.path.join(ctx["base"], "config")
+	includes=[]
+	dump_env=False
+	for o, a in opts:
+		if o in ("-h", "--help"):
+			usage()
+			sys.exit(0)
+		elif o in ("--include"):
+			includes.append(a)
+		elif o in ("--config-dir"):
+			ctx["config"]=os.path.join(ctx["base"], a)
+		elif o in ("--dump-env"):
+			args=[a]
+			dump_env=True
+	print("config="+ctx["config"])
+	print("includes="+str(includes))
 
-	                generateMakefiles(ctx, sys.argv[1])	
+	for platform in args:
+		ctx["platforms"].append(platform)
+
+	if 1==len(ctx["platforms"]) and platformSubseteqTest(ctx["platforms"][0], "win32-*-*") and 1==len(includes):
+		generateWin32(ctx, include)
 	else:
-		print("arg needed:\n Makefile.xml [platform=arm-apple-darwin]\n")
-
+		for include in includes:
+			generateMakefiles(ctx, include)

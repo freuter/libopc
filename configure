@@ -125,7 +125,7 @@ if [[ $PLATFORM =~ ^[^-]+-[^-]+-[^-]+$ ]]; then
 	if [[ $PYTHON_VERSION =~ ^"Python 2.6."[1-9][0-9]*$|^"Python 2."[7-9][0-9]*(\.[0-9]*)?$|^"Python "[3][0-9]*(\.[0-9]*(\.[0-9]*))?$ ]]; then
 		execConfigure "third_party" "zlib-1.2.5" "$ZLIBCONFIG" "$ZLIBFILES"
 		execConfigure "third_party" "libxml2-2.7.7" "$LIBXMLCONFIG" "$LIBXMLFILES"
-		$PYTHON_PATH generate.py Makefile.xml $PLATFORM
+		$PYTHON_PATH generate.py --include Makefile.xml --config-dir $BUILDDIR $PLATFORM
 		if [ $? -ne 0 ]; then
 			echo "*** error generating Makefile!"
 			exit 1
@@ -136,3 +136,4 @@ if [[ $PLATFORM =~ ^[^-]+-[^-]+-[^-]+$ ]]; then
 else
 	echo "Can not guess PLATFORM triple. It is set to \"$PLATFORM\" but it should be something like \"linux-i386-gcc\"."
 fi
+echo "Configured platform $PLATFORM."
