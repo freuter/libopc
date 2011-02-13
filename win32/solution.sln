@@ -8,13 +8,9 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "opc", "opc\opc.vcxproj", "{
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "mce", "mce\mce.vcxproj", "{662B4FEA-25F4-5790-B59F-0DAF49FBC412}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "opcmain", "opcmain\opcmain.vcxproj", "{9456AE32-6E90-5DAD-8B8D-CE91C91BE05E}"
-EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "opc_helloworld", "opc_helloworld\opc_helloworld.vcxproj", "{CFAF9971-0554-5BA5-9F12-BE0039BAB569}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "opc_zipread", "opc_zipread\opc_zipread.vcxproj", "{3AF0A8D6-3B0D-5262-8AEA-6AB2B58EA202}"
-EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "opc_zipread2", "opc_zipread2\opc_zipread2.vcxproj", "{AD076045-0412-5640-94FF-593A856B4B48}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -38,10 +34,6 @@ Global
 		{662B4FEA-25F4-5790-B59F-0DAF49FBC412}.Debug|Win32.Build.0 = Debug|Win32
 		{662B4FEA-25F4-5790-B59F-0DAF49FBC412}.Release|Win32.ActiveCfg = Release|Win32
 		{662B4FEA-25F4-5790-B59F-0DAF49FBC412}.Release|Win32.Build.0 = Release|Win32
-		{9456AE32-6E90-5DAD-8B8D-CE91C91BE05E}.Debug|Win32.ActiveCfg = Debug|Win32
-		{9456AE32-6E90-5DAD-8B8D-CE91C91BE05E}.Debug|Win32.Build.0 = Debug|Win32
-		{9456AE32-6E90-5DAD-8B8D-CE91C91BE05E}.Release|Win32.ActiveCfg = Release|Win32
-		{9456AE32-6E90-5DAD-8B8D-CE91C91BE05E}.Release|Win32.Build.0 = Release|Win32
 		{CFAF9971-0554-5BA5-9F12-BE0039BAB569}.Debug|Win32.ActiveCfg = Debug|Win32
 		{CFAF9971-0554-5BA5-9F12-BE0039BAB569}.Debug|Win32.Build.0 = Debug|Win32
 		{CFAF9971-0554-5BA5-9F12-BE0039BAB569}.Release|Win32.ActiveCfg = Release|Win32
@@ -50,10 +42,6 @@ Global
 		{3AF0A8D6-3B0D-5262-8AEA-6AB2B58EA202}.Debug|Win32.Build.0 = Debug|Win32
 		{3AF0A8D6-3B0D-5262-8AEA-6AB2B58EA202}.Release|Win32.ActiveCfg = Release|Win32
 		{3AF0A8D6-3B0D-5262-8AEA-6AB2B58EA202}.Release|Win32.Build.0 = Release|Win32
-		{AD076045-0412-5640-94FF-593A856B4B48}.Debug|Win32.ActiveCfg = Debug|Win32
-		{AD076045-0412-5640-94FF-593A856B4B48}.Debug|Win32.Build.0 = Debug|Win32
-		{AD076045-0412-5640-94FF-593A856B4B48}.Release|Win32.ActiveCfg = Release|Win32
-		{AD076045-0412-5640-94FF-593A856B4B48}.Release|Win32.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -34,7 +34,7 @@
 <ItemDefinitionGroup>
 <ClCompile>
 <PreprocessorDefinitions>WIN32;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-<AdditionalIncludeDirectories>..\..\config\x86-msvc-win32\zlib-1.2.5;..\..\third_party\zlib-1.2.5;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+<AdditionalIncludeDirectories>..\..\config\win32-debug-msvc\zlib-1.2.5;..\..\third_party\zlib-1.2.5;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
 </ClCompile>
 </ItemDefinitionGroup>
 <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
@@ -51,7 +51,7 @@
 </ClCompile>
 </ItemDefinitionGroup>
 <ItemGroup>
-  <ClInclude Include="..\..\config\x86-msvc-win32\zlib-1.2.5\zconf.h"/>
+  <ClInclude Include="..\..\config\win32-debug-msvc\zlib-1.2.5\zconf.h"/>
   <ClInclude Include="..\..\third_party\zlib-1.2.5\crc32.h"/>
   <ClInclude Include="..\..\third_party\zlib-1.2.5\deflate.h"/>
   <ClInclude Include="..\..\third_party\zlib-1.2.5\inffast.h"/>

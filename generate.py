@@ -591,7 +591,7 @@ if __name__ == "__main__":
 		ctx["platforms"].append(platform)
 
 	if 1==len(ctx["platforms"]) and platformSubseteqTest(ctx["platforms"][0], "win32-*-*") and 1==len(includes):
-		generateWin32(ctx, include)
+		generateWin32(ctx, includes[0])
 	else:
 		for include in includes:
 			generateMakefiles(ctx, include)
