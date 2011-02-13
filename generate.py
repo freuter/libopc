@@ -140,6 +140,7 @@ def parsePlatform(conf, node, ctx):
 		platform={ "exclude": {}, "libs": [] }
 		setAttr(platform, node, "cc")
 		setAttr(platform, node, "ar")
+		setAttr(platform, node, "ld")
 		setAttr(platform, node, "cflags")
 		setAttr(platform, node, "cflags_c")
 		setAttr(platform, node, "cflags_cpp")
@@ -172,7 +173,7 @@ def parseTargets(conf, node, ctx):
 			parseError("unhanded element: "+child.tag)
 
 def parseConfiguration(conf, filename, ctx):
-	print("parsing "+filename)
+	sys.stderr.write("parsing "+filename+"\n")
 	tree=etree.parse(filename)
 	if tree is not None:
 		parseTargets(conf, tree.getroot(), ctx)
@@ -248,7 +249,7 @@ def generateVCXPROJ(conf, ctx, lib, type):
 	filename=os.path.abspath("win32\\"+lib["name"]+"\\"+lib["name"]+".vcxproj")
 	filepath=os.path.dirname(filename)
 	prj_uuid=lib["uuid"]
-	print "generating "+filename;
+	sys.stderr.write("generating "+filename+"\n")
 	try:
 		os.makedirs(os.path.dirname(filename))
 	except OSError:
@@ -390,12 +391,24 @@ def writeProject(out, solution_uuid, lib):
 	out.write("Project(\"{"+str(solution_uuid)+"}\") = \""+lib["name"]+"\", \""+lib["name"]+"\\"+lib["name"]+".vcxproj\", \"{"+str(lib["uuid"])+"}\"\n")
 	out.write("EndProject\n")
 
+def generateConfiguration(ctx, includes, platform):
+	conf={ "libraries": [], "tools": [], "platforms": {} }
+	ctx["platform"]=platform
+	for include in includes:
+		parseConfiguration(conf, include, ctx)
+	if ctx["platform"] not in conf["platforms"]:	
+		add=[]
+		for platform in conf["platforms"]:
+			if platformSubseteqTest(ctx["platform"], platform):
+				add.append(platform)
+		add.sort(platformCompare)
+		if len(add)>0:
+			conf["platforms"][ctx["platform"]]=conf["platforms"][add[0]]
+	return conf
 
 def generateWin32(ctx, source):
 	platform=ctx["platforms"][0]
-	ctx["platform"]=platform
-	conf={ "libraries": [], "tools": [], "platforms": {} }
-	parseConfiguration(conf, source, ctx)
+	conf=generateConfiguration(ctx, [source], platform)
 #	print conf
         print "generate win32 project"
 	for lib in conf["libraries"]:
@@ -419,7 +432,7 @@ def generateWin32(ctx, source):
 	out.close()
 
 def generateMakefile(conf, ctx, filename):
-	print("generating "+filename);
+	sys.stderr.write("generating "+filename)
 	obj_dir=os.path.join("build", ctx["platform"])
 	out=open(filename, "w")
 	out.write("# Generated.\n")
@@ -490,19 +503,7 @@ def generateMakefile(conf, ctx, filename):
 
 def generateMakefiles(ctx, source):
 	for platform in ctx["platforms"]:
-		ctx["platform"]=platform
-		conf={ "libraries": [], "tools": [], "platforms": {} }
-		parseConfiguration(conf, source, ctx)
-#		if not ctx["platform"] in conf["platforms"]:			
-#			conf["platforms"][ctx["platform"]]={'cppflags': '', 'cflags_c': '-std=c99', 'cc': 'gcc', 'ar': 'ar', 'cflags_cpp': '-fno-rtti', 'cflags': '-g -fno-exceptions', 'libs': [], 'exclude': {}}
-		if ctx["platform"] not in conf["platforms"]:	
-			add=[]
-			for platform in conf["platforms"]:
-				if platformSubseteqTest(ctx["platform"], platform):
-					add.append(platform)
-			add.sort(platformCompare)
-			if len(add)>0:
-				conf["platforms"][ctx["platform"]]=conf["platforms"][add[0]]
+		conf=generateConfiguration(ctx, [source], platform)
 		if ctx["platform"] in conf["platforms"]:			
 			generateMakefile(conf, ctx, "Makefile."+ctx["platform"])
 		else:
@@ -524,15 +525,30 @@ def generateMakefiles(ctx, source):
 		out.write("\t@$(MAKE) -f Makefile."+platform+"\n");
 	out.close()
 
+def dumpEnvironment(ctx, includes, platform):
+	conf=generateConfiguration(ctx, includes, platform)
+	if platform in conf["platforms"]:			
+		p=conf["platforms"][platform]
+#		print(str(p))
+		sys.stdout.write("export CC=\""+p["cc"]+"\" "+
+			 "export AR=\""+p["ar"]+"\" "+
+			 "export LD=\""+p["ld"]+"\" "
+			)
+	else:
+		parseError("platform "+platform+" is unknown.")
+		print("available platforms:");
+		for platform in conf["platforms"]:
+			print(platform)	
+
 def usage():
 	print("usage:")
 	print(" generate [--include \"Makefile.xml\"]")
 	print("          [--config-dir \"config/\"]")
-	print("          [--dump-env \"linux-release-gcc\"]")
+	print("          [--print-env \"linux-release-gcc\"]")
 
 if __name__ == "__main__":	
 	try:
-		opts, args = getopt.getopt(sys.argv[1:], "h", ["help", "include=", "config-dir=", "dump-env="])
+		opts, args = getopt.getopt(sys.argv[1:], "h", ["help", "include=", "config-dir=", "print-env="])
 	except getopt.GetoptError, err:
 		# print help information and exit:
 		print str(err) # will print something like "option -a not recognized"
@@ -541,7 +557,7 @@ if __name__ == "__main__":
 	ctx={ "base": os.path.abspath(os.curdir), "root": os.path.abspath(os.curdir), "platform": "?-?-?", "platforms": [] }
 	ctx["config"]=os.path.join(ctx["base"], "config")
 	includes=[]
-	dump_env=False
+	dump_env=[]
 	for o, a in opts:
 		if o in ("-h", "--help"):
 			usage()
@@ -550,11 +566,9 @@ if __name__ == "__main__":
 			includes.append(a)
 		elif o in ("--config-dir"):
 			ctx["config"]=os.path.join(ctx["base"], a)
-		elif o in ("--dump-env"):
-			args=[a]
-			dump_env=True
-	print("config="+ctx["config"])
-	print("includes="+str(includes))
+		elif o in ("--print-env"):
+			args=[]
+			dump_env=[a]
 
 	for platform in args:
 		ctx["platforms"].append(platform)
@@ -564,3 +578,6 @@ if __name__ == "__main__":
 	else:
 		for include in includes:
 			generateMakefiles(ctx, include)
+
+	for platform in dump_env:
+		dumpEnvironment(ctx, includes, platform)
