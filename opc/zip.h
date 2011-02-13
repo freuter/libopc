@@ -53,7 +53,7 @@ extern "C" {
 	} opcZipPartInfo;
 
 	typedef struct OPC_ZIPDEFLATESTREAM_STRUCT {
-		opc_uint8_t buf[1024];
+		opc_uint8_t buf[OPC_DEFLATE_BUFFER_SIZE];
 		z_stream stream;
 		opc_ofs_t stream_ofs;
 		opc_uint16_t compression_method;
