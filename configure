@@ -3,6 +3,7 @@
 OS=`uname -s | tr '[:upper:]' '[:lower:]'`
 TARGET=debug
 TOOLCHAIN=gcc
+HOST=""
 
 while test $# -ge 1
 do
@@ -14,12 +15,14 @@ case "$1" in
          echo '           [--os="OS", e.g. --os="linux"]'
          echo '           [--target="TARGET", e.g. --target="release"]'
          echo '           [--toolchain="TOOLCHAIN", e.g. --toolchain="clang"]'
+         echo '           [--configure-host="HOST", pass the --host options to third party configure scripts]'
 		exit 0 ;;
 	--with-python=*) PYTHON_PATH=`echo $1 | sed 's/.*=//'`; shift ;;
 	--platform=*) PLATFORM=`echo $1 | sed 's/.*=//'`; shift ;;
 	--target=*) TARGET=`echo $1 | sed 's/.*=//'`; shift ;;
 	--toolchain=*) TOOLCHAIN=`echo $1 | sed 's/.*=//'`; shift ;;
 	--os=*) OS=`echo $1 | sed 's/.*=//'`; shift ;;
+	--configure-host=*) HOST="--host=`echo $1 | sed 's/.*=//'`"; shift ;;
 	*) echo "unknown option: $1"; echo "$0 --help for help"; exit 1 ;;
 esac
 done
@@ -65,6 +68,7 @@ execConfigure() {
 	PACKAGE=$2
 	OPTIONS=$3
 	FILES=$4
+	OPT_HOST=$5
 	echo "Configuring $SRCDIR/$PACKAGE"
 	mkdir -p "$BUILDDIR"
 	rm -rf "$BUILDDIR/$PACKAGE"
@@ -73,10 +77,10 @@ execConfigure() {
 	if [ -d "$BUILDDIR/$PACKAGE" ]; then
 		pushd "$BUILDDIR/$PACKAGE" > /dev/null
 		if [ -x "./configure" ]; then
-			./configure $OPTIONS
+			./configure $OPT_HOST $OPTIONS
 			if [ $? -ne 0 ]; then
 				popd -n > /dev/null
-				echo "*** error running \"./configure $OPTIONS\" in \"$BUILDDIR/$PACKAGE\""
+				echo "*** error running \"./configure $OPT_HOST $OPTIONS\" in \"$BUILDDIR/$PACKAGE\""
 				echo "*** please fix this first!"
 				exit 1
 			fi
@@ -125,8 +129,8 @@ if [[ $PLATFORM =~ ^[^-]+-[^-]+-[^-]+$ ]]; then
 	if [[ $PYTHON_VERSION =~ ^"Python 2.6."[1-9][0-9]*$|^"Python 2."[7-9][0-9]*(\.[0-9]*)?$|^"Python "[3][0-9]*(\.[0-9]*(\.[0-9]*))?$ ]]; then
 		FLAGS=`$PYTHON_PATH generate.py --include Makefile.platform.xml --config-dir $BUILDDIR --print-env $PLATFORM`
 		eval $FLAGS
-		execConfigure "third_party" "zlib-1.2.5" "$ZLIBCONFIG" "$ZLIBFILES"
-		execConfigure "third_party" "libxml2-2.7.7" "$LIBXMLCONFIG" "$LIBXMLFILES"
+		execConfigure "third_party" "zlib-1.2.5" "$ZLIBCONFIG" "$ZLIBFILES" ""
+		execConfigure "third_party" "libxml2-2.7.7" "$LIBXMLCONFIG" "$LIBXMLFILES" "$HOST"
 		$PYTHON_PATH generate.py --include Makefile.xml --config-dir $BUILDDIR $PLATFORM
 		if [ $? -ne 0 ]; then
 			echo "*** error generating Makefile!"
@@ -139,3 +143,4 @@ else
 	echo "Can not guess PLATFORM triple. It is set to \"$PLATFORM\" but it should be something like \"linux-i386-gcc\"."
 fi
 echo "Configured platform $PLATFORM."
+echo "Executables will be generated in \"build/$PLATFORM\"."
