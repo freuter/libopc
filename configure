@@ -15,14 +15,12 @@ case "$1" in
          echo '           [--os="OS", e.g. --os="linux"]'
          echo '           [--target="TARGET", e.g. --target="release"]'
          echo '           [--toolchain="TOOLCHAIN", e.g. --toolchain="clang"]'
-         echo '           [--configure-host="HOST", pass the --host options to third party configure scripts]'
 		exit 0 ;;
 	--with-python=*) PYTHON_PATH=`echo $1 | sed 's/.*=//'`; shift ;;
 	--platform=*) PLATFORM=`echo $1 | sed 's/.*=//'`; shift ;;
 	--target=*) TARGET=`echo $1 | sed 's/.*=//'`; shift ;;
 	--toolchain=*) TOOLCHAIN=`echo $1 | sed 's/.*=//'`; shift ;;
 	--os=*) OS=`echo $1 | sed 's/.*=//'`; shift ;;
-	--configure-host=*) HOST="--host=`echo $1 | sed 's/.*=//'`"; shift ;;
 	*) echo "unknown option: $1"; echo "$0 --help for help"; exit 1 ;;
 esac
 done
@@ -129,8 +127,13 @@ if [[ $PLATFORM =~ ^[^-]+-[^-]+-[^-]+$ ]]; then
 	if [[ $PYTHON_VERSION =~ ^"Python 2.6."[1-9][0-9]*$|^"Python 2."[7-9][0-9]*(\.[0-9]*)?$|^"Python "[3][0-9]*(\.[0-9]*(\.[0-9]*))?$ ]]; then
 		FLAGS=`$PYTHON_PATH generate.py --include Makefile.platform.xml --config-dir $BUILDDIR --print-env $PLATFORM`
 		eval $FLAGS
+#		echo $FLAGS
+		CONFIG_OPT=""
+		if [ x"" != x$HOST ]; then
+			CONFIG_OPT="--host=$HOST"
+		fi
 		execConfigure "third_party" "zlib-1.2.5" "$ZLIBCONFIG" "$ZLIBFILES" ""
-		execConfigure "third_party" "libxml2-2.7.7" "$LIBXMLCONFIG" "$LIBXMLFILES" "$HOST"
+		execConfigure "third_party" "libxml2-2.7.7" "$LIBXMLCONFIG" "$LIBXMLFILES" "$CONFIG_OPT"
 		$PYTHON_PATH generate.py --include Makefile.xml --config-dir $BUILDDIR $PLATFORM
 		if [ $? -ne 0 ]; then
 			echo "*** error generating Makefile!"

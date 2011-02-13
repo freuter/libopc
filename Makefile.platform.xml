@@ -29,19 +29,22 @@
             ld="/Developer/Platforms/iPhoneSimulator.platform/Developer/usr/bin/ld"
             cflags="-g -arch i386 -fno-exceptions"
             cflags_c="-std=c99" cflags_cpp="-fno-rtti"
-            cppflags="-D__IPHONE_OS_VERSION_MIN_REQUIRED=30200 -isysroot /Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator4.0.sdk" />
+            cppflags="-D__IPHONE_OS_VERSION_MIN_REQUIRED=30200 -isysroot /Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator4.0.sdk"
+            host="i386-apple-darwin10" />
   <platform name="ios4-release-gcc"	
             cc="/Developer/Platforms/iPhoneOS.platform/Developer/usr/bin/gcc-4.2"
             ar="/Developer/Platforms/iPhoneOS.platform/Developer/usr/bin/ar"
             ld="/Developer/Platforms/iPhoneOS.platform/Developer/usr/bin/ld"
             cflags="-g -arch armv6 -fno-exceptions"
             cflags_c="-std=c99" cflags_cpp="-fno-rtti"
-            cppflags="-D__IPHONE_OS_VERSION_MIN_REQUIRED=30200 -isysroot /Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS4.2.sdk" />
+            cppflags="-D__IPHONE_OS_VERSION_MIN_REQUIRED=30200 -isysroot /Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS4.2.sdk" 
+            host="arm-apple-darwin10"/>
   <platform name="android9-debug-gcc"	
             cc="/Users/flr/Documents/tmp/android-ndk-r5/toolchains/arm-linux-androideabi-4.4.3/prebuilt/darwin-x86/bin/arm-linux-androideabi-gcc"
             ar="/Users/flr/Documents/tmp/android-ndk-r5/toolchains/arm-linux-androideabi-4.4.3/prebuilt/darwin-x86/bin/arm-linux-androideabi-ar"
             ld="/Users/flr/Documents/tmp/android-ndk-r5/toolchains/arm-linux-androideabi-4.4.3/prebuilt/darwin-x86/bin/arm-linux-androideabi-ld"
             cppflags="--sysroot /Users/flr/Documents/tmp/android-ndk-r5/platforms/android-9/arch-arm"
             cflags="-fno-exceptions -mthumb"
-            cflags_c="-std=c99" cflags_cpp="-fno-rtti" />
+            cflags_c="-std=c99" cflags_cpp="-fno-rtti" 
+            host="arm-android-linux" />
 </project>

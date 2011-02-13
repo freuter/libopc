@@ -145,6 +145,7 @@ def parsePlatform(conf, node, ctx):
 		setAttr(platform, node, "cflags_c")
 		setAttr(platform, node, "cflags_cpp")
 		setAttr(platform, node, "cppflags")
+		setAttr(platform, node, "host")
 		if "exclude" in node.attrib:
 			for prj in node.attrib["exclude"].split(" "):
 				platform["exclude"][prj]=None
@@ -545,11 +546,15 @@ def dumpEnvironment(ctx, includes, platform):
 	if platform in conf["platforms"]:			
 		p=conf["platforms"][platform]
 #		print(str(p))
+		host=""
+		if "host" in p:
+			host="HOST=\""+p["host"]+"\" "
 		sys.stdout.write("export CC=\""+p["cc"]+"\" "+
 			 "export AR=\""+p["ar"]+"\" "+
 			 "export LD=\""+p["ld"]+"\" "
 			 "export CPPFLAGS=\""+p["cppflags"]+"\" "
-			 "export CFLAGS=\""+p["cflags"]+"\" "
+			 "export CFLAGS=\""+p["cflags"]+"\" "+
+			 host
 			)
 	else:
 		parseError("platform "+platform+" is unknown.")
