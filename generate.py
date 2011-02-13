@@ -228,6 +228,16 @@ def generateOBJS(conf, ctx, lib, out, obj_dir, cppflags):
 		objs.append(rel_obj)
 	return objs
 
+def generateDEPS(conf, ctx, lib, out, obj_dir, cppflags, filename):
+	for file in lib["source"]["files"]:
+		rel_source=os.path.relpath(file["path"], ctx["base"])
+		specific=""
+		if file["ext"]=="c":
+			specific ="$(CFLAGS_C) "
+		elif file["ext"]=="cpp":
+			specific ="$(CFLAGS_CPP) "
+		out.write("\tmakedepend -a -f"+filename+" $(CPPFLAGS)"+cppflags+" "+ rel_source+"\n")
+
 def generateCPPFLAGS(conf, ctx, lib):
 	cppflags=""
 	for define in lib["defines"]:
@@ -445,7 +455,7 @@ def generateMakefile(conf, ctx, filename):
 	out.write("CFLAGS_CPP="+conf["platforms"][platform]["cflags_cpp"]+"\n")
 	out.write("CPPFLAGS="+conf["platforms"][platform]["cppflags"]+"\n");
 	# generate phony targets
-	out.write(".phony: all clean tools")
+	out.write(".phony: all clean tools dep")
 	for lib in conf["libraries"]:
 		out.write(" "+lib["name"])
 	for tool in conf["tools"]:
@@ -499,6 +509,11 @@ def generateMakefile(conf, ctx, filename):
 #		out.write("\t@echo "+tool["name"]+" built successfully.\n")
 	out.write("clean:\n")
 	out.write("\t@rm -rf "+obj_dir+"\n")
+	out.write("dep:\n")
+	for lib in conf["libraries"]:
+		generateDEPS(conf, ctx, lib, out, obj_dir, generateCPPFLAGS(conf, ctx, lib), filename)
+	for tool in conf["tools"]:
+		generateDEPS(conf, ctx, tool, out, obj_dir, generateCPPFLAGS(conf, ctx, tool), filename)
 	out.close()
 
 def generateMakefiles(ctx, source):
@@ -533,6 +548,8 @@ def dumpEnvironment(ctx, includes, platform):
 		sys.stdout.write("export CC=\""+p["cc"]+"\" "+
 			 "export AR=\""+p["ar"]+"\" "+
 			 "export LD=\""+p["ld"]+"\" "
+			 "export CPPFLAGS=\""+p["cppflags"]+"\" "
+			 "export CFLAGS=\""+p["cflags"]+"\" "
 			)
 	else:
 		parseError("platform "+platform+" is unknown.")
