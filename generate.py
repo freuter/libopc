@@ -531,7 +531,7 @@ def generateToolMakefile(conf, ctx, tool, filename, build_dir, src_dir):
 		out.write(" $(BUILD_DIR)/lib"+ dep +".a")
 	out.write("\n")
 	out.write("$(BUILD_DIR)/"+tool["name"]+": $(objs_"+tool["name"]+") $("+tool["name"]+"_ld)\n")			
-	out.write("\t$(CC) -o $(BUILD_DIR)/"+tool["name"]+" $(objs_"+tool["name"]+") $("+tool["name"]+"_ld)\n")
+	out.write("\t$(CC) $(CFLAGS) $(CPPFLAGS) -o $(BUILD_DIR)/"+tool["name"]+" $(objs_"+tool["name"]+") $("+tool["name"]+"_ld)\n")
 	out.write("\n")
 	out.write("clean:\n")
 	out.write("\trm -f $(BUILD_DIR)/"+tool["name"]+" $(objs_"+tool["name"]+")\n")
