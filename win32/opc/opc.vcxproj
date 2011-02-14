@@ -33,7 +33,7 @@
 <PropertyGroup />
 <ItemDefinitionGroup>
 <ClCompile>
-<PreprocessorDefinitions>WIN32;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+<PreprocessorDefinitions>WIN32;LIBXML_STATIC;%(PreprocessorDefinitions)</PreprocessorDefinitions>
 <AdditionalIncludeDirectories>..\..\config;..\..;..\..\config\win32-debug-msvc\zlib-1.2.5;..\..\third_party\zlib-1.2.5;..\..\config\win32-debug-msvc\libxml2-2.7.7;..\..\third_party\libxml2-2.7.7\include\libxml;..\..\third_party\libxml2-2.7.7\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
 <CompileAs>CompileAsCpp</CompileAs>
 </ClCompile>
