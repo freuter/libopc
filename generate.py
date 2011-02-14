@@ -212,6 +212,13 @@ def gatherIncludeDirs(conf, ctx, deps):
 #	print ret
 	return ret
 
+def gatherSources(conf, ctx, lib):
+	sources=[]
+	for file in lib["source"]["files"]:
+		rel_source=os.path.relpath(file["path"], ctx["base"])
+		sources.append(rel_source)
+	return sources
+
 def generateOBJS(conf, ctx, lib, out, obj_dir, cppflags):
 	objs=[]
 	for file in lib["source"]["files"]:
@@ -239,7 +246,7 @@ def generateDEPS(conf, ctx, lib, out, obj_dir, cppflags, filename):
 			specific ="$(CFLAGS_CPP) "
 		out.write("\tmakedepend -a -f"+filename+" $(CPPFLAGS)"+cppflags+" "+ rel_source+"\n")
 
-def generateCPPFLAGS(conf, ctx, lib):
+def generateCPPFLAGS(conf, ctx, lib, build_dir):
 	cppflags=""
 	for define in lib["defines"]:
 		if lib["defines"][define] is None:
@@ -248,11 +255,15 @@ def generateCPPFLAGS(conf, ctx, lib):
 			cppflags=cppflags+" -D"+define+"="+lib["defines"][define]
 	for dir in lib["header"]["includes"]:
 		abs_dir=os.path.abspath(dir)
-		rel_dir=os.path.relpath(abs_dir, ctx["base"])
+		rel_dir=os.path.relpath(abs_dir, os.path.join(ctx["base"], build_dir))
+#		print("abs_dir="+str(abs_dir)+" build_dir="+os.path.join(ctx["base"], build_dir)+" rel_dir="+str(rel_dir))
 		cppflags=cppflags+" -I"+rel_dir
 	dep_dirs=gatherIncludeDirs(conf, ctx, depClosure(conf, lib["deps"]))
 	for dir in dep_dirs:
-		cppflags=cppflags+" -I"+dir
+		abs_dir=os.path.abspath(dir)
+		rel_dir=os.path.relpath(abs_dir, os.path.join(ctx["base"], build_dir))
+#		print("abs_dir="+str(abs_dir)+" build_dir="+os.path.join(ctx["base"], build_dir)+" rel_dir="+str(rel_dir))
+		cppflags=cppflags+" -I"+rel_dir
 	return cppflags
 
 
@@ -442,12 +453,31 @@ def generateWin32(ctx, source):
 	out.write("\n")
 	out.close()
 
-def generateMakefile(conf, ctx, filename):
-	sys.stderr.write("generating "+filename)
-	obj_dir=os.path.join("build", ctx["platform"])
-	out=open(filename, "w")
-	out.write("# Generated.\n")
-	# compiler flags
+def writeSourceRules(conf, ctx, out, lib, build_dir):
+	dirs={}
+	sources=gatherSources(conf, ctx, lib)
+	out.write("objs_"+lib["name"]+"=\\\n")
+	for source in sources:
+		out.write("     $(BUILD_DIR)/"+os.path.splitext(source)[0]+".o\\\n")
+		dirs[os.path.dirname(source)]=None
+	out.write("     \n")
+	out.write(lib["name"]+"_includes="+generateCPPFLAGS(conf, ctx, lib, build_dir)+"\n")
+	out.write("\n")
+	includes="$("+lib["name"]+"_includes)"
+	for dir in dirs:
+		for ext in EXT_MAPPING:
+			if EXT_MAPPING[ext]=='c':
+				out.write("$(BUILD_DIR)/"+dir+"/%.o: $(SRC_DIR)/"+dir+"/%"+ext+"\n")
+				out.write("\t@mkdir -p $(dir $@)\n")
+				out.write("\t$(CC) $(CFLAGS) $(CFLAGS_C) $(CPPFLAGS) "+includes+" -c \"$<\" -o \"$@\"\n")
+				out.write("\n")
+			elif EXT_MAPPING[ext]=='cpp':
+				out.write("$(BUILD_DIR)/"+dir+"/%.o: $(SRC_DIR)/"+dir+"/%"+ext+"\n")
+				out.write("\t@mkdir -p $(dir $@)\n")
+				out.write("\t$(CC) $(CFLAGS) $(CFLAGS_CPP) $(CPPFLAGS) "+includes+" -c \"$<\" -o \"$@\"\n")
+				out.write("\n")
+
+def writeMakefileFlags(conf, ctx, out):
 	platform=ctx["platform"]
 	out.write("CC="+conf["platforms"][platform]["cc"]+"\n");
 	out.write("AR="+conf["platforms"][platform]["ar"]+"\n");
@@ -455,6 +485,67 @@ def generateMakefile(conf, ctx, filename):
 	out.write("CFLAGS_C="+conf["platforms"][platform]["cflags_c"]+"\n")
 	out.write("CFLAGS_CPP="+conf["platforms"][platform]["cflags_cpp"]+"\n")
 	out.write("CPPFLAGS="+conf["platforms"][platform]["cppflags"]+"\n");
+
+def generateLibraryMakefile(conf, ctx, lib, filename, build_dir, src_dir):
+	sys.stderr.write("generating "+filename+"\n")
+	if not os.path.exists(os.path.dirname(filename)):
+    		os.makedirs(os.path.dirname(filename))
+	out=open(filename, "w")
+	out.write("# Generated.\n")
+	# compiler flags
+	writeMakefileFlags(conf, ctx, out)
+	out.write("BUILD_DIR=.\n")
+	out.write("SRC_DIR="+src_dir+"\n")
+	out.write("\n")
+	out.write(".phony: all clean\n")
+	out.write("\n")
+	out.write("# library "+lib["name"]+"\n")
+	out.write("all: $(BUILD_DIR)/lib"+lib["name"]+".a\n\n")
+	writeSourceRules(conf, ctx, out, lib, build_dir)
+	out.write("$(BUILD_DIR)/lib"+lib["name"]+".a: $(objs_"+lib["name"]+")\n")
+	out.write("\t$(AR) -rcs $(BUILD_DIR)/lib"+lib["name"]+".a $(objs_"+lib["name"]+")\n")
+	out.write("\n")
+	out.write("clean:\n")
+	out.write("\trm -f $(BUILD_DIR)/lib"+lib["name"]+".a $(objs_"+lib["name"]+")\n")
+	out.close()
+
+def generateToolMakefile(conf, ctx, tool, filename, build_dir, src_dir):
+	sys.stderr.write("generating "+filename+"\n")
+	if not os.path.exists(os.path.dirname(filename)):
+    		os.makedirs(os.path.dirname(filename))
+	out=open(filename, "w")
+	out.write("# Generated.\n")
+	# compiler flags
+	writeMakefileFlags(conf, ctx, out)
+	out.write("BUILD_DIR=.\n")
+	out.write("SRC_DIR="+src_dir+"\n")
+	out.write("\n")
+	out.write(".phony: all clean\n")
+	out.write("\n")
+	out.write("# tool "+tool["name"]+"\n")
+	out.write("all: $(BUILD_DIR)/"+ tool["name"]+"\n\n")
+	writeSourceRules(conf, ctx, out, tool, build_dir)
+	out.write(tool["name"]+"_ld=")
+	deps=depClosure(conf, tool["deps"])
+	for dep in deps:
+		out.write(" $(BUILD_DIR)/lib"+ dep +".a")
+	out.write("\n")
+	out.write("$(BUILD_DIR)/"+tool["name"]+": $(objs_"+tool["name"]+") $("+tool["name"]+"_ld)\n")			
+	out.write("\t$(CC) -o $(BUILD_DIR)/"+tool["name"]+" $(objs_"+tool["name"]+") $("+tool["name"]+"_ld)\n")
+	out.write("\n")
+	out.write("clean:\n")
+	out.write("\trm -f $(BUILD_DIR)/"+tool["name"]+" $(objs_"+tool["name"]+")\n")
+
+
+def generateMakefile(conf, ctx):
+	obj_dir=os.path.join("build", ctx["platform"])
+	filename=os.path.join(obj_dir, "Makefile")
+	sys.stderr.write("generating "+filename+"\n")
+	if not os.path.exists(os.path.dirname(filename)):
+    		os.makedirs(os.path.dirname(filename))
+	out=open(filename, "w")
+	out.write("# Generated.\n")
+
 	# generate phony targets
 	out.write(".phony: all clean tools dep")
 	for lib in conf["libraries"]:
@@ -472,63 +563,55 @@ def generateMakefile(conf, ctx, filename):
 	for tool in conf["tools"]:
 		out.write(" "+tool["name"])
 	out.write("\n")
+
 	# generate libs
 	for lib in conf["libraries"]:
-		objs= generateOBJS(conf, ctx, lib, out, obj_dir, generateCPPFLAGS(conf, ctx, lib))
-		libname=os.path.join(obj_dir, "lib"+lib["name"]+".a")
-		out.write(libname+":")
-		for obj in objs:
-			out.write(" "+obj)
+		makefile=os.path.join(obj_dir, "Makefile."+lib["name"])
+		generateLibraryMakefile(conf, ctx, lib, makefile, obj_dir, os.path.join("..", ".."))
+		out.write(lib["name"]+":")
+		deps=depClosure(conf, lib["deps"])
+		for dep in deps:
+			out.write(" "+dep)
 		out.write("\n")
-		out.write("\t@$(AR) -rcs "+libname)
-		for obj in objs:
-			out.write(" "+obj)
-		out.write("\n")
-		out.write(lib["name"]+": "+ libname+"\n")
-#		out.write("\t@echo "+lib["name"]+" built successfully.\n")
+		out.write("\t$(MAKE) -f "+"Makefile."+lib["name"]+"\n\n")
+	
 	# generate tools
 	for tool in conf["tools"]:
-		deps=depClosure(conf, tool["deps"])
-		objs=generateOBJS(conf, ctx, tool, out, obj_dir, generateCPPFLAGS(conf, ctx, tool))
-		toolname=os.path.join(obj_dir, tool["name"])
-		out.write(toolname+":")
-		for obj in objs:
-			out.write(" "+obj)
+		makefile=os.path.join(obj_dir, "Makefile."+tool["name"])
+		generateToolMakefile(conf, ctx, tool, makefile, obj_dir, os.path.join("..", ".."))
+		out.write(tool["name"]+":")
+		deps=depClosure(conf, lib["deps"])
 		for dep in deps:
-			libname=os.path.join(obj_dir, "lib"+ dep +".a")
-			out.write(" "+libname)
+			out.write(" "+dep)
 		out.write("\n")
-		out.write("\t@mkdir -p "+os.path.dirname(toolname)+"\n")
-		out.write("\t$(CC) $(CFLAGS) $(CPPFLAGS) -lstdc++ -lm -o "+toolname)
-		for obj in objs:
-			out.write(" "+obj)
-		for dep in deps:
-			libname=os.path.join(obj_dir, "lib"+ dep +".a")
-			out.write(" "+libname)
-		out.write("\n")
-		out.write(tool["name"]+": "+toolname+"\n")
-#		out.write("\t@echo "+tool["name"]+" built successfully.\n")
+		out.write("\t$(MAKE) -f "+"Makefile."+ tool["name"]+"\n\n")
+
 	out.write("clean:\n")
-	out.write("\t@rm -rf "+obj_dir+"\n")
-	out.write("dep:\n")
 	for lib in conf["libraries"]:
-		generateDEPS(conf, ctx, lib, out, obj_dir, generateCPPFLAGS(conf, ctx, lib), filename)
+		out.write("\t$(MAKE) -f "+"Makefile."+lib["name"]+" clean\n")
 	for tool in conf["tools"]:
-		generateDEPS(conf, ctx, tool, out, obj_dir, generateCPPFLAGS(conf, ctx, tool), filename)
+		out.write("\t$(MAKE) -f "+"Makefile."+tool["name"]+" clean\n")
+
+
+#	out.write("dep:\n")
+#	for lib in conf["libraries"]:
+#		generateDEPS(conf, ctx, lib, out, obj_dir, generateCPPFLAGS(conf, ctx, lib), filename)
+#	for tool in conf["tools"]:
+#		generateDEPS(conf, ctx, tool, out, obj_dir, generateCPPFLAGS(conf, ctx, tool), filename)
 	out.close()
 
 def generateMakefiles(ctx, source):
 	for platform in ctx["platforms"]:
 		conf=generateConfiguration(ctx, [source], platform)
 		if ctx["platform"] in conf["platforms"]:			
-			generateMakefile(conf, ctx, "Makefile."+ctx["platform"])
+			generateMakefile(conf, ctx)
 		else:
 			parseError("platform "+ctx["platform"]+" is unknown.")
 			print("available platforms:");
 			for platform in conf["platforms"]:
 				print(platform)
 	out=open("Makefile", "w")
-	out.write(".phony: all");
+	out.write(".phony: all clean");
 	for platform in ctx["platforms"]:
 		out.write(" "+platform);
 	out.write("\n");
@@ -537,8 +620,11 @@ def generateMakefiles(ctx, source):
 		out.write(" "+platform);
 	out.write("\n");
 	for platform in ctx["platforms"]:
-		out.write(platform+": Makefile."+platform+"\n");
-		out.write("\t@$(MAKE) -f Makefile."+platform+"\n");
+		out.write(platform+": build"+os.sep+platform+os.sep+"Makefile\n");
+		out.write("\t@$(MAKE) -C build"+os.sep+platform+"\n");
+	out.write("clean:\n")
+	for platform in ctx["platforms"]:
+		out.write("\t@$(MAKE) -C build"+os.sep+platform+" clean\n");	
 	out.close()
 
 def dumpEnvironment(ctx, includes, platform):
