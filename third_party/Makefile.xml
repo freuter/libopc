@@ -34,10 +34,9 @@
   </library>
   <library name="xml" dep="zlib">
     <settings>
-      <!-- define name="LIBXML_STATIC"/ -->
     </settings>
     <export>
-      <!-- define name="LIBXML_STATIC"/ -->
+      <define name="LIBXML_STATIC"/>
     </export>
     <header root="{config}/{platform}/libxml2-2.7.7">
       <file path="config.h"/>
