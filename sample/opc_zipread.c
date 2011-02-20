@@ -40,31 +40,32 @@ typedef struct ZIPPARTSSTRUCT {
 	int partInfo_items;
 } ZipParts;
 
-static int partInfoCallback(void *callbackCtx, opcZip *zip) {
+static opc_error_t partInfoCallback(void *callbackCtx, opcZip *zip) {
 	ZipParts *zipParts=(ZipParts*)callbackCtx;
 	zipParts->partInfo_array=(opcZipPartInfo *)xmlRealloc(zipParts->partInfo_array, (zipParts->partInfo_items+1)*sizeof(opcZipPartInfo));
 	if (NULL!=zipParts->partInfo_array && opcZipInitPartInfo(zip, zipParts->partInfo_array+zipParts->partInfo_items)) {
 		zipParts->partInfo_items++;
 	}
-	return 1;
+	return OPC_ERROR_NONE;
 }
 
-static int dumpStream(opcZipPartInfo *partInfo, opcZip *zip, FILE *out) {
+static opc_error_t dumpStream(opcZipPartInfo *partInfo, opcZip *zip, FILE *out) {
+    opc_error_t err=OPC_ERROR_NONE;
 	opcZipDeflateStream stream;
-	if (opcZipInitDeflateStream(partInfo, &stream)) {
-		if (opcZipOpenDeflateStream(partInfo, &stream)) {
+	if (OPC_ERROR_NONE==err && OPC_ERROR_NONE==(err=opcZipInitDeflateStream(partInfo, &stream))) {
+		if (OPC_ERROR_NONE==err && OPC_ERROR_NONE==(err=opcZipOpenDeflateStream(partInfo, &stream))) {
 			int len=0;
 			char buf[OPC_DEFLATE_BUFFER_SIZE];
 			do {
-				len=opcZipReadDeflateStream(zip, &stream, buf, sizeof(buf));
+				len=opcZipReadDeflateStream(zip, &stream, buf, sizeof(buf), &err);
 				if (len>0 && NULL!=out) {
 					fwrite(buf, sizeof(char), len, out);
 				}
-			} while (len>0);
-			opcZipCloseDeflateStream(partInfo, &stream);
+			} while (len>0 && OPC_ERROR_NONE==err);
+			if (OPC_ERROR_NONE==err) err=opcZipCloseDeflateStream(partInfo, &stream);
 		}
 	}
-	return 1;
+	return err;
 }
 
 
@@ -72,29 +73,30 @@ static int dumpStream(opcZipPartInfo *partInfo, opcZip *zip, FILE *out) {
 int main( int argc, const char* argv[] )
 {
 	time_t start_time=time(NULL);
-	if (opcInitLibrary()) {
+    opc_error_t err=OPC_ERROR_NONE;
+	if (OPC_ERROR_NONE==(err=opcInitLibrary())) {
 		for(int i=1;i<argc;i++) {
 			opcZip *zip=opcZipOpenFile(_X(argv[i]), OPC_ZIP_READ);
 			if (NULL!=zip) {
 				ZipParts zipParts;
 				memset(&zipParts, 0, sizeof(zipParts));
-				if (opZipScan(zip, &zipParts, partInfoCallback)) {
+				if (OPC_ERROR_NONE==opZipScan(zip, &zipParts, partInfoCallback)) {
 					printf("scan ok.\n");
 					for(int i=0;i<zipParts.partInfo_items;i++) {
 						printf("%s[%li]\n", zipParts.partInfo_array[i].partName, zipParts.partInfo_array[i].stream_ofs);
 						dumpStream(&zipParts.partInfo_array[i], zip, NULL);
 					}
 				}
-				for(int i=0;i<zipParts.partInfo_items;i++) {
-					opcZipCleanupPartInfo(zipParts.partInfo_array+i);
+				for(int i=0;OPC_ERROR_NONE==err && i<zipParts.partInfo_items;i++) {
+					err=opcZipCleanupPartInfo(zipParts.partInfo_array+i);
 				}
-				opcZipClose(zip);
+				if (OPC_ERROR_NONE==err) err=opcZipClose(zip);
 			}
 		}
-		opcFreeLibrary();
+		if (OPC_ERROR_NONE==err) err=opcFreeLibrary();
 	}
 	time_t end_time=time(NULL);
 	printf("time %.2lfsec\n", difftime(end_time, start_time));
-	return 0;	
+	return (OPC_ERROR_NONE==err?0:3);	
 }
 
