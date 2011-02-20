@@ -43,7 +43,7 @@ typedef struct ZIPPARTSSTRUCT {
 static opc_error_t partInfoCallback(void *callbackCtx, opcZip *zip) {
 	ZipParts *zipParts=(ZipParts*)callbackCtx;
 	zipParts->partInfo_array=(opcZipPartInfo *)xmlRealloc(zipParts->partInfo_array, (zipParts->partInfo_items+1)*sizeof(opcZipPartInfo));
-	if (NULL!=zipParts->partInfo_array && opcZipInitPartInfo(zip, zipParts->partInfo_array+zipParts->partInfo_items)) {
+	if (NULL!=zipParts->partInfo_array && OPC_ERROR_NONE==opcZipInitPartInfo(zip, zipParts->partInfo_array+zipParts->partInfo_items)) {
 		zipParts->partInfo_items++;
 	}
 	return OPC_ERROR_NONE;
@@ -75,12 +75,12 @@ int main( int argc, const char* argv[] )
 	time_t start_time=time(NULL);
     opc_error_t err=OPC_ERROR_NONE;
 	if (OPC_ERROR_NONE==(err=opcInitLibrary())) {
-		for(int i=1;i<argc;i++) {
+		for(int i=1;OPC_ERROR_NONE==err && i<argc;i++) {
 			opcZip *zip=opcZipOpenFile(_X(argv[i]), OPC_ZIP_READ);
 			if (NULL!=zip) {
 				ZipParts zipParts;
 				memset(&zipParts, 0, sizeof(zipParts));
-				if (OPC_ERROR_NONE==opZipScan(zip, &zipParts, partInfoCallback)) {
+				if (OPC_ERROR_NONE==err && OPC_ERROR_NONE==(err=opZipScan(zip, &zipParts, partInfoCallback))) {
 					printf("scan ok.\n");
 					for(int i=0;i<zipParts.partInfo_items;i++) {
 						printf("%s[%li]\n", zipParts.partInfo_array[i].partName, zipParts.partInfo_array[i].stream_ofs);
@@ -90,8 +90,13 @@ int main( int argc, const char* argv[] )
 				for(int i=0;OPC_ERROR_NONE==err && i<zipParts.partInfo_items;i++) {
 					err=opcZipCleanupPartInfo(zipParts.partInfo_array+i);
 				}
-				if (OPC_ERROR_NONE==err) err=opcZipClose(zip);
-			}
+			} else {
+                err=OPC_ERROR_STREAM;
+            }
+            if (OPC_ERROR_NONE!=err) {
+                printf("*ERROR: %s => %i\n", argv[i], err);
+            }
+            opcZipClose(zip);
 		}
 		if (OPC_ERROR_NONE==err) err=opcFreeLibrary();
 	}

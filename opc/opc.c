@@ -32,12 +32,12 @@
 #include <opc/opc.h>
 #include <libxml/xmlreader.h>
 
-int opcInitLibrary() {
+opc_error_t opcInitLibrary() {
 	xmlInitParser();
-	return 1;
+	return OPC_ERROR_NONE;
 }
 
-int opcFreeLibrary() {
+opc_error_t opcFreeLibrary() {
 	xmlCleanupParser();
-	return 1;
+    return OPC_ERROR_NONE;
 }

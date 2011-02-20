@@ -72,7 +72,8 @@ extern "C" {
         OPC_ERROR_STREAM,
         OPC_ERROR_UNSUPPORTED_DATA_DESCRIPTOR,
         OPC_ERROR_UNSUPPORTED_COMPRESSION,
-        OPC_ERROR_DEFLATE
+        OPC_ERROR_DEFLATE,
+        OPC_ERROR_HEADER
     } opc_error_t;
     
 #ifdef __cplusplus

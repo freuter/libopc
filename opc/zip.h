@@ -87,7 +87,7 @@ extern "C" {
 						 opcZipSeekCallback *ioseek,
 						 void *iocontext,
 						 int flags);
-	int opcZipClose(opcZip *zip);
+	void opcZipClose(opcZip *zip);
 	
 	int opcZipWriteStart(opcZip *zip);
 	int opcZipWriteEnd(opcZip *zip);
