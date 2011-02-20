@@ -62,10 +62,10 @@ extern "C" {
 		opc_uint32_t stream_size;
 	} opcZipDeflateStream;
 
-	int opcZipInitDeflateStream(opcZipPartInfo *partInfo, opcZipDeflateStream *stream);
-	int opcZipOpenDeflateStream(opcZipPartInfo *partInfo, opcZipDeflateStream *stream);
-	int opcZipReadDeflateStream(opcZip *zip, opcZipDeflateStream *stream, char *buf, int len);
-	int opcZipCloseDeflateStream(opcZipPartInfo *partInfo, opcZipDeflateStream *stream);
+	opc_error_t opcZipInitDeflateStream(opcZipPartInfo *partInfo, opcZipDeflateStream *stream);
+	opc_error_t opcZipOpenDeflateStream(opcZipPartInfo *partInfo, opcZipDeflateStream *stream);
+	int opcZipReadDeflateStream(opcZip *zip, opcZipDeflateStream *stream, char *buf, int len, opc_error_t *err);
+	opc_error_t opcZipCloseDeflateStream(opcZipPartInfo *partInfo, opcZipDeflateStream *stream);
 
 	typedef enum OPC_ZIPSEEKMODE_ENUM {
 		opcZipSeekSet = SEEK_SET,
@@ -100,20 +100,20 @@ extern "C" {
 	int opcZipWriteDirectoryEntry(opcZip *zip, opcZipPartInfo *partInfo);
 	int opcZipWriteEndDirectory(opcZip *zip);
 
-	int opcZipReadLocalFileHeader(opcZip *zip);	
-	int opcZipReadDataDescriptor(opcZip *zip);
-	int opcZipSkipLocalFileData(opcZip *zip);
+	opc_error_t opcZipReadLocalFileHeader(opcZip *zip);	
+	opc_error_t opcZipReadDataDescriptor(opcZip *zip);
+	opc_error_t opcZipSkipLocalFileData(opcZip *zip);
 
-	int opcZipReadEndOfCentralDirectory(opcZip *zip);
+	opc_error_t opcZipReadEndOfCentralDirectory(opcZip *zip);
 
-	int opcZipReadDirectoryFileHeader(opcZip *zip);
-	int opcZipNextDirectoyFileHeader(opcZip *zip);
+	opc_error_t opcZipReadDirectoryFileHeader(opcZip *zip);
+	opc_error_t opcZipNextDirectoyFileHeader(opcZip *zip);
 
-	int opcZipInitPartInfo(opcZip *zip, opcZipPartInfo *partInfo);
-	int opcZipCleanupPartInfo(opcZipPartInfo *partInfo);
+	opc_error_t opcZipInitPartInfo(opcZip *zip, opcZipPartInfo *partInfo);
+	opc_error_t opcZipCleanupPartInfo(opcZipPartInfo *partInfo);
 
-	typedef int opcZipPartInfoCallback(void *callbackCtx, opcZip *zip);
-	int opZipScan(opcZip *zip, void *callbackCtx, opcZipPartInfoCallback *partInfoCallback);
+	typedef opc_error_t opcZipPartInfoCallback(void *callbackCtx, opcZip *zip);
+	opc_error_t opZipScan(opcZip *zip, void *callbackCtx, opcZipPartInfoCallback *partInfoCallback);
 
 	/*
 	int opcZipReadStart(opcZip *zip);	

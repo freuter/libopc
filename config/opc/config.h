@@ -67,6 +67,14 @@ extern "C" {
 
 #define OPC_DEFLATE_BUFFER_SIZE 1024
 
+    typedef enum OPC_ERROR_ENUM {
+        OPC_ERROR_NONE,
+        OPC_ERROR_STREAM,
+        OPC_ERROR_UNSUPPORTED_DATA_DESCRIPTOR,
+        OPC_ERROR_UNSUPPORTED_COMPRESSION,
+        OPC_ERROR_DEFLATE
+    } opc_error_t;
+    
 #ifdef __cplusplus
 } /* extern "C" */
 #endif  

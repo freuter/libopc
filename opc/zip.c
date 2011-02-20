@@ -185,8 +185,8 @@ int opcZipClose(opcZip *zip) {
 	return ret;
 }
 
-int opcZipReadDirectoryFileHeader(opcZip *zip) {
-	int ret=0;
+opc_error_t opcZipReadDirectoryFileHeader(opcZip *zip) {
+	opc_error_t err=OPC_ERROR_STREAM;
 	if (NULL!=zip && 0x02014b50==zip->header_signature) {
 		if (2==(zip->read_state=opcZipReadU16(zip, NULL))) // version made by
 		if (2==(zip->read_state=opcZipReadU16(zip, &zip->version_needed)))
@@ -222,26 +222,27 @@ int opcZipReadDirectoryFileHeader(opcZip *zip) {
 						}
 				}
 			}
-			if (zip->read_state>0 && zip->comment_length>0) {
-				opcZipSkipBytes(zip, zip->comment_length);
+			if (zip->read_state>0
+                && 0==zip->extra_length
+                && (zip->comment_length>0 || zip->comment_length==opcZipSkipBytes(zip, zip->comment_length))) {
+				err=OPC_ERROR_NONE;
 			}
-			ret=(zip->read_state>0 && 0==zip->extra_length);
 		}
 	}
-	return ret;
+	return err;
 }
 
-int opcZipNextDirectoyFileHeader(opcZip *zip) {
-	int ret=0;
+opc_error_t opcZipNextDirectoyFileHeader(opcZip *zip) {
+	opc_error_t err=OPC_ERROR_NONE;
 	if (NULL!=zip) {
 		zip->read_state=opcZipReadU32(zip, &zip->header_signature); // read next header signature
-		ret=(zip->read_state>=0);
+		err=(zip->read_state>=0?OPC_ERROR_NONE:OPC_ERROR_STREAM);
 	} 
-	return ret;
+	return err;
 }
 
-int opcZipReadLocalFileHeader(opcZip *zip) {
-	int ret=0;
+opc_error_t opcZipReadLocalFileHeader(opcZip *zip) {
+	opc_error_t ret=OPC_ERROR_STREAM;
 	if (NULL!=zip && 0x04034b50==zip->header_signature) {
 		if (2==(zip->read_state=opcZipReadU16(zip, &zip->version_needed)))
 		if (2==(zip->read_state=opcZipReadU16(zip, &zip->bit_flag)))
@@ -272,13 +273,19 @@ int opcZipReadLocalFileHeader(opcZip *zip) {
 				}
 				
 			}
-			ret=(zip->read_state>0 && 0==zip->extra_length);
+			if (zip->read_state>0 && 0==zip->extra_length) {
+                ret=OPC_ERROR_NONE;
+            }
 		}
 	}
+    if (OPC_ERROR_NONE==ret && 0x8==(zip->bit_flag&0x8)) {
+        // we do not support streamed zip files
+        ret=OPC_ERROR_UNSUPPORTED_DATA_DESCRIPTOR;
+    }
 	return ret;
 }
 
-int opcZipInitDeflateStream(opcZipPartInfo *partInfo, opcZipDeflateStream *stream) {
+opc_error_t opcZipInitDeflateStream(opcZipPartInfo *partInfo, opcZipDeflateStream *stream) {
 	memset(stream, 0, sizeof(*stream));
 	stream->stream.zalloc = Z_NULL;
 	stream->stream.zfree = Z_NULL;
@@ -288,21 +295,21 @@ int opcZipInitDeflateStream(opcZipPartInfo *partInfo, opcZipDeflateStream *strea
 	stream->stream_size=partInfo->stream_compressed_size;
 	stream->stream_ofs=partInfo->stream_ofs; 
 	stream->compression_method=partInfo->compression_method;
-	return 8==stream->compression_method || 0==stream->compression_method; // either DEFLATE or STORE
+	return 8==stream->compression_method || 0==stream->compression_method ? OPC_ERROR_NONE : OPC_ERROR_UNSUPPORTED_COMPRESSION; // either DEFLATE or STORE
 }
 
-int opcZipOpenDeflateStream(opcZipPartInfo *partInfo, opcZipDeflateStream *stream) {
+opc_error_t opcZipOpenDeflateStream(opcZipPartInfo *partInfo, opcZipDeflateStream *stream) {
 	if (8==stream->compression_method) {
-		return Z_OK==inflateInit2(&stream->stream, -MAX_WBITS);
+		return Z_OK==inflateInit2(&stream->stream, -MAX_WBITS) ? OPC_ERROR_NONE : OPC_ERROR_DEFLATE;
 	} else if (0==stream->compression_method) {
-		return 1;
+		return OPC_ERROR_NONE;
 	} else {
 		// unsupported compression
-		return 0;
+		return OPC_ERROR_UNSUPPORTED_COMPRESSION;
 	}
 }
-static inline int _opcZipFillBuffer(opcZip *zip, opcZipDeflateStream *stream) {
-	int ret=0;
+static inline opc_error_t _opcZipFillBuffer(opcZip *zip, opcZipDeflateStream *stream) {
+	opc_error_t err=OPC_ERROR_STREAM;
 	OPC_ASSERT(stream->stream.avail_in<=sizeof(stream->buf));
 	if (Z_OK==stream->stream_state && 
 		0==stream->stream.avail_in &&
@@ -316,89 +323,107 @@ static inline int _opcZipFillBuffer(opcZip *zip, opcZipDeflateStream *stream) {
 		int const max_buf=sizeof(stream->buf)-stream->stream.avail_in;
 		int const max=(max_buf<max_stream?max_buf:max_stream);
 		stream->stream.next_in=(Bytef*)stream->buf;
-		ret=zip->ioread(zip->iocontext, ((char*)stream->stream.next_in), max);
+		int ret=zip->ioread(zip->iocontext, ((char*)stream->stream.next_in), max);
 		if (ret>0) {
 			OPC_ASSERT(stream->stream.avail_in<=sizeof(stream->buf));
 			stream->stream.avail_in=ret;
 			OPC_ASSERT(stream->stream.avail_in<=sizeof(stream->buf));
+            err=OPC_ERROR_NONE;
 		} else if (0==ret) {
 			stream->stream_state=Z_STREAM_END;
+            err=OPC_ERROR_NONE;
 		} else {
 			stream->stream_state=Z_STREAM_ERROR;
+            err=OPC_ERROR_STREAM;
 		}
 	}
 	OPC_ASSERT(stream->stream.avail_in<=sizeof(stream->buf));
 	return (Z_OK==stream->stream_state?stream->stream.avail_in:0);
 }
 
-static inline int _opcZipInflateBuffer(opcZip *zip, opcZipDeflateStream *stream, char *buf, int len) {
+static inline int _opcZipInflateBuffer(opcZip *zip, opcZipDeflateStream *stream, char *buf, int len, opc_error_t *err) {
 	int ret=0;
-	stream->stream.next_out=(Bytef*)buf;
-	stream->stream.avail_out=len;
-	if (Z_OK==stream->inflate_state && 
-		(Z_OK==(stream->inflate_state=inflate(&stream->stream, Z_SYNC_FLUSH)) || Z_STREAM_END==stream->inflate_state)) {
-			OPC_ASSERT(stream->stream.avail_out<=(uInt)len);
-			ret=len-stream->stream.avail_out;
-	}
+    if (NULL==err || OPC_ERROR_NONE==*err) {
+        stream->stream.next_out=(Bytef*)buf;
+        stream->stream.avail_out=len;
+        if (Z_OK==stream->inflate_state 
+            && (Z_OK==(stream->inflate_state=inflate(&stream->stream, Z_SYNC_FLUSH)) || Z_STREAM_END==stream->inflate_state)) {
+                OPC_ASSERT(stream->stream.avail_out<=(uInt)len);
+                ret=len-stream->stream.avail_out;
+        } else {
+            if (NULL!=err && OPC_ERROR_NONE==*err) {
+                *err==OPC_ERROR_DEFLATE;
+            }
+        }
+    }
 	return ret;
 }
 
-int opcZipReadDeflateStream(opcZip *zip, opcZipDeflateStream *stream, char *buf, int len) {
+int opcZipReadDeflateStream(opcZip *zip, opcZipDeflateStream *stream, char *buf, int len, opc_error_t *err) {
 	int ofs=0;
-	if (8==stream->compression_method) {
-		int bytes=0;
-		while(ofs<len && 
-			_opcZipFillBuffer(zip, stream)>0 && 
-			(bytes=_opcZipInflateBuffer(zip, stream, buf+ofs, len-ofs))>0) {
-				ofs+=bytes;
-		}
-	} else {
-		int const max_stream=stream->stream_size-stream->stream.total_in;
-		int const max=(len<max_stream?len:max_stream);
-		int bytes=zip->ioread(zip->iocontext, buf, max);
-		if (bytes>0) {
-			ofs=bytes;
-			stream->stream.total_in+=bytes;
-			stream->stream.total_out+=bytes;
-		} else {
-			ofs=0;
-		}
-	}
+    if (NULL==err || *err==OPC_ERROR_NONE) {
+        if (8==stream->compression_method) {
+            int bytes=0;
+            while((NULL==err || OPC_ERROR_NONE==*err)
+                  && ofs<len 
+                  && _opcZipFillBuffer(zip, stream)>0 
+                  && (bytes=_opcZipInflateBuffer(zip, stream, buf+ofs, len-ofs, err))>0) {
+                ofs+=bytes;
+            }
+        } else {
+            int const max_stream=stream->stream_size-stream->stream.total_in;
+            int const max=(len<max_stream?len:max_stream);
+            int bytes=zip->ioread(zip->iocontext, buf, max);
+            if (bytes>0) {
+                ofs=bytes;
+                stream->stream.total_in+=bytes;
+                stream->stream.total_out+=bytes;
+            } else {
+                ofs=0;
+                if ((NULL==err || OPC_ERROR_NONE==*err) && bytes<0) {
+                    *err=OPC_ERROR_STREAM;
+                }
+            }
+        }
+    } else {
+        if (NULL!=err) *err=OPC_ERROR_UNSUPPORTED_COMPRESSION;
+    }
 	return ofs;
 }
 
-int opcZipCloseDeflateStream(opcZipPartInfo *partInfo, opcZipDeflateStream *stream) {
+opc_error_t opcZipCloseDeflateStream(opcZipPartInfo *partInfo, opcZipDeflateStream *stream) {
 	OPC_ASSERT(stream->stream.total_in==stream->stream_size);
 	OPC_ASSERT(stream->stream.total_in==partInfo->stream_compressed_size);
 	OPC_ASSERT(stream->stream.total_out==partInfo->stream_uncompressed_size);
 	if (8==stream->compression_method) {
-		return Z_OK==inflateEnd(&stream->stream);
+		return Z_OK==inflateEnd(&stream->stream) ? OPC_ERROR_NONE : OPC_ERROR_DEFLATE;
 	} else {
 		return 1;
 	}
 }
 
-int opcZipSkipLocalFileData(opcZip *zip) {
-	int ret=0;
+opc_error_t opcZipSkipLocalFileData(opcZip *zip) {
+	opc_error_t err=OPC_ERROR_STREAM;
 	if (NULL!=zip && 0x04034b50==zip->header_signature && 0==zip->extra_length) {
-		ret=(opcZipSkipBytes(zip, zip->compressed_size)==zip->compressed_size);
+        err=(opcZipSkipBytes(zip, zip->compressed_size)==zip->compressed_size?OPC_ERROR_NONE:OPC_ERROR_STREAM);
 	}
-	return ret;
+	return err;
 }
 
 
 
-int opcZipReadDataDescriptor(opcZip *zip) {
-	int ret=0;
+opc_error_t opcZipReadDataDescriptor(opcZip *zip) {
+	int err=OPC_ERROR_STREAM;
 	if (NULL!=zip && 0x04034b50==zip->header_signature && 0==zip->extra_length) {
-		//@TODO implement me!
-		zip->read_state=opcZipReadU32(zip, &zip->header_signature); // read first header signature
+        if (zip->read_state>0) { 
+            err=(4==(zip->read_state=opcZipReadU32(zip, &zip->header_signature))?OPC_ERROR_NONE:OPC_ERROR_STREAM);
+        }
 	}
-	return ret;
+	return err;
 }
 
-int opcZipReadEndOfCentralDirectory(opcZip *zip) {
-	int ret=0;
+opc_error_t opcZipReadEndOfCentralDirectory(opcZip *zip) {
+	opc_error_t err=OPC_ERROR_STREAM;
 	opc_uint16_t comment_length=0;
 	if (NULL!=zip && 0x06054b50==zip->header_signature) {
 		if (2==(zip->read_state=opcZipReadU16(zip, NULL))) // number of this disk
@@ -410,14 +435,14 @@ int opcZipReadEndOfCentralDirectory(opcZip *zip) {
 		if (2==(zip->read_state=opcZipReadU16(zip, &comment_length))) // .ZIP file comment len
 		if (comment_length==(opcZipSkipBytes(zip, comment_length))) {
 			char ch=0;
-			ret=(0==zip->ioread(zip->iocontext, &ch, sizeof(ch))); // if not, then we have trailing bytes...
+			err=(0==zip->ioread(zip->iocontext, &ch, sizeof(ch))?OPC_ERROR_NONE:OPC_ERROR_STREAM); // if not, then we have trailing bytes...
 		}
 	}
-	return ret;
+	return err;
 }
 
-int opcZipInitPartInfo(opcZip *zip, opcZipPartInfo *partInfo) {
-	int ret=0;
+opc_error_t opcZipInitPartInfo(opcZip *zip, opcZipPartInfo *partInfo) {
+	opc_error_t err=OPC_ERROR_STREAM;
 	if (NULL!=zip && 0x04034b50==zip->header_signature && NULL!=zip->ioseek) {
 		memset(partInfo, 0, sizeof(*partInfo));
 		partInfo->stream_ofs=zip->ioseek(zip->iocontext, 0, opcZipSeekCur);
@@ -425,34 +450,35 @@ int opcZipInitPartInfo(opcZip *zip, opcZipPartInfo *partInfo) {
 		partInfo->stream_compressed_size=zip->compressed_size;
 		partInfo->stream_uncompressed_size=zip->uncompressed_size;
 		partInfo->compression_method=zip->compression_method;
-		ret=(partInfo->partName!=NULL);
+		err=(partInfo->partName!=NULL?OPC_ERROR_NONE:OPC_ERROR_STREAM);
 	}
-	return ret;
+	return err;
 }
 
-int opcZipCleanupPartInfo(opcZipPartInfo *partInfo) {
+opc_error_t opcZipCleanupPartInfo(opcZipPartInfo *partInfo) {
 	if (NULL!=partInfo) {
 		xmlFree(partInfo->partName);
 	}
-	return 1;
+	return OPC_ERROR_NONE;
 }
 
 
-int opZipScan(opcZip *zip, void *callbackCtx, opcZipPartInfoCallback *partInfoCallback) {
+opc_error_t opZipScan(opcZip *zip, void *callbackCtx, opcZipPartInfoCallback *partInfoCallback) {
 	// Parts in ZIP (according to local file infos)
-	int ok=1;
-	while (ok && opcZipReadLocalFileHeader(zip)) {
-		if (NULL!=partInfoCallback) {
-			ok=partInfoCallback(callbackCtx, zip);
+	int err=OPC_ERROR_NONE;
+	while (OPC_ERROR_NONE==err && OPC_ERROR_NONE==(err=opcZipReadLocalFileHeader(zip))) {
+		if (OPC_ERROR_NONE==err && NULL!=partInfoCallback) {
+			err=partInfoCallback(callbackCtx, zip);
 		}
-		opcZipSkipLocalFileData(zip);
-		opcZipReadDataDescriptor(zip);
+        if (OPC_ERROR_NONE==err) err=opcZipSkipLocalFileData(zip);
+        if (OPC_ERROR_NONE==err) err=opcZipReadDataDescriptor(zip);
 	}
 	// Parts in ZIP (according to directory)
-	while(ok && opcZipReadDirectoryFileHeader(zip)) {
-		opcZipNextDirectoyFileHeader(zip);
+	while(OPC_ERROR_NONE==err && OPC_ERROR_NONE==(err=opcZipReadDirectoryFileHeader(zip))) {
+		err=opcZipNextDirectoyFileHeader(zip);
 	}
-	return ok && opcZipReadEndOfCentralDirectory(zip);
+    if (OPC_ERROR_NONE==err) err=opcZipReadEndOfCentralDirectory(zip);
+	return err;
 }
 
 
