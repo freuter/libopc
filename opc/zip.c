@@ -176,18 +176,17 @@ opcZip *opcZipOpenIO(opcZipReadCallback *ioread,
 	return zip;
 }
 
-int opcZipClose(opcZip *zip) {
-	int ret=0;
+void opcZipClose(opcZip *zip) {
 	if (NULL!=zip) {
-		ret=zip->ioclose(zip->iocontext);
+		OPC_ENSURE(0==zip->ioclose(zip->iocontext));
 		xmlFree(zip);
 	}
-	return ret;
 }
 
 opc_error_t opcZipReadDirectoryFileHeader(opcZip *zip) {
-	opc_error_t err=OPC_ERROR_STREAM;
+	opc_error_t err=OPC_ERROR_HEADER;
 	if (NULL!=zip && 0x02014b50==zip->header_signature) {
+        err=OPC_ERROR_STREAM;
 		if (2==(zip->read_state=opcZipReadU16(zip, NULL))) // version made by
 		if (2==(zip->read_state=opcZipReadU16(zip, &zip->version_needed)))
 		if (2==(zip->read_state=opcZipReadU16(zip, &zip->bit_flag)))
@@ -242,8 +241,9 @@ opc_error_t opcZipNextDirectoyFileHeader(opcZip *zip) {
 }
 
 opc_error_t opcZipReadLocalFileHeader(opcZip *zip) {
-	opc_error_t ret=OPC_ERROR_STREAM;
+	opc_error_t ret=OPC_ERROR_HEADER;
 	if (NULL!=zip && 0x04034b50==zip->header_signature) {
+        ret=OPC_ERROR_STREAM;
 		if (2==(zip->read_state=opcZipReadU16(zip, &zip->version_needed)))
 		if (2==(zip->read_state=opcZipReadU16(zip, &zip->bit_flag)))
 		if (2==(zip->read_state=opcZipReadU16(zip, &zip->compression_method)))
@@ -273,7 +273,7 @@ opc_error_t opcZipReadLocalFileHeader(opcZip *zip) {
 				}
 				
 			}
-			if (zip->read_state>0 && 0==zip->extra_length) {
+            if (zip->read_state>0 && 0==zip->extra_length) {
                 ret=OPC_ERROR_NONE;
             }
 		}
@@ -308,10 +308,10 @@ opc_error_t opcZipOpenDeflateStream(opcZipPartInfo *partInfo, opcZipDeflateStrea
 		return OPC_ERROR_UNSUPPORTED_COMPRESSION;
 	}
 }
-static inline opc_error_t _opcZipFillBuffer(opcZip *zip, opcZipDeflateStream *stream) {
-	opc_error_t err=OPC_ERROR_STREAM;
+static inline int _opcZipFillBuffer(opcZip *zip, opcZipDeflateStream *stream, opc_error_t *err) {
 	OPC_ASSERT(stream->stream.avail_in<=sizeof(stream->buf));
-	if (Z_OK==stream->stream_state && 
+	if ((NULL==err || OPC_ERROR_NONE==*err) &&
+        Z_OK==stream->stream_state && 
 		0==stream->stream.avail_in &&
 		stream->stream.total_in+stream->stream.avail_in<stream->stream_size) {
 		OPC_ASSERT(stream->stream.total_in<=stream->stream_size);
@@ -328,13 +328,13 @@ static inline opc_error_t _opcZipFillBuffer(opcZip *zip, opcZipDeflateStream *st
 			OPC_ASSERT(stream->stream.avail_in<=sizeof(stream->buf));
 			stream->stream.avail_in=ret;
 			OPC_ASSERT(stream->stream.avail_in<=sizeof(stream->buf));
-            err=OPC_ERROR_NONE;
+            if (NULL!=*err) *err=OPC_ERROR_NONE;
 		} else if (0==ret) {
 			stream->stream_state=Z_STREAM_END;
-            err=OPC_ERROR_NONE;
+            if (NULL!=*err) *err=OPC_ERROR_NONE;
 		} else {
 			stream->stream_state=Z_STREAM_ERROR;
-            err=OPC_ERROR_STREAM;
+            if (NULL!=*err) *err=OPC_ERROR_STREAM;
 		}
 	}
 	OPC_ASSERT(stream->stream.avail_in<=sizeof(stream->buf));
@@ -352,7 +352,7 @@ static inline int _opcZipInflateBuffer(opcZip *zip, opcZipDeflateStream *stream,
                 ret=len-stream->stream.avail_out;
         } else {
             if (NULL!=err && OPC_ERROR_NONE==*err) {
-                *err==OPC_ERROR_DEFLATE;
+                *err=OPC_ERROR_DEFLATE;
             }
         }
     }
@@ -366,8 +366,10 @@ int opcZipReadDeflateStream(opcZip *zip, opcZipDeflateStream *stream, char *buf,
             int bytes=0;
             while((NULL==err || OPC_ERROR_NONE==*err)
                   && ofs<len 
-                  && _opcZipFillBuffer(zip, stream)>0 
-                  && (bytes=_opcZipInflateBuffer(zip, stream, buf+ofs, len-ofs, err))>0) {
+                  && _opcZipFillBuffer(zip, stream, err)>0 
+                  && (NULL==err || OPC_ERROR_NONE==*err)
+                  && (bytes=_opcZipInflateBuffer(zip, stream, buf+ofs, len-ofs, err))>0
+                  && (NULL==err || OPC_ERROR_NONE==*err)) {
                 ofs+=bytes;
             }
         } else {
@@ -398,7 +400,7 @@ opc_error_t opcZipCloseDeflateStream(opcZipPartInfo *partInfo, opcZipDeflateStre
 	if (8==stream->compression_method) {
 		return Z_OK==inflateEnd(&stream->stream) ? OPC_ERROR_NONE : OPC_ERROR_DEFLATE;
 	} else {
-		return 1;
+		return OPC_ERROR_NONE;
 	}
 }
 
@@ -413,7 +415,7 @@ opc_error_t opcZipSkipLocalFileData(opcZip *zip) {
 
 
 opc_error_t opcZipReadDataDescriptor(opcZip *zip) {
-	int err=OPC_ERROR_STREAM;
+	opc_error_t err=OPC_ERROR_STREAM;
 	if (NULL!=zip && 0x04034b50==zip->header_signature && 0==zip->extra_length) {
         if (zip->read_state>0) { 
             err=(4==(zip->read_state=opcZipReadU32(zip, &zip->header_signature))?OPC_ERROR_NONE:OPC_ERROR_STREAM);
@@ -465,7 +467,7 @@ opc_error_t opcZipCleanupPartInfo(opcZipPartInfo *partInfo) {
 
 opc_error_t opZipScan(opcZip *zip, void *callbackCtx, opcZipPartInfoCallback *partInfoCallback) {
 	// Parts in ZIP (according to local file infos)
-	int err=OPC_ERROR_NONE;
+	opc_error_t err=OPC_ERROR_NONE;
 	while (OPC_ERROR_NONE==err && OPC_ERROR_NONE==(err=opcZipReadLocalFileHeader(zip))) {
 		if (OPC_ERROR_NONE==err && NULL!=partInfoCallback) {
 			err=partInfoCallback(callbackCtx, zip);
@@ -473,11 +475,14 @@ opc_error_t opZipScan(opcZip *zip, void *callbackCtx, opcZipPartInfoCallback *pa
         if (OPC_ERROR_NONE==err) err=opcZipSkipLocalFileData(zip);
         if (OPC_ERROR_NONE==err) err=opcZipReadDataDescriptor(zip);
 	}
-	// Parts in ZIP (according to directory)
-	while(OPC_ERROR_NONE==err && OPC_ERROR_NONE==(err=opcZipReadDirectoryFileHeader(zip))) {
-		err=opcZipNextDirectoyFileHeader(zip);
-	}
-    if (OPC_ERROR_NONE==err) err=opcZipReadEndOfCentralDirectory(zip);
+    if (OPC_ERROR_HEADER==err) {
+        err=OPC_ERROR_NONE;
+	    // Parts in ZIP (according to directory)
+	    while(OPC_ERROR_NONE==err && OPC_ERROR_NONE==(err=opcZipReadDirectoryFileHeader(zip))) {
+    		err=opcZipNextDirectoyFileHeader(zip);
+    	}
+        if (OPC_ERROR_HEADER==err) err=opcZipReadEndOfCentralDirectory(zip);
+    }
 	return err;
 }
 

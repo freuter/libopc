@@ -57,14 +57,14 @@ extern "C" {
 	 * \include opc_helloworld.c
 	 * @return Non-zero if successful.
 	 */
-	int opcInitLibrary();
+	opc_error_t opcInitLibrary();
 
 	/**
 	 * Free libopc. Clean up all resources.
 	 * @return Non-zero if successful.
 	 * \see opcInitLibrary.
 	 */
-	int opcFreeLibrary();
+	opc_error_t opcFreeLibrary();
 
 #ifdef __cplusplus
 } /* extern "C" */
