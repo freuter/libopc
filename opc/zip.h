@@ -111,6 +111,7 @@ extern "C" {
 
 	opc_error_t opcZipInitPartInfo(opcZip *zip, opcZipPartInfo *partInfo);
 	opc_error_t opcZipCleanupPartInfo(opcZipPartInfo *partInfo);
+    opc_error_t opcZipConsumedPartInCallback(opcZip *zip, opcZipPartInfo *partInfo);
 
 	typedef opc_error_t opcZipPartInfoCallback(void *callbackCtx, opcZip *zip);
 	opc_error_t opZipScan(opcZip *zip, void *callbackCtx, opcZipPartInfoCallback *partInfoCallback);

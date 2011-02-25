@@ -33,32 +33,71 @@
 #include <opc/opc.h>
 #include <stdio.h>
 #include <libxml/xmlstring.h>
+#include <time.h>
+
+
+static opc_error_t dumpStream(opcZipPartInfo *partInfo, opcZip *zip, FILE *out) {
+    opc_error_t err=OPC_ERROR_NONE;
+	opcZipDeflateStream stream;
+	if (OPC_ERROR_NONE==err && OPC_ERROR_NONE==(err=opcZipInitDeflateStream(partInfo, &stream))) {
+		if (OPC_ERROR_NONE==err && OPC_ERROR_NONE==(err=opcZipOpenDeflateStream(partInfo, &stream))) {
+			int len=0;
+			char buf[OPC_DEFLATE_BUFFER_SIZE];
+			do {
+				len=opcZipReadDeflateStream(zip, &stream, buf, sizeof(buf), &err);
+				if (len>0 && NULL!=out) {
+					fwrite(buf, sizeof(char), len, out);
+				}
+			} while (len>0 && OPC_ERROR_NONE==err);
+			if (OPC_ERROR_NONE==err) err=opcZipCloseDeflateStream(partInfo, &stream);
+		}
+	}
+	return err;
+}
+
+static opc_error_t partInfoCallback(void *callbackCtx, opcZip *zip) {
+    opcZipPartInfo partInfo;
+    opc_error_t err=OPC_ERROR_NONE;
+    xmlChar *filename=(xmlChar*)callbackCtx;
+    if (OPC_ERROR_NONE==(err=opcZipInitPartInfo(zip, &partInfo))) {
+        if (NULL==filename) {
+            printf("%s\n", partInfo.partName);
+        } else if (xmlStrcmp(filename, partInfo.partName)==0) {
+            if (OPC_ERROR_NONE==(err=dumpStream(&partInfo, zip, stdout))) {
+                err=opcZipConsumedPartInCallback(zip, &partInfo);
+            }
+        }
+        if (OPC_ERROR_NONE==err) {
+            err=opcZipCleanupPartInfo(&partInfo);
+        }
+
+    }
+    return err;
+}
 
 int main( int argc, const char* argv[] )
 {
-	if (opcInitLibrary()) {
-		opcZip *zip=opcZipOpenFile(_X("sample.zip"), OPC_ZIP_READ);
-		opcZipReadDirectoryStart(zip);
-		opcZipPartInfo info;
-		while(opcZipReadDirectoryInfo(zip, &info)) {
-			printf("%s\n", info.partName);
-			if (xmlStrcmp(info.partName, _X("sample.txt"))==0) {
-				opcZipReadInfo readInfo;
-				opcZipReadDataStart(zip, &info, &readInfo);
-				char buf[100];
-				int len=0;
-				while((len=opcZipReadData(zip, &info, &readInfo, buf, sizeof(buf)))>0) {
-					printf("%*.s", len, buf);
-				}
-				opcZipReadDataEnd(zip, &info, &readInfo);
-				printf("\n");
-			}
-			opcZipCleanupPartInfo(&info);
-		}
-		opcZipReadDirectoryEnd(zip);
-		opcZipClose(zip);
-		opcFreeLibrary();
-	}
-	return 0;	
+    if (argc<2 || argc>3) {
+        printf("opc_zipextract ZIP-FILE [PART-NAME]\n");
+        return 1;
+    } else {
+        time_t start_time=time(NULL);
+        opc_error_t err=OPC_ERROR_NONE;
+        if (OPC_ERROR_NONE==(err=opcInitLibrary())) {
+            opcZip *zip=opcZipOpenFile(_X(argv[1]), OPC_ZIP_READ);
+            if (NULL!=zip) {
+                err=opZipScan(zip, argc==3?_X(argv[2]):NULL, partInfoCallback);
+            } else {
+                err=OPC_ERROR_STREAM;
+            }
+        }
+        if (OPC_ERROR_NONE==err) err=opcFreeLibrary();
+        if (OPC_ERROR_NONE!=err) {
+            fprintf(stderr, "*ERROR: %s => %i\n", argv[1], err);
+        }
+        time_t end_time=time(NULL);
+        fprintf(stderr, "time %.2lfsec\n", difftime(end_time, start_time));
+        return (OPC_ERROR_NONE==err?0:3);	
+    }
 }
 
