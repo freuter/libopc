@@ -1,4 +1,4 @@
-<!--
+/*
  Copyright (c) 2010, Florian Reuter
  All rights reserved.
  
@@ -28,11 +28,64 @@
  STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) 
  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED 
  OF THE POSSIBILITY OF SUCH DAMAGE.
--->
-<project>
-  <include path="third_party/Makefile.xml"/>
-  <include path="plib/Makefile.xml"/>
-  <include path="Makefile.lib.xml"/>
-  <include path="sample/Makefile.xml"/>
-  <include path="Makefile.platform.xml"/>
-</project>
+ 
+*/
+#ifndef _PLIB_PLIB_H_
+#define _PLIB_PLIB_H_
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+#undef HAVE_STDINT_H
+#undef HAVE_STDDEF_H
+#undef HAVE_STDIO_H
+#undef WIN32
+
+#ifdef HAVE_STDDEF_H
+#include <stddef.h>
+typedef size_t pofs_t; // maximum file offset for eg. read write ops
+
+#elif defined(WIN32)
+
+#else
+#error "system types can not be determined"
+#endif
+
+#ifdef HAVE_STDIO_H
+#include <stdio.h>
+#elif defined(WIN32)
+
+#else
+#error "system io can not be determined"
+#endif
+
+#ifdef HAVE_STDINT_H
+#include <stdint.h>
+
+typedef int8_t pint8_t;
+typedef uint8_t puint8_t;
+
+typedef int16_t pint16_t;
+typedef uint16_t puint16_t;
+
+typedef int32_t pint32_t;
+typedef uint32_t puint32_t;
+
+typedef int64_t pint64_t;
+typedef uint64_t puint64_t;
+
+// INTN_MAX, INTN_MIN, UINTN_MAX
+#elif defined(WIN32)
+
+#else
+#error "system types can not be determined"
+#endif
+
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
+
+
+#endif /* _PLIB_PLIB_H_ */

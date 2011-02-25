@@ -27,6 +27,9 @@ done
 
 BUILDDIR="build/config"
 
+PLIBCONFIG=""
+PLIBFILES="include/plib/plib.h=>include/plib"
+
 ZLIBCONFIG=""
 ZLIBFILES="zconf.h=>"
 LIBXMLCONFIG="--without-c14n \
@@ -132,6 +135,7 @@ if [[ $PLATFORM =~ ^[^-]+-[^-]+-[^-]+$ ]]; then
 		if [ x"" != x$HOST ]; then
 			CONFIG_OPT="--host=$HOST"
 		fi
+		execConfigure "." "plib" "$PLIBCONFIG" "$PLIBFILES" ""
 		execConfigure "third_party" "zlib-1.2.5" "$ZLIBCONFIG" "$ZLIBFILES" ""
 		execConfigure "third_party" "libxml2-2.7.7" "$LIBXMLCONFIG" "$LIBXMLFILES" "$CONFIG_OPT"
 		$PYTHON_PATH generate.py --include Makefile.xml --config-dir $BUILDDIR $PLATFORM

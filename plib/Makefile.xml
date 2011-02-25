@@ -1,3 +1,4 @@
+<?xml version="1.0"?>
 <!--
  Copyright (c) 2010, Florian Reuter
  All rights reserved.
@@ -30,53 +31,14 @@
  OF THE POSSIBILITY OF SUCH DAMAGE.
 -->
 <project>
-  <library name="opc" dep="plib zlib xml" mode="c99">
-    <header root="config">
-      <file path="opc/config.h" install="yes"/>
+  <library name="plib">
+    <header root="{config}/{platform}/plib/include">
+      <file path="plib/plib.h" install="yes"/>
     </header>
     <header root=".">
-      <file path="opc/opc.h" install="yes"/>
-      <file path="opc/container.h" install="yes"/>
-      <file path="opc/inputstream.h" install="yes"/>
-      <file path="opc/outputstream.h" install="yes"/>
-      <file path="opc/part.h" install="yes"/>
-      <file path="opc/relation.h" install="yes"/>
-      <file path="opc/type.h" install="yes"/>
-      <file path="opc/xmlreader.h" install="yes"/>
-      <file path="opc/xmlwriter.h" install="yes"/>
-      <file path="opc/zip.h" install="yes"/>
     </header>
-    <source root="opc">
-      <file path="opc.c"/>
-      <file path="container.c"/>
-      <file path="inputstream.c"/>
-      <file path="outputstream.c"/>
-      <file path="part.c"/>
-      <file path="relation.c"/>
-      <file path="type.c"/>
-      <file path="xmlreader.c"/>
-      <file path="xmlwriter.c"/>
-      <file path="zip.c"/>
-    </source>
-  </library>
-<!--
-  <tool name="opcmain" dep="opc" mode="c99">
-    <source root="opc">
-      <file path="main.c"/>
-    </source>
-  </tool>
--->
-  <library name="mce" dep="opc" mode="c99">
-    <header root="config">
-      <file path="mce/config.h" install="yes"/>
-    </header>
-    <header root=".">
-      <file path="mce/textreader.h" install="yes"/>
-      <file path="mce/textwriter.h" install="yes"/>
-    </header>
-    <source root="mce">
-      <file path="textreader.c"/>
-      <file path="textwriter.c"/>
+    <source root="source">
+	<file path="plib.c"/>
     </source>
   </library>
 </project>

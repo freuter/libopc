@@ -28,56 +28,7 @@
  STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) 
  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED 
  OF THE POSSIBILITY OF SUCH DAMAGE.
+ 
  */
-/**@file config/opc/config.h
- */
-#ifndef OPC_CONFIG_H
-#define OPC_CONFIG_H
 
-#include <libxml/xmlstring.h>
 #include <plib/plib.h>
-#include <assert.h>
-
-#ifdef __cplusplus
-extern "C" {
-#endif   
-
-/**
- Converts an ASCII string to a xmlChar string. This only works for ASCII strings.
- */
-#ifndef _X
-#define _X(s) BAD_CAST(s) 
-#endif
-#ifndef _X2C
-#define _X2C(s) ((char*)(s))
-#endif
-
-#define OPC_ASSERT(e) assert(e)
-#define OPC_ENSURE(e) assert(e)
-
-	typedef pofs_t opc_ofs_t;
-	typedef puint8_t opc_uint8_t;
-	typedef puint16_t opc_uint16_t;
-	typedef puint32_t opc_uint32_t;
-	typedef puint64_t opc_uint64_t;
-	typedef pint8_t opc_int8_t;
-	typedef pint16_t opc_int16_t;
-	typedef pint32_t opc_int32_t;
-	typedef pint64_t opc_int64_t;
-
-#define OPC_DEFLATE_BUFFER_SIZE 1024
-
-    typedef enum OPC_ERROR_ENUM {
-        OPC_ERROR_NONE,
-        OPC_ERROR_STREAM,
-        OPC_ERROR_UNSUPPORTED_DATA_DESCRIPTOR,
-        OPC_ERROR_UNSUPPORTED_COMPRESSION,
-        OPC_ERROR_DEFLATE,
-        OPC_ERROR_HEADER
-    } opc_error_t;
-    
-#ifdef __cplusplus
-} /* extern "C" */
-#endif  
-
-#endif /* OPC_CONFIG_H */
