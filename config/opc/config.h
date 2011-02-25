@@ -76,6 +76,8 @@ extern "C" {
         OPC_ERROR_HEADER
     } opc_error_t;
     
+#define opc_logf printf
+
 #ifdef __cplusplus
 } /* extern "C" */
 #endif  
