@@ -211,7 +211,7 @@ opc_error_t opcZipReadDirectoryFileHeader(opcZip *zip) {
 					&& 2==(zip->read_state=opcZipReadU16(zip, &extra_size))) {
 						switch(extra_id) {
 						default: // just ignore
-							printf("%02X %02X\n", extra_id, extra_size);
+							opc_logf("**ignoring extra data id=%02X size=%02X\n", extra_id, extra_size);
 							// no break;
 						case 0xa220: // Microsoft Open Packaging Growth Hint => ignore
 							if (extra_size==(zip->read_state=opcZipSkipBytes(zip, extra_size))) {
@@ -262,7 +262,7 @@ opc_error_t opcZipReadLocalFileHeader(opcZip *zip) {
 					&& 2==(zip->read_state=opcZipReadU16(zip, &extra_size))) {
 						switch(extra_id) {
 						default: // just ignore
-							printf("%02X %02X\n", extra_id, extra_size);
+							opc_logf("**ignoring extra data id=%02X size=%02X\n", extra_id, extra_size);
 							// no break;
 						case 0xa220: // Microsoft Open Packaging Growth Hint => ignore
 							if (extra_size==(zip->read_state=opcZipSkipBytes(zip, extra_size))) {
