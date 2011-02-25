@@ -4,5 +4,5 @@ BUILD ON LINUX/MAC OSX:
 make
 
 BUILD ON WINDOWS:
-* Optionally generate project files:
+* Optionally generate project files: c:\Python26\python.exe generate.py --include Makefile.xml win32-debug-msvc
 * Open win32\solution.sln in Visual Studio.
