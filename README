@@ -1,0 +1,8 @@
+
+BUILD ON LINUX/MAC OSX:
+./configure
+make
+
+BUILD ON WINDOWS:
+* Optionally generate project files:
+* Open win32\solution.sln in Visual Studio.
