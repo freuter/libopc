@@ -464,6 +464,13 @@ opc_error_t opcZipCleanupPartInfo(opcZipPartInfo *partInfo) {
 	return OPC_ERROR_NONE;
 }
 
+opc_error_t opcZipConsumedPartInCallback(opcZip *zip, opcZipPartInfo *partInfo) {
+    OPC_ASSERT(zip->compressed_size==partInfo->stream_compressed_size);
+    OPC_ASSERT(NULL==zip->ioseek || zip->ioseek(zip->iocontext, 0, opcZipSeekCur)==partInfo->stream_ofs+partInfo->stream_compressed_size); // make sure the stream is really consumed!
+    zip->compressed_size=0; // consumed data locally
+    return OPC_ERROR_NONE;
+}
+
 
 opc_error_t opZipScan(opcZip *zip, void *callbackCtx, opcZipPartInfoCallback *partInfoCallback) {
 	// Parts in ZIP (according to local file infos)

@@ -14,6 +14,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "opc_helloworld", "opc_hello
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "opc_zipread", "opc_zipread\opc_zipread.vcxproj", "{3AF0A8D6-3B0D-5262-8AEA-6AB2B58EA202}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "opc_zipextract", "opc_zipextract\opc_zipextract.vcxproj", "{C935A912-71CE-5382-BE66-926E0328FE1D}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
@@ -48,6 +50,10 @@ Global
 		{3AF0A8D6-3B0D-5262-8AEA-6AB2B58EA202}.Debug|Win32.Build.0 = Debug|Win32
 		{3AF0A8D6-3B0D-5262-8AEA-6AB2B58EA202}.Release|Win32.ActiveCfg = Release|Win32
 		{3AF0A8D6-3B0D-5262-8AEA-6AB2B58EA202}.Release|Win32.Build.0 = Release|Win32
+		{C935A912-71CE-5382-BE66-926E0328FE1D}.Debug|Win32.ActiveCfg = Debug|Win32
+		{C935A912-71CE-5382-BE66-926E0328FE1D}.Debug|Win32.Build.0 = Debug|Win32
+		{C935A912-71CE-5382-BE66-926E0328FE1D}.Release|Win32.ActiveCfg = Release|Win32
+		{C935A912-71CE-5382-BE66-926E0328FE1D}.Release|Win32.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
