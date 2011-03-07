@@ -41,26 +41,26 @@
 #ifdef __cplusplus
 extern "C" {
 #endif    
-	/**
-	 Handle to an OPC part created by \ref opcPartOpen.
-	 \see opcPartOpen.
-	 */
-	typedef struct OPC_PART_STRUCT opcPart;
+    /**
+     Handle to an OPC part created by \ref opcPartOpen.
+     \see opcPartOpen.
+     */
+    typedef struct OPC_PART_STRUCT opcPart;
 
 #define OPC_PART_CREATE 0x1
-#define OPC_PART_COMPRESSED 0x2	
-	
-	opcPart *opcPartOpen(opcContainer *container, 
-						 const xmlChar *absolutePath, 
-						 opcType *type,						 
-						 int flags);
-	
-	int opcPartRelease(opcPart *part);
-	
-	int opcPartDelete(opcContainer *container, const xmlChar *absolutePath);
-	
+#define OPC_PART_COMPRESSED 0x2    
+    
+    opcPart *opcPartOpen(opcContainer *container, 
+                         const xmlChar *absolutePath, 
+                         opcType *type,                         
+                         int flags);
+    
+    int opcPartRelease(opcPart *part);
+    
+    int opcPartDelete(opcContainer *container, const xmlChar *absolutePath);
+    
 #ifdef __cplusplus
 } /* extern "C" */
 #endif    
-		
+        
 #endif /* OPC_PART_H */

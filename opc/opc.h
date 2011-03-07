@@ -50,24 +50,24 @@
 #ifdef __cplusplus
 extern "C" {
 #endif    
-	
-	/**
-	 * Initialize libopc.
-	 * Sample:
-	 * \include opc_helloworld.c
-	 * @return Non-zero if successful.
-	 */
-	opc_error_t opcInitLibrary();
+    
+    /**
+     * Initialize libopc.
+     * Sample:
+     * \include opc_helloworld.c
+     * @return Non-zero if successful.
+     */
+    opc_error_t opcInitLibrary();
 
-	/**
-	 * Free libopc. Clean up all resources.
-	 * @return Non-zero if successful.
-	 * \see opcInitLibrary.
-	 */
-	opc_error_t opcFreeLibrary();
+    /**
+     * Free libopc. Clean up all resources.
+     * @return Non-zero if successful.
+     * \see opcInitLibrary.
+     */
+    opc_error_t opcFreeLibrary();
 
 #ifdef __cplusplus
 } /* extern "C" */
 #endif    
-		
+        
 #endif /* OPC_OPC_H */

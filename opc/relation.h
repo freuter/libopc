@@ -42,27 +42,27 @@
 extern "C" {
 #endif    
 
-	typedef struct OPC_RELATION_STRUCT opcRelation;
+    typedef struct OPC_RELATION_STRUCT opcRelation;
 
-	opcRelation *opcRelationCreateRoot(opcContainer *container, const xmlChar *relationId, const xmlChar *mimeType);
-	opcRelation *opcRelationCreatePart(opcPart *part, const xmlChar *relationId, const xmlChar *mimeType);
-	
-	int opcRelationRelease(opcRelation *relation);
-	
-	int opcRelationDeleteRoot(opcContainer *container, const xmlChar *relationId);
-	int opcRelationDeletePart(opcPart *part, const xmlChar *relationId);
-	
-	opcRelation *opcRelationFirstRoot(opcContainer *container);
-	opcRelation *opcRelationFirstPart(opcContainer *container);
-	opcRelation *opcRelationNext(opcRelation *relation);
-	
-	opcPart *opcRelationGetSource(opcRelation *relation);
-	opcPart *opcRelationGetInternalTarget(opcRelation *relation);
-	xmlChar *opcRelationGetExternalTarget(opcRelation *relation);
-	xmlChar *opcRelationGetType(opcRelation *relation);
-	
+    opcRelation *opcRelationCreateRoot(opcContainer *container, const xmlChar *relationId, const xmlChar *mimeType);
+    opcRelation *opcRelationCreatePart(opcPart *part, const xmlChar *relationId, const xmlChar *mimeType);
+    
+    int opcRelationRelease(opcRelation *relation);
+    
+    int opcRelationDeleteRoot(opcContainer *container, const xmlChar *relationId);
+    int opcRelationDeletePart(opcPart *part, const xmlChar *relationId);
+    
+    opcRelation *opcRelationFirstRoot(opcContainer *container);
+    opcRelation *opcRelationFirstPart(opcContainer *container);
+    opcRelation *opcRelationNext(opcRelation *relation);
+    
+    opcPart *opcRelationGetSource(opcRelation *relation);
+    opcPart *opcRelationGetInternalTarget(opcRelation *relation);
+    xmlChar *opcRelationGetExternalTarget(opcRelation *relation);
+    xmlChar *opcRelationGetType(opcRelation *relation);
+    
 #ifdef __cplusplus
 } /* extern "C" */
 #endif    
-		
+        
 #endif /* OPC_RELATION_H */

@@ -32,13 +32,13 @@
 #include <opc/opc.h>
 
 opcInputStream *opcInputStreamOpen(opcPart *part) {
-	return NULL;
+    return NULL;
 }
 
 int opcInputStreamRead(opcInputStream *stream, void *buf, size_t buf_size) {
-	return 0;
+    return 0;
 }
 
 int opcInputStreamClose(opcInputStream *stream) {
-	return 0;
+    return 0;
 }

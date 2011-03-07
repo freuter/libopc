@@ -42,20 +42,20 @@
 extern "C" {
 #endif    
 
-	typedef struct OPC_TYPE_STRUCT opcType;
+    typedef struct OPC_TYPE_STRUCT opcType;
 
-	
-	opcType *opcTypeCreate(opcContainer *container, 
-						   const xmlChar *mimeType, 
-						   const xmlChar *extension,
-						   opcType *baseType);
-	
-	int opcTypeRelease(opcType *type);
-	
-	int opcTypeDelete(opcContainer *container, const xmlChar *mimeType);
-	
+    
+    opcType *opcTypeCreate(opcContainer *container, 
+                           const xmlChar *mimeType, 
+                           const xmlChar *extension,
+                           opcType *baseType);
+    
+    int opcTypeRelease(opcType *type);
+    
+    int opcTypeDelete(opcContainer *container, const xmlChar *mimeType);
+    
 #ifdef __cplusplus
 } /* extern "C" */
 #endif    
-		
+        
 #endif /* OPC_TYPE_H */
