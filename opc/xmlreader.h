@@ -43,15 +43,15 @@
 extern "C" {
 #endif    
 
-	typedef struct OPC_XMLREADER_STRUCT opcXmlReader;
+    typedef struct OPC_XMLREADER_STRUCT opcXmlReader;
 
-	opcXmlReader *opcXmlReaderOpen(opcPart *part);
-	int opcXmlReaderRead(opcXmlReader *reader);
-	int opcXmlReaderClose(opcXmlReader *reader);
-	int opcXmlReaderNodeType(opcXmlReader *reader);
-	int opcXmlReaderIsEmptyElement(opcXmlReader *reader);
-	const xmlChar *opcXmlReaderLocalName(opcXmlReader *reader);	
-	
+    opcXmlReader *opcXmlReaderOpen(opcPart *part);
+    int opcXmlReaderRead(opcXmlReader *reader);
+    int opcXmlReaderClose(opcXmlReader *reader);
+    int opcXmlReaderNodeType(opcXmlReader *reader);
+    int opcXmlReaderIsEmptyElement(opcXmlReader *reader);
+    const xmlChar *opcXmlReaderLocalName(opcXmlReader *reader);    
+    
 #define opc_xml_start_document(c)
 #define opc_xml_end_document(c)
 #define opc_xml_start_element(c, ns, ln)
@@ -64,11 +64,11 @@ extern "C" {
 #define opc_xml_start_text(c)
 #define opc_xml_end_text(c)
 #define opc_xml_text(c)
-	xmlChar *opc_xml_const_value(opcXmlReader *reader);
+    xmlChar *opc_xml_const_value(opcXmlReader *reader);
 
-	
+    
 #ifdef __cplusplus
 } /* extern "C" */
 #endif    
-		
+        
 #endif /* OPC_XMLREADER_H */

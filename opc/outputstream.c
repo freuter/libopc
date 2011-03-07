@@ -32,13 +32,13 @@
 #include <opc/opc.h>
 
 opcOutputStream *opcOutputStreamOpen(opcPart *part, int growth_hint) {
-	return 0;
+    return 0;
 }
 
 int opcOutputStreamWrite(opcOutputStream *stream, const void *buf, size_t buf_len) {
-	return 0;
+    return 0;
 }
 
 int opcOutputStreamClose(opcOutputStream *stream) {
-	return 0;
+    return 0;
 }

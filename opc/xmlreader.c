@@ -32,29 +32,29 @@
 #include <opc/opc.h>
 
 opcXmlReader *opcXmlReaderOpen(opcPart *part) {
-	return NULL;
+    return NULL;
 }
 
 int opcXmlReaderRead(opcXmlReader *reader) {
-	return 0;
+    return 0;
 }
 
 int opcXmlReaderClose(opcXmlReader *reader) {
-	return 0;
+    return 0;
 }
 
 int opcXmlReaderNodeType(opcXmlReader *reader) {
-	return 0;
+    return 0;
 }
 
 int opcXmlReaderIsEmptyElement(opcXmlReader *reader) {
-	return 0;
+    return 0;
 }
 
 const xmlChar *opcXmlReaderLocalName(opcXmlReader *reader) {
-	return 0;
+    return 0;
 }
 
 xmlChar *opc_xml_const_value(opcXmlReader *reader) {
-	return NULL;
+    return NULL;
 }

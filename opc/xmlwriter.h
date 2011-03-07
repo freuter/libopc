@@ -42,11 +42,11 @@
 extern "C" {
 #endif    
 
-	typedef struct OPC_XMLWRITER_STRUCT opcXmlWriter;
+    typedef struct OPC_XMLWRITER_STRUCT opcXmlWriter;
 
-	
+    
 #ifdef __cplusplus
 } /* extern "C" */
 #endif    
-		
+        
 #endif /* OPC_XMLWRITER_H */

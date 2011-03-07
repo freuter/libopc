@@ -32,19 +32,19 @@
 #include <opc/opc.h>
 
 opcContainer* opcContainerOpen(const xmlChar *fileName, 
-							   opcContainerOpenMode mode, 
-							   void *userContext, 
-							   const xmlChar *destName) {
-	return NULL;
+                               opcContainerOpenMode mode, 
+                               void *userContext, 
+                               const xmlChar *destName) {
+    return NULL;
 }
 
 int opcContainerClose(opcContainer *c, opcContainerCloseMode mode) {
-	return 0;
+    return 0;
 }
 
 
 int opcContainerDump(opcContainer *c, FILE *out) {
-	return 0;
+    return 0;
 }
 
 

@@ -52,115 +52,115 @@
 #ifdef __cplusplus
 extern "C" {
 #endif    
-	/**
-	 Handle to an OPC container created by \ref opcContainerOpen.
-	 \see opcContainerOpen.
-	 */
-	typedef struct OPC_CONTAINER_STRUCT opcContainer;
-	
-	/**
-	 Modes for opcContainerOpen();
-	 \see opcContainerOpen
-	 */
-	typedef enum {
-		/**
-		 Opens the OPC container denoted by \a fileName in READ-ONLY mode. The \a destName parameter must be \a NULL.
-		 */
-		OPC_OPEN_READ_ONLY=0, 
-		/**
-		 Opens the OPC container denoted by \a fileName in WRITE-ONLY mode. The \a destName parameter must be \a NULL.
-		 */
-		OPC_OPEN_WRITE_ONLY=1,
-		/**
-		 Opens the OPC container denoted by \a fileName in READ/WRITE mode. The \a destName parameter must be \a NULL.
-		 */
-		OPC_OPEN_READ_WRITE=2,
-		/**
-		 This mode will open the container denoted by \a fileName in READ-ONLY mode and the container denoted by 
-		 \a destName in write-only mode. Any modifications will be written to the container denoted by \a destName 
-		 and the unmodified streams from \a fileName will be written to \a destName on closing.
-		 */
-		OPC_OPEN_TEMPLATE=3,
-		/**
-		 Like the OPC_OPEN_TEMPLATE mode, but the \a destName will be renamed to the \a fileName on closing. If \a destName 
-		 is \a NULL, then the name of the temporary file will be generated automatically.
-		 */
-		OPC_OPEN_TRANSITION=4
-	} opcContainerOpenMode; 
-	
-	/** Modes for opcContainerClose.
-	 \see opcContainerClose.
-	 */
-	typedef enum {
-		/**
-		 Close the OPC container without any further postprocessing.
-		 */
-		OPC_CLOSE_NOW = 0,
-		/**
-		 Close the OPC container and trim the file by removing unused fragments like e.g. 
-		 deleted parts.
-		 */
-		OPC_CLOSE_TRIM = 1,
-		/**
-		 Close the OPC container like in \a OPC_CLOSE_TRIM mode, but additionally remove any 
-		 "interleaved" parts by reordering them.
-		 */
-		OPC_CLOSE_DEFRAG = 2
-	} opcContainerCloseMode;
-	
-	/**
-	 Opens a ZIP-based OPC container.
-	 @param[in] fileName. For more details see \ref opcContainerOpenMode.
-	 @param[in] mode. For more details see \ref opcContainerOpenMode.
-	 @param[in] userContext. Will not be modified by libopc. Can be used to e.g. store the "this" pointer for C++ bindings.
-	 @param[in] mode. For more details see \ref opcContainerOpenMode.
-	 @return \a NULL if failed. 
-	 \see opcContainerOpenMode
-	 \see opcContainerDump
-	 */
-	opcContainer* opcContainerOpen(const xmlChar *fileName, 
-								   opcContainerOpenMode mode, 
-								   void *userContext, 
-								   const xmlChar *destName);
-	
-	/**
-	 Close an OPC container.
-	 @param[in] c. \ref opcContainer openered by \ref opcContainerOpen.
-	 @param[in] mode. For more information see \ref opcContainerCloseMode.
-	 @return Non-zero if successful.
-	 \see opcContainerOpen
-	 \see opcContainerCloseMode
-	 */
-	int opcContainerClose(opcContainer *c, opcContainerCloseMode mode);
-	
-	/**
-	 Returns the unmodified user context passed to \ref opcContainerOpen.
-	 \see opcContainerOpen
-	 */
-	void *opcContainerGetUserContext(opcContainer *c);
-	
-	/**
-	 List all types, relations and parts of the container \a c to \a out.
-	 \par Sample:
-	 \include opc_dump.c
-	 */
-	int opcContainerDump(opcContainer *c, FILE *out);
-	
-	/**
-	 Exports the OPC container to "Flat OPC" (http://blogs.msdn.com/b/ericwhite/archive/2008/09/29/the-flat-opc-format.aspx).
-	 The flat versions of an OPC file are very important when dealing with e.g XSL(T)-based or Javascript-based transformations.
-	 \see opcContainerFlatImport.
-	 */
-	int opcContainerFlatExport(opcContainer *c, const xmlChar *fileName);
-	
-	/**
-	 Imports the flat version of an OPC container. 
-	 \see opcContainerFlatExport.
-	 */
-	int opcContainerFlatImport(opcContainer *c, const xmlChar *fileName);
-	
+    /**
+     Handle to an OPC container created by \ref opcContainerOpen.
+     \see opcContainerOpen.
+     */
+    typedef struct OPC_CONTAINER_STRUCT opcContainer;
+    
+    /**
+     Modes for opcContainerOpen();
+     \see opcContainerOpen
+     */
+    typedef enum {
+        /**
+         Opens the OPC container denoted by \a fileName in READ-ONLY mode. The \a destName parameter must be \a NULL.
+         */
+        OPC_OPEN_READ_ONLY=0, 
+        /**
+         Opens the OPC container denoted by \a fileName in WRITE-ONLY mode. The \a destName parameter must be \a NULL.
+         */
+        OPC_OPEN_WRITE_ONLY=1,
+        /**
+         Opens the OPC container denoted by \a fileName in READ/WRITE mode. The \a destName parameter must be \a NULL.
+         */
+        OPC_OPEN_READ_WRITE=2,
+        /**
+         This mode will open the container denoted by \a fileName in READ-ONLY mode and the container denoted by 
+         \a destName in write-only mode. Any modifications will be written to the container denoted by \a destName 
+         and the unmodified streams from \a fileName will be written to \a destName on closing.
+         */
+        OPC_OPEN_TEMPLATE=3,
+        /**
+         Like the OPC_OPEN_TEMPLATE mode, but the \a destName will be renamed to the \a fileName on closing. If \a destName 
+         is \a NULL, then the name of the temporary file will be generated automatically.
+         */
+        OPC_OPEN_TRANSITION=4
+    } opcContainerOpenMode; 
+    
+    /** Modes for opcContainerClose.
+     \see opcContainerClose.
+     */
+    typedef enum {
+        /**
+         Close the OPC container without any further postprocessing.
+         */
+        OPC_CLOSE_NOW = 0,
+        /**
+         Close the OPC container and trim the file by removing unused fragments like e.g. 
+         deleted parts.
+         */
+        OPC_CLOSE_TRIM = 1,
+        /**
+         Close the OPC container like in \a OPC_CLOSE_TRIM mode, but additionally remove any 
+         "interleaved" parts by reordering them.
+         */
+        OPC_CLOSE_DEFRAG = 2
+    } opcContainerCloseMode;
+    
+    /**
+     Opens a ZIP-based OPC container.
+     @param[in] fileName. For more details see \ref opcContainerOpenMode.
+     @param[in] mode. For more details see \ref opcContainerOpenMode.
+     @param[in] userContext. Will not be modified by libopc. Can be used to e.g. store the "this" pointer for C++ bindings.
+     @param[in] mode. For more details see \ref opcContainerOpenMode.
+     @return \a NULL if failed. 
+     \see opcContainerOpenMode
+     \see opcContainerDump
+     */
+    opcContainer* opcContainerOpen(const xmlChar *fileName, 
+                                   opcContainerOpenMode mode, 
+                                   void *userContext, 
+                                   const xmlChar *destName);
+    
+    /**
+     Close an OPC container.
+     @param[in] c. \ref opcContainer openered by \ref opcContainerOpen.
+     @param[in] mode. For more information see \ref opcContainerCloseMode.
+     @return Non-zero if successful.
+     \see opcContainerOpen
+     \see opcContainerCloseMode
+     */
+    int opcContainerClose(opcContainer *c, opcContainerCloseMode mode);
+    
+    /**
+     Returns the unmodified user context passed to \ref opcContainerOpen.
+     \see opcContainerOpen
+     */
+    void *opcContainerGetUserContext(opcContainer *c);
+    
+    /**
+     List all types, relations and parts of the container \a c to \a out.
+     \par Sample:
+     \include opc_dump.c
+     */
+    int opcContainerDump(opcContainer *c, FILE *out);
+    
+    /**
+     Exports the OPC container to "Flat OPC" (http://blogs.msdn.com/b/ericwhite/archive/2008/09/29/the-flat-opc-format.aspx).
+     The flat versions of an OPC file are very important when dealing with e.g XSL(T)-based or Javascript-based transformations.
+     \see opcContainerFlatImport.
+     */
+    int opcContainerFlatExport(opcContainer *c, const xmlChar *fileName);
+    
+    /**
+     Imports the flat version of an OPC container. 
+     \see opcContainerFlatExport.
+     */
+    int opcContainerFlatImport(opcContainer *c, const xmlChar *fileName);
+    
 #ifdef __cplusplus
 } /* extern "C" */
 #endif    
-		
+        
 #endif /* OPC_CONTAINER_H */

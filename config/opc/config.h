@@ -57,16 +57,16 @@ extern "C" {
 #define OPC_TRUE (0==0)
 #define OPC_FALSE (0==1)
 
-	typedef pbool_t opc_bool_t;
-	typedef pofs_t opc_ofs_t;
-	typedef puint8_t opc_uint8_t;
-	typedef puint16_t opc_uint16_t;
-	typedef puint32_t opc_uint32_t;
-	typedef puint64_t opc_uint64_t;
-	typedef pint8_t opc_int8_t;
-	typedef pint16_t opc_int16_t;
-	typedef pint32_t opc_int32_t;
-	typedef pint64_t opc_int64_t;
+    typedef pbool_t opc_bool_t;
+    typedef pofs_t opc_ofs_t;
+    typedef puint8_t opc_uint8_t;
+    typedef puint16_t opc_uint16_t;
+    typedef puint32_t opc_uint32_t;
+    typedef puint64_t opc_uint64_t;
+    typedef pint8_t opc_int8_t;
+    typedef pint16_t opc_int16_t;
+    typedef pint32_t opc_int32_t;
+    typedef pint64_t opc_int64_t;
 
 #define OPC_DEFLATE_BUFFER_SIZE 4096
 

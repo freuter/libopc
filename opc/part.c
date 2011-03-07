@@ -32,16 +32,16 @@
 #include <opc/opc.h>
 
 opcPart *opcPartOpen(opcContainer *container, 
-					 const xmlChar *absolutePath, 
-					 opcType *type,						 
-					 int flags) {
-	return NULL;
+                     const xmlChar *absolutePath, 
+                     opcType *type,                         
+                     int flags) {
+    return NULL;
 }
 
 int opcPartRelease(opcPart *part) {
-	return 0;
+    return 0;
 }
 
 int opcPartDelete(opcContainer *container, const xmlChar *absolutePath) {
-	return 0;
+    return 0;
 }

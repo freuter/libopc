@@ -33,11 +33,11 @@
 #include <libxml/xmlreader.h>
 
 opc_error_t opcInitLibrary() {
-	xmlInitParser();
-	return OPC_ERROR_NONE;
+    xmlInitParser();
+    return OPC_ERROR_NONE;
 }
 
 opc_error_t opcFreeLibrary() {
-	xmlCleanupParser();
+    xmlCleanupParser();
     return OPC_ERROR_NONE;
 }
