@@ -34,21 +34,21 @@
 
 int main( int argc, const char* argv[] )
 {
-	if (opcInitLibrary() && 2==argc) {
-		opcContainer *c=NULL;
-		if (NULL!=(c=opcContainerOpen(_X(argv[1]), OPC_OPEN_READ_ONLY, NULL, NULL))) {
-			opcContainerDump(c, stdout);
-			opcContainerClose(c, OPC_CLOSE_NOW);
-		} else {
-			printf("ERROR: \"%s\" could not be opened.\n", argv[1]);
-		}
-		opcFreeLibrary();
-	} else if (2==argc) {
-		printf("ERROR: initialization of libopc failed.\n");	
-	} else {
-		printf("opc_dump FILENAME.\n\n");
-		printf("Sample: opc_dump test.docx\n");
-	}
-	return 0;
+    if (OPC_ERROR_NONE==opcInitLibrary() && 2==argc) {
+        opcContainer *c=NULL;
+        if (NULL!=(c=opcContainerOpen(_X(argv[1]), OPC_OPEN_READ_ONLY, NULL, NULL))) {
+            opcContainerDump(c, stdout);
+            opcContainerClose(c, OPC_CLOSE_NOW);
+        } else {
+            printf("ERROR: \"%s\" could not be opened.\n", argv[1]);
+        }
+        opcFreeLibrary();
+    } else if (2==argc) {
+        printf("ERROR: initialization of libopc failed.\n");    
+    } else {
+        printf("opc_dump FILENAME.\n\n");
+        printf("Sample: opc_dump test.docx\n");
+    }
+    return 0;
 }
 

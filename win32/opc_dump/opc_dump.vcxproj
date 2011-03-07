@@ -1,0 +1,87 @@
+<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<ItemGroup Label="ProjectConfigurations">
+ <ProjectConfiguration Include="Debug|Win32">
+   <Configuration>Debug</Configuration>
+   <Platform>Win32</Platform>
+ </ProjectConfiguration>
+<ProjectConfiguration Include="Release|Win32">
+   <Configuration>Release</Configuration>
+   <Platform>Win32</Platform>
+</ProjectConfiguration>
+</ItemGroup>
+<PropertyGroup Label="Globals">
+    <ProjectGuid>{ebe78ecc-ac47-5d69-9e4b-e3b5748428a5}</ProjectGuid>
+    <Keyword>Win32Proj</Keyword>
+    <RootNamespace>opc_dump</RootNamespace>
+</PropertyGroup>
+<Import Project="$(VCTargetsPath)\Microsoft.Cpp.default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+<Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+<ImportGroup Label="ExtensionSettings" />
+<ImportGroup Label="PropertySheets" />
+<PropertyGroup Label="UserMacros" />
+<PropertyGroup />
+<ItemDefinitionGroup>
+<ClCompile>
+<PreprocessorDefinitions>WIN32;LIBXML_STATIC;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+<AdditionalIncludeDirectories>..\..\config\win32-debug-msvc\zlib-1.2.5;..\..\third_party\zlib-1.2.5;..\..\config\win32-debug-msvc\libxml2-2.7.7;..\..\third_party\libxml2-2.7.7\include\libxml;..\..\third_party\libxml2-2.7.7\include;..\..\config\win32-debug-msvc\plib\include;..\..\config;..\..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+<CompileAs>CompileAsCpp</CompileAs>
+</ClCompile>
+<Link>
+<AdditionalDependencies>%(AdditionalDependencies)</AdditionalDependencies> 
+</Link>
+</ItemDefinitionGroup>
+<ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+<ClCompile>
+<WarningLevel>Level3</WarningLevel>
+<Optimization>Disabled</Optimization>
+</ClCompile>
+<Link>
+<GenerateDebugInformation>true</GenerateDebugInformation>
+</Link>
+</ItemDefinitionGroup>
+<ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+<ClCompile>
+<Optimization>MaxSpeed</Optimization>
+<FunctionLevelLinking>true</FunctionLevelLinking> 
+<IntrinsicFunctions>true</IntrinsicFunctions> 
+</ClCompile>
+<Link>
+<GenerateDebugInformation>false</GenerateDebugInformation>
+<EnableCOMDATFolding>true</EnableCOMDATFolding>
+<OptimizeReferences>true</OptimizeReferences>
+</Link>
+</ItemDefinitionGroup>
+<ItemGroup>
+</ItemGroup>
+<ItemGroup>
+  <ClCompile Include="..\..\sample\opc_dump.c">
+  </ClCompile>
+</ItemGroup>
+<ItemGroup>
+<ProjectReference Include="../opc/opc.vcxproj">
+<Project>{f674b118-98cb-56eb-b398-3c0f6aa6c40b}</Project>
+</ProjectReference>
+<ProjectReference Include="../plib/plib.vcxproj">
+<Project>{9a6d5063-5bcd-597e-a440-5122933f70c4}</Project>
+</ProjectReference>
+<ProjectReference Include="../zlib/zlib.vcxproj">
+<Project>{e49ff4af-766a-598f-91a2-99f255aad4a8}</Project>
+</ProjectReference>
+<ProjectReference Include="../xml/xml.vcxproj">
+<Project>{c1949314-bf17-551a-a7a5-8c1e2b999681}</Project>
+</ProjectReference>
+</ItemGroup>
+<Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+<ImportGroup Label="ExtensionTargets" />
+</Project>

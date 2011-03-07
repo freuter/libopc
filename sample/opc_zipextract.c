@@ -76,6 +76,7 @@ int main( int argc, const char* argv[] )
                         OPC_ENSURE(OPC_ERROR_NONE==dumpStream(zip, &rawBuffer, &segment, stdout));
                     } else {
                         OPC_ENSURE(OPC_ERROR_NONE==opcZipRawSkipFileData(zip, &rawBuffer, &segment));
+                        OPC_ENSURE(OPC_ERROR_NONE==opcZipRawReadDataDescriptor(zip, &rawBuffer, &segment));
                     }
                     opcZipCleanupSegment(&segment);
                     xmlFree(name);
