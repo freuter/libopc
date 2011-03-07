@@ -36,44 +36,23 @@
 #include <time.h>
 
 
-static opc_error_t dumpStream(opcZipPartInfo *partInfo, opcZip *zip, FILE *out) {
+static opc_error_t dumpStream(opcZip *zip, opcZipRawBuffer *rawBuffer, opcZipSegment *segment, FILE *out) {
     opc_error_t err=OPC_ERROR_NONE;
-	opcZipDeflateStream stream;
-	if (OPC_ERROR_NONE==err && OPC_ERROR_NONE==(err=opcZipInitDeflateStream(partInfo, &stream))) {
-		if (OPC_ERROR_NONE==err && OPC_ERROR_NONE==(err=opcZipOpenDeflateStream(partInfo, &stream))) {
-			int len=0;
-			char buf[OPC_DEFLATE_BUFFER_SIZE];
-			do {
-				len=opcZipReadDeflateStream(zip, &stream, buf, sizeof(buf), &err);
-				if (len>0 && NULL!=out) {
-					fwrite(buf, sizeof(char), len, out);
-				}
-			} while (len>0 && OPC_ERROR_NONE==err);
-			if (OPC_ERROR_NONE==err) err=opcZipCloseDeflateStream(partInfo, &stream);
-		}
-	}
+    opcZipInflateState inflateState;
+    OPC_ENSURE(OPC_ERROR_NONE==opcZipInitInflateState(&rawBuffer->state, segment, &inflateState));
+    opc_uint8_t buf[OPC_DEFLATE_BUFFER_SIZE];
+    opc_uint32_t len=0;
+    opc_uint32_t crc=0;
+    while((len=opcZipRawReadFileData(zip, rawBuffer, &inflateState, buf, sizeof(buf)))>0) {
+        crc=crc32(crc, buf, len);
+        if (NULL!=out) fwrite(buf, sizeof(puint8_t), len, out);
+    }
+    OPC_ENSURE(OPC_ERROR_NONE==opcZipRawReadDataDescriptor(zip, rawBuffer, segment));
+    OPC_ASSERT(crc==segment->crc32);
+    OPC_ENSURE(OPC_ERROR_NONE==opcZipCleanupInflateState(&rawBuffer->state, segment, &inflateState));
 	return err;
 }
 
-static opc_error_t partInfoCallback(void *callbackCtx, opcZip *zip) {
-    opcZipPartInfo partInfo;
-    opc_error_t err=OPC_ERROR_NONE;
-    xmlChar *filename=(xmlChar*)callbackCtx;
-    if (OPC_ERROR_NONE==(err=opcZipInitPartInfo(zip, &partInfo))) {
-        if (NULL==filename) {
-            printf("%s\n", partInfo.partName);
-        } else if (xmlStrcmp(filename, partInfo.partName)==0) {
-            if (OPC_ERROR_NONE==(err=dumpStream(&partInfo, zip, stdout))) {
-                err=opcZipConsumedPartInCallback(zip, &partInfo);
-            }
-        }
-        if (OPC_ERROR_NONE==err) {
-            err=opcZipCleanupPartInfo(&partInfo);
-        }
-
-    }
-    return err;
-}
 
 int main( int argc, const char* argv[] )
 {
@@ -86,7 +65,21 @@ int main( int argc, const char* argv[] )
         if (OPC_ERROR_NONE==(err=opcInitLibrary())) {
             opcZip *zip=opcZipOpenFile(_X(argv[1]), OPC_ZIP_READ);
             if (NULL!=zip) {
-                err=opZipScan(zip, argc==3?_X(argv[2]):NULL, partInfoCallback);
+                opcZipRawBuffer rawBuffer;
+                OPC_ENSURE(OPC_ERROR_NONE==opcZipInitRawBuffer(zip, &rawBuffer));
+                opcZipSegment segment;
+                xmlChar *name=NULL;
+                opc_uint32_t segment_number;
+                opc_bool_t last_segment;
+                while(opcZipRawReadLocalFile(zip, &rawBuffer, &segment, &name, &segment_number, &last_segment)) {
+                    if (0==xmlStrcmp(_X(argv[2]), name)) {
+                        OPC_ENSURE(OPC_ERROR_NONE==dumpStream(zip, &rawBuffer, &segment, stdout));
+                    } else {
+                        OPC_ENSURE(OPC_ERROR_NONE==opcZipRawSkipFileData(zip, &rawBuffer, &segment));
+                    }
+                    opcZipCleanupSegment(&segment);
+                    xmlFree(name);
+                }
             } else {
                 err=OPC_ERROR_STREAM;
             }
