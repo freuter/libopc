@@ -35,73 +35,86 @@
 #include <string.h>
 #include <time.h>
 
-typedef struct ZIPPARTSSTRUCT {
-	opcZipPartInfo *partInfo_array;
-	int partInfo_items;
-} ZipParts;
+typedef struct MYPARTSTRUCT {
+    opcZipSegment segment;
+    opc_uint32_t segment_number;
+    opc_bool_t last_segment;
+    xmlChar *name;
+} myPart;
 
-static opc_error_t partInfoCallback(void *callbackCtx, opcZip *zip) {
-	ZipParts *zipParts=(ZipParts*)callbackCtx;
-	zipParts->partInfo_array=(opcZipPartInfo *)xmlRealloc(zipParts->partInfo_array, (zipParts->partInfo_items+1)*sizeof(opcZipPartInfo));
-	if (NULL!=zipParts->partInfo_array && OPC_ERROR_NONE==opcZipInitPartInfo(zip, zipParts->partInfo_array+zipParts->partInfo_items)) {
-		zipParts->partInfo_items++;
-	}
-	return OPC_ERROR_NONE;
+
+typedef struct MYCONTAINERSTRUCT {
+    myPart *part_array;
+    opc_uint32_t part_items;
+} myContainer;
+
+myPart* ensurePart(myContainer *container) {
+    container->part_array=(myPart *)xmlRealloc(container->part_array, (container->part_items+1)*sizeof(myPart));
+    myPart* ret=&container->part_array[container->part_items];
+    opc_bzero_mem(ret, sizeof(*ret));
+    return ret;
 }
-
-static opc_error_t dumpStream(opcZipPartInfo *partInfo, opcZip *zip, FILE *out) {
-    opc_error_t err=OPC_ERROR_NONE;
-	opcZipDeflateStream stream;
-	if (OPC_ERROR_NONE==err && OPC_ERROR_NONE==(err=opcZipInitDeflateStream(partInfo, &stream))) {
-		if (OPC_ERROR_NONE==err && OPC_ERROR_NONE==(err=opcZipOpenDeflateStream(partInfo, &stream))) {
-			int len=0;
-			char buf[OPC_DEFLATE_BUFFER_SIZE];
-			do {
-				len=opcZipReadDeflateStream(zip, &stream, buf, sizeof(buf), &err);
-				if (len>0 && NULL!=out) {
-					fwrite(buf, sizeof(char), len, out);
-				}
-			} while (len>0 && OPC_ERROR_NONE==err);
-			if (OPC_ERROR_NONE==err) err=opcZipCloseDeflateStream(partInfo, &stream);
-		}
-	}
-	return err;
-}
-
-
 
 int main( int argc, const char* argv[] )
 {
-	time_t start_time=time(NULL);
+    time_t start_time=time(NULL);
     opc_error_t err=OPC_ERROR_NONE;
-	if (OPC_ERROR_NONE==(err=opcInitLibrary())) {
-		for(int i=1;OPC_ERROR_NONE==err && i<argc;i++) {
-			opcZip *zip=opcZipOpenFile(_X(argv[i]), OPC_ZIP_READ);
-			if (NULL!=zip) {
-				ZipParts zipParts;
-				memset(&zipParts, 0, sizeof(zipParts));
-				if (OPC_ERROR_NONE==err && OPC_ERROR_NONE==(err=opZipScan(zip, &zipParts, partInfoCallback))) {
-					printf("scan ok.\n");
-					for(int i=0;i<zipParts.partInfo_items;i++) {
-						printf("%s[%li]\n", zipParts.partInfo_array[i].partName, zipParts.partInfo_array[i].stream_ofs);
-						dumpStream(&zipParts.partInfo_array[i], zip, NULL);
-					}
-				}
-				for(int i=0;OPC_ERROR_NONE==err && i<zipParts.partInfo_items;i++) {
-					err=opcZipCleanupPartInfo(zipParts.partInfo_array+i);
-				}
-			} else {
-                err=OPC_ERROR_STREAM;
-            }
-            if (OPC_ERROR_NONE!=err) {
-                printf("*ERROR: %s => %i\n", argv[i], err);
+    if (OPC_ERROR_NONE==(err=opcInitLibrary())) {
+        for(int i=1;OPC_ERROR_NONE==err && i<argc;i++) {
+            opcZip *zip=opcZipOpenFile(_X(argv[i]), OPC_ZIP_READ);
+            if (NULL!=zip) {
+                myContainer container;
+                memset(&container, 0, sizeof(myContainer));
+                opcZipRawBuffer rawBuffer;
+                OPC_ENSURE(OPC_ERROR_NONE==opcZipInitRawBuffer(zip, &rawBuffer));
+                myPart *part=NULL;
+                while(NULL!=(part=ensurePart(&container)) && opcZipRawReadLocalFile(zip, &rawBuffer, &part->segment, &part->name, &part->segment_number, &part->last_segment)) {
+                    opcZipInflateState inflateState;
+                    OPC_ENSURE(OPC_ERROR_NONE==opcZipInitInflateState(&rawBuffer.state, &part->segment, &inflateState));
+                    opc_uint8_t buf[OPC_DEFLATE_BUFFER_SIZE];
+                    opc_uint32_t len=0;
+                    opc_uint32_t crc=0;
+                    while((len=opcZipRawReadFileData(zip, &rawBuffer, &inflateState, buf, sizeof(buf)))>0) {
+                        crc=crc32(crc, buf, len);
+                    }
+                    OPC_ENSURE(OPC_ERROR_NONE==opcZipRawReadDataDescriptor(zip, &rawBuffer, &part->segment));
+                    OPC_ASSERT(crc==part->segment.crc32);
+                    OPC_ENSURE(OPC_ERROR_NONE==opcZipCleanupInflateState(&rawBuffer.state, &part->segment, &inflateState));
+                    printf("%s\n", part->name);
+                    part=NULL; container.part_items++;
+                }
+                opcZipSegment segment;
+                xmlChar *name=NULL;
+                opc_uint32_t segment_number;
+                opc_bool_t last_segment;
+                while(opcZipRawReadCentralDirectory(zip, &rawBuffer, &segment, &name, &segment_number, &last_segment)) {
+                    OPC_ENSURE(OPC_ERROR_NONE==opcZipCleanupSegment(&segment));
+                    xmlFree(name);
+                }
+                opc_uint16_t central_dir_entries=0;
+                OPC_ENSURE(opcZipRawReadEndOfCentralDirectory(zip, &rawBuffer, &central_dir_entries));
+                for(opc_uint32_t i=0;i<container.part_items;i++) {
+                    opcZipSegmentInputStream *stream=opcZipCreateSegmentInputStream(zip, &container.part_array[i].segment);
+                    opc_uint8_t buf[OPC_DEFLATE_BUFFER_SIZE];
+                    opc_uint32_t len=0;
+                    opc_uint32_t crc=0;
+                    while((len=opcZipReadSegmentInputStream(zip, stream, buf, sizeof(buf)))>0) {
+                        crc=crc32(crc, buf, len);
+                    }
+                    OPC_ASSERT(crc==container.part_array[i].segment.crc32);
+                    printf("%s [%08X]\n", container.part_array[i].name, crc);
+                    OPC_ENSURE(OPC_ERROR_NONE==opcZipCloseSegmentInputStream(zip, &container.part_array[i].segment, stream));
+                }
+                for(opc_uint32_t i=0;i<container.part_items;i++) {
+                    OPC_ENSURE(OPC_ERROR_NONE==opcZipCleanupSegment(&container.part_array[i].segment));
+                    xmlFree(container.part_array[i].name);
+                }
             }
             opcZipClose(zip);
-		}
-		if (OPC_ERROR_NONE==err) err=opcFreeLibrary();
-	}
-	time_t end_time=time(NULL);
-	printf("time %.2lfsec\n", difftime(end_time, start_time));
-	return (OPC_ERROR_NONE==err?0:3);	
+        }
+        if (OPC_ERROR_NONE==err) err=opcFreeLibrary();
+    }
+    time_t end_time=time(NULL);
+    printf("time %.2lfsec\n", difftime(end_time, start_time));
+    return (OPC_ERROR_NONE==err?0:3);	
 }
-

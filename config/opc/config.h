@@ -54,7 +54,10 @@ extern "C" {
 
 #define OPC_ASSERT(e) assert(e)
 #define OPC_ENSURE(e) assert(e)
+#define OPC_TRUE (0==0)
+#define OPC_FALSE (0==1)
 
+	typedef pbool_t opc_bool_t;
 	typedef pofs_t opc_ofs_t;
 	typedef puint8_t opc_uint8_t;
 	typedef puint16_t opc_uint16_t;
@@ -65,11 +68,12 @@ extern "C" {
 	typedef pint32_t opc_int32_t;
 	typedef pint64_t opc_int64_t;
 
-#define OPC_DEFLATE_BUFFER_SIZE 1024
+#define OPC_DEFLATE_BUFFER_SIZE 4096
 
     typedef enum OPC_ERROR_ENUM {
         OPC_ERROR_NONE,
         OPC_ERROR_STREAM,
+        OPC_ERROR_SEEK, // can't seek
         OPC_ERROR_UNSUPPORTED_DATA_DESCRIPTOR,
         OPC_ERROR_UNSUPPORTED_COMPRESSION,
         OPC_ERROR_DEFLATE,
@@ -77,6 +81,7 @@ extern "C" {
     } opc_error_t;
     
 #define opc_logf printf
+#define opc_bzero_mem(m,s) memset(m, 0, s)
 
 #ifdef __cplusplus
 } /* extern "C" */

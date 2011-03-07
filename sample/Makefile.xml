@@ -21,4 +21,9 @@
       <file path="opc_zipextract.c"/>
     </source>
   </tool>
+  <tool name="opc_zipwrite" dep="opc" mode="c99">
+    <source root=".">
+      <file path="opc_zipwrite.c"/>
+    </source>
+  </tool>
 </project>

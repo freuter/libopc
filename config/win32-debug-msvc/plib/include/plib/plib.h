@@ -96,6 +96,7 @@ typedef unsigned __int32 puint32_t;
 typedef __int64 pint64_t;
 typedef unsigned __int64 puint64_t;
 
+typedef int pbool_t;
 
 #else
 #error "system types can not be determined"
