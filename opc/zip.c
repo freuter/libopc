@@ -34,8 +34,6 @@
 #include <libxml/globals.h>
 #include <string.h>
 #include <stdio.h>
-#include <io.h>
-
 #define OPC_MAXPATH 512
 
 struct OPC_ZIP_STRUCT {
@@ -169,7 +167,14 @@ static opc_ofs_t __opcZipFileSeek(void *iocontext, opc_ofs_t ofs) {
     }
 }
 
-
+static opc_uint32_t __opcZipFileLength(void *iocontext) {
+    opc_ofs_t current=ftell((FILE*)iocontext);
+    OPC_ENSURE(fseek((FILE*)iocontext, 0, SEEK_END)>=0);
+    opc_ofs_t length=ftell((FILE*)iocontext);
+    OPC_ENSURE(fseek((FILE*)iocontext, current, SEEK_SET)>=0);
+    OPC_ASSERT(current==ftell((FILE*)iocontext));
+    return length;
+}
 
 opcZip *opcZipOpenFile(const xmlChar *fileName, int flags) {
     opcZip *ret=NULL;
@@ -185,7 +190,7 @@ opcZip *opcZipOpenFile(const xmlChar *fileName, int flags) {
     mode[mode_ofs++]='\0';
     FILE *file=fopen(_X2C(fileName), mode);
     if (file!=NULL) {
-        ret=opcZipOpenIO(__opcZipFileRead, __opcZipFileWrite, __opcZipFileClose, __opcZipFileSeek, file, _filelength(_fileno(file)), flags);
+        ret=opcZipOpenIO(__opcZipFileRead, __opcZipFileWrite, __opcZipFileClose, __opcZipFileSeek, file, __opcZipFileLength(file), flags);
     }
     return ret;
 }
@@ -312,7 +317,7 @@ static puint32_t opcZipEncodeFilename(const xmlChar *name, char *buf, int buf_le
         default:
             if ((ch>='A' && ch<='Z') || (ch>='a' && ch<='z') || (ch>='0' && ch<='9')) {
                 if (NULL!=buf) buf[buf_ofs]=ch; buf_ofs++;
-            } else if (NULL==buf || (buf_len+3<=buf_len && 3==_snprintf(buf+buf_ofs, 3, "%%%02X", ch))) {
+            } else if (NULL==buf || (buf_len+3<=buf_len && 3==snprintf(buf+buf_ofs, 3, "%%%02X", ch))) {
                 buf_ofs+=3;
             } else {
                 buf_ofs=0; buf_len=0; // indicate error
@@ -331,13 +336,13 @@ static puint32_t opcZipFilenameAppendPiece(opc_uint32_t segment_number, opc_bool
             // only one segment, do not append anything...
         } else if (last_segment) {
             OPC_ASSERT(segment_number>0); // we have a last segment
-            if (NULL==buf || (buf_ofs<buf_len && (len=_snprintf(buf+buf_ofs, buf_len-buf_ofs, "/[%i].last.piece", segment_number))>14)) {
+            if (NULL==buf || (buf_ofs<buf_len && (len=snprintf(buf+buf_ofs, buf_len-buf_ofs, "/[%i].last.piece", segment_number))>14)) {
                 buf_ofs+=len;
                 buf_len-=len;
             }
         } else {
             OPC_ASSERT(!last_segment); // we have a segment with more to come...
-            if (NULL==buf || (buf_ofs<buf_len && (len=_snprintf(buf+buf_ofs, buf_len-buf_ofs, "/[%i].piece", segment_number))>9)) {
+            if (NULL==buf || (buf_ofs<buf_len && (len=snprintf(buf+buf_ofs, buf_len-buf_ofs, "/[%i].piece", segment_number))>9)) {
                 buf_ofs+=len;
                 buf_len-=len;
             }

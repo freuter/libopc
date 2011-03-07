@@ -75,6 +75,8 @@ typedef uint32_t puint32_t;
 typedef int64_t pint64_t;
 typedef uint64_t puint64_t;
 
+typedef int pbool_t;
+
 // INTN_MAX, INTN_MIN, UINTN_MAX
 #elif defined(WIN32)
 
