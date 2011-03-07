@@ -131,7 +131,7 @@ extern "C" {
      \see opcContainerOpen
      \see opcContainerCloseMode
      */
-    int opcContainerClose(opcContainer *c, opcContainerCloseMode mode);
+    opc_error_t opcContainerClose(opcContainer *c, opcContainerCloseMode mode);
     
     /**
      Returns the unmodified user context passed to \ref opcContainerOpen.
@@ -144,7 +144,7 @@ extern "C" {
      \par Sample:
      \include opc_dump.c
      */
-    int opcContainerDump(opcContainer *c, FILE *out);
+    opc_error_t opcContainerDump(opcContainer *c, FILE *out);
     
     /**
      Exports the OPC container to "Flat OPC" (http://blogs.msdn.com/b/ericwhite/archive/2008/09/29/the-flat-opc-format.aspx).

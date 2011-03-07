@@ -26,4 +26,9 @@
       <file path="opc_zipwrite.c"/>
     </source>
   </tool>
+  <tool name="opc_dump" dep="opc" mode="c99">
+    <source root=".">
+      <file path="opc_dump.c"/>
+    </source>
+  </tool>
 </project>
