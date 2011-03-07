@@ -102,6 +102,7 @@ typedef int pbool_t;
 #error "system types can not be determined"
 #endif
 
+#define snprintf _snprintf
 
 #ifdef __cplusplus
 } /* extern "C" */
