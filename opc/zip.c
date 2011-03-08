@@ -905,10 +905,11 @@ static inline int opcZipRawReadString(opcZip *zip, opcZipRawBuffer *raw, xmlChar
 }
 
 
-static opc_error_t _opcZipSplitFilename(opc_uint8_t *filename, opc_uint32_t filename_length, opc_uint32_t *segment_number, opc_bool_t *last_segment) {
+static opc_error_t _opcZipSplitFilename(opc_uint8_t *filename, opc_uint32_t filename_length, opc_uint32_t *segment_number, opc_bool_t *last_segment, opc_bool_t *rel_segment) {
     opc_error_t ret=OPC_ERROR_STREAM;
     if (NULL!=segment_number) *segment_number=0;
     if (NULL!=last_segment) *last_segment=OPC_TRUE;
+    if (NULL!=rel_segment) *rel_segment=OPC_FALSE;
     if (filename_length>7 // "].piece"  suffix
         && filename[filename_length-7]==']'
         && filename[filename_length-6]=='.'
@@ -952,13 +953,37 @@ static opc_error_t _opcZipSplitFilename(opc_uint8_t *filename, opc_uint32_t file
             filename[i-2]='\0';
             ret=OPC_ERROR_NONE;
         }
+    } else if (filename_length>5 // ".rels"  suffix
+        && filename[filename_length-5]=='.'
+        && filename[filename_length-4]=='r'
+        && filename[filename_length-3]=='e'
+        && filename[filename_length-2]=='l'
+        && filename[filename_length-1]=='s') {
+        opc_uint32_t i=filename_length-5;
+        while(i>0 && filename[i-1]!='/') i--;
+        //"_rels/"
+        if (i>=6
+            && filename[i-6]=='_' 
+            && filename[i-5]=='r' 
+            && filename[i-4]=='e' 
+            && filename[i-3]=='l' 
+            && filename[i-2]=='s' 
+            && filename[i-1]=='/') {
+            opc_uint32_t j=i;
+            for(;j<filename_length-5;j++) {
+                filename[j-6]=filename[j];
+            }
+            filename[j-6]=0;
+            if (NULL!=rel_segment) *rel_segment=OPC_TRUE;
+        }
+        ret=OPC_ERROR_NONE;
     } else {
         ret=OPC_ERROR_NONE;
     }
     return ret;
 }
 
-opc_bool_t opcZipRawReadLocalFile(opcZip *zip, opcZipRawBuffer *rawBuffer, opcZipSegment *segment, xmlChar **name, opc_uint32_t *segment_number, opc_bool_t *last_segment) {
+opc_bool_t opcZipRawReadLocalFile(opcZip *zip, opcZipRawBuffer *rawBuffer, opcZipSegment *segment, xmlChar **name, opc_uint32_t *segment_number, opc_bool_t *last_segment, opc_bool_t *rel_segment) {
     opc_bool_t ret=OPC_FALSE;
     opc_uint32_t sig=opcZipRawPeekHeaderSignature(zip, rawBuffer);
     if (0x04034b50==sig) {
@@ -1021,7 +1046,7 @@ opc_bool_t opcZipRawReadLocalFile(opcZip *zip, opcZipRawBuffer *rawBuffer, opcZi
                 
             }
             if (0==extra_length && OPC_ERROR_NONE==rawBuffer->state.err) {
-                rawBuffer->state.err=_opcZipSplitFilename(filename, filename_length, segment_number, last_segment);
+                rawBuffer->state.err=_opcZipSplitFilename(filename, filename_length, segment_number, last_segment, rel_segment);
             }
             ret=(OPC_ERROR_NONE==rawBuffer->state.err && 0==extra_length);
             if (ret && NULL!=name) {
@@ -1103,7 +1128,7 @@ opc_error_t opcZipRawReadDataDescriptor(opcZip *zip, opcZipRawBuffer *rawBuffer,
     return OPC_ERROR_NONE;
 }
 
-opc_bool_t opcZipRawReadCentralDirectory(opcZip *zip, opcZipRawBuffer *rawBuffer, opcZipSegment *segment, xmlChar **name, opc_uint32_t *segment_number, opc_bool_t *last_segment) {
+opc_bool_t opcZipRawReadCentralDirectory(opcZip *zip, opcZipRawBuffer *rawBuffer, opcZipSegment *segment, xmlChar **name, opc_uint32_t *segment_number, opc_bool_t *last_segment, opc_bool_t *rel_segment) {
     opc_bool_t ret=OPC_FALSE;
     opc_uint32_t sig=opcZipRawPeekHeaderSignature(zip, rawBuffer);
     if (0x02014b50==sig) {
@@ -1159,7 +1184,7 @@ opc_bool_t opcZipRawReadCentralDirectory(opcZip *zip, opcZipRawBuffer *rawBuffer
                 comment_length-=opcZipRawSkipBytes(zip, rawBuffer, comment_length);
             }
             if (0==extra_length && 0==comment_length && OPC_ERROR_NONE==rawBuffer->state.err) {
-                rawBuffer->state.err=_opcZipSplitFilename(filename, filename_length, segment_number, last_segment);
+                rawBuffer->state.err=_opcZipSplitFilename(filename, filename_length, segment_number, last_segment, rel_segment);
             }
             ret=(OPC_ERROR_NONE==rawBuffer->state.err && 0==extra_length && 0==comment_length);
             if (ret && NULL!=name) {
