@@ -111,12 +111,12 @@ extern "C" {
     opc_error_t opcZipInitInflateState(opcZipRawState *rawState, opcZipSegment *segment, opcZipInflateState *state);
     opc_error_t opcZipCleanupInflateState(opcZipRawState *rawState, opcZipSegment *segment, opcZipInflateState *state);
 
-    opc_bool_t opcZipRawReadLocalFile(opcZip *zip, opcZipRawBuffer *rawBuffer, opcZipSegment *segment, xmlChar **name, opc_uint32_t *segment_number, opc_bool_t *last_segment);
+    opc_bool_t opcZipRawReadLocalFile(opcZip *zip, opcZipRawBuffer *rawBuffer, opcZipSegment *segment, xmlChar **name, opc_uint32_t *segment_number, opc_bool_t *last_segment, opc_bool_t *rel_segment);
     opc_uint32_t opcZipRawReadFileData(opcZip *zip, opcZipRawBuffer *rawBuffer, opcZipInflateState *state, opc_uint8_t *buffer, opc_uint32_t buf_len);
     opc_error_t opcZipRawReadDataDescriptor(opcZip *zip, opcZipRawBuffer *rawBuffer, opcZipSegment *segment);
     opc_error_t opcZipRawSkipFileData(opcZip *zip, opcZipRawBuffer *rawBuffer, opcZipSegment *segment);
 
-    opc_bool_t opcZipRawReadCentralDirectory(opcZip *zip, opcZipRawBuffer *rawBuffer, opcZipSegment *segment, xmlChar **name, opc_uint32_t *segment_number, opc_bool_t *last_segment);
+    opc_bool_t opcZipRawReadCentralDirectory(opcZip *zip, opcZipRawBuffer *rawBuffer, opcZipSegment *segment, xmlChar **name, opc_uint32_t *segment_number, opc_bool_t *last_segment, opc_bool_t *rel_segment);
     opc_bool_t opcZipRawReadEndOfCentralDirectory(opcZip *zip, opcZipRawBuffer *rawBuffer, opc_uint16_t *central_dir_entries);
 
     typedef struct OPC_ZIPSEGMENTINPUTSTREAM_STRUCT opcZipSegmentInputStream;
