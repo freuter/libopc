@@ -31,9 +31,13 @@
  */
 #include <opc/opc.h>
 #include <stdio.h>
+#include <time.h>
+
 
 int main( int argc, const char* argv[] )
 {
+    time_t start_time=time(NULL);
+    opc_error_t err=OPC_ERROR_NONE;
     if (OPC_ERROR_NONE==opcInitLibrary() && 2==argc) {
         opcContainer *c=NULL;
         if (NULL!=(c=opcContainerOpen(_X(argv[1]), OPC_OPEN_READ_ONLY, NULL, NULL))) {
@@ -41,14 +45,18 @@ int main( int argc, const char* argv[] )
             opcContainerClose(c, OPC_CLOSE_NOW);
         } else {
             printf("ERROR: \"%s\" could not be opened.\n", argv[1]);
+            err=OPC_ERROR_STREAM;
         }
         opcFreeLibrary();
     } else if (2==argc) {
         printf("ERROR: initialization of libopc failed.\n");    
+        err=OPC_ERROR_STREAM;
     } else {
         printf("opc_dump FILENAME.\n\n");
         printf("Sample: opc_dump test.docx\n");
     }
-    return 0;
+    time_t end_time=time(NULL);
+    fprintf(stderr, "time %.2lfsec\n", difftime(end_time, start_time));
+    return (OPC_ERROR_NONE==err?0:3);	
 }
 

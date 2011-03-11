@@ -68,7 +68,7 @@ int main( int argc, const char* argv[] )
                 opcZipRawBuffer rawBuffer;
                 OPC_ENSURE(OPC_ERROR_NONE==opcZipInitRawBuffer(zip, &rawBuffer));
                 myPart *part=NULL;
-                while(NULL!=(part=ensurePart(&container)) && opcZipRawReadLocalFile(zip, &rawBuffer, &part->segment, &part->name, &part->segment_number, &part->last_segment)) {
+                while(NULL!=(part=ensurePart(&container)) && opcZipRawReadLocalFile(zip, &rawBuffer, &part->segment, &part->name, &part->segment_number, &part->last_segment, NULL)) {
                     opcZipInflateState inflateState;
                     OPC_ENSURE(OPC_ERROR_NONE==opcZipInitInflateState(&rawBuffer.state, &part->segment, &inflateState));
                     opc_uint8_t buf[OPC_DEFLATE_BUFFER_SIZE];
@@ -87,7 +87,7 @@ int main( int argc, const char* argv[] )
                 xmlChar *name=NULL;
                 opc_uint32_t segment_number;
                 opc_bool_t last_segment;
-                while(opcZipRawReadCentralDirectory(zip, &rawBuffer, &segment, &name, &segment_number, &last_segment)) {
+                while(opcZipRawReadCentralDirectory(zip, &rawBuffer, &segment, &name, &segment_number, &last_segment, NULL)) {
                     OPC_ENSURE(OPC_ERROR_NONE==opcZipCleanupSegment(&segment));
                     xmlFree(name);
                 }

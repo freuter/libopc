@@ -71,7 +71,7 @@ int main( int argc, const char* argv[] )
                 xmlChar *name=NULL;
                 opc_uint32_t segment_number;
                 opc_bool_t last_segment;
-                while(opcZipRawReadLocalFile(zip, &rawBuffer, &segment, &name, &segment_number, &last_segment)) {
+                while(opcZipRawReadLocalFile(zip, &rawBuffer, &segment, &name, &segment_number, &last_segment, NULL)) {
                     if (0==xmlStrcmp(_X(argv[2]), name)) {
                         OPC_ENSURE(OPC_ERROR_NONE==dumpStream(zip, &rawBuffer, &segment, stdout));
                     } else {
