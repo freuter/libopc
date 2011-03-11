@@ -1,0 +1,64 @@
+<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<ItemGroup Label="ProjectConfigurations">
+ <ProjectConfiguration Include="Debug|Win32">
+   <Configuration>Debug</Configuration>
+   <Platform>Win32</Platform>
+ </ProjectConfiguration>
+<ProjectConfiguration Include="Release|Win32">
+   <Configuration>Release</Configuration>
+   <Platform>Win32</Platform>
+</ProjectConfiguration>
+</ItemGroup>
+<PropertyGroup Label="Globals">
+    <ProjectGuid>{9a6d5063-5bcd-597e-a440-5122933f70c4}</ProjectGuid>
+    <Keyword>Win32Proj</Keyword>
+    <RootNamespace>plib</RootNamespace>
+</PropertyGroup>
+<Import Project="$(VCTargetsPath)\Microsoft.Cpp.default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+<Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+<ImportGroup Label="ExtensionSettings" />
+<ImportGroup Label="PropertySheets" />
+<PropertyGroup Label="UserMacros" />
+<PropertyGroup />
+<ItemDefinitionGroup>
+<ClCompile>
+<PreprocessorDefinitions>WIN32;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+<AdditionalIncludeDirectories>..\..\config\win32-debug-msvc\plib\include;..\..\plib;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+</ClCompile>
+</ItemDefinitionGroup>
+<ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+<ClCompile>
+<WarningLevel>Level3</WarningLevel>
+<Optimization>Disabled</Optimization>
+</ClCompile>
+</ItemDefinitionGroup>
+<ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+<ClCompile>
+<Optimization>MaxSpeed</Optimization>
+<FunctionLevelLinking>true</FunctionLevelLinking> 
+<IntrinsicFunctions>true</IntrinsicFunctions> 
+</ClCompile>
+</ItemDefinitionGroup>
+<ItemGroup>
+  <ClInclude Include="..\..\config\win32-debug-msvc\plib\include\plib\plib.h"/>
+</ItemGroup>
+<ItemGroup>
+  <ClCompile Include="..\..\plib\source\plib.c">
+  </ClCompile>
+</ItemGroup>
+<ItemGroup>
+</ItemGroup>
+<Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+<ImportGroup Label="ExtensionTargets" />
+</Project>
