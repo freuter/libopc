@@ -159,6 +159,7 @@ extern "C" {
      */
     int opcContainerFlatImport(opcContainer *c, const xmlChar *fileName);
     
+
 #ifdef __cplusplus
 } /* extern "C" */
 #endif    

@@ -35,7 +35,7 @@
 
 int main( int argc, const char* argv[] )
 {
-	if (opcInitLibrary()) {
+	if (OPC_ERROR_NONE==opcInitLibrary()) {
 		printf("libopc as well as zlib and libxml2 are ready to use.\n");
 		opcFreeLibrary();
 		return 0;

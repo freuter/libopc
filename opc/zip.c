@@ -35,23 +35,8 @@
 #include <string.h>
 #include <stdio.h>
 #define OPC_MAXPATH 512
+#include "internal.h"
 
-struct OPC_ZIP_STRUCT {
-    opcZipReadCallback *_ioread;
-    opcZipWriteCallback *_iowrite;
-    opcZipCloseCallback *_ioclose;
-    opcZipSeekCallback *_ioseek;
-    void *iocontext;
-    int flags;
-    opcZipRawState state;
-    opc_ofs_t file_size;
-    opc_ofs_t append_ofs; // last offset in zip where data can be appended
-};
-
-struct OPC_ZIPSEGMENTINPUTSTREAM_STRUCT {
-    opcZipRawBuffer raw;
-    opcZipInflateState state;
-};
 
 static inline opc_uint32_t _opcZipFileRead(opcZip *zip, opc_uint8_t *buf, opc_uint32_t buf_len) {
     OPC_ASSERT(NULL!=zip && zip->_ioread!=NULL && NULL!=buf);
