@@ -77,7 +77,10 @@ extern "C" {
         OPC_ERROR_UNSUPPORTED_DATA_DESCRIPTOR,
         OPC_ERROR_UNSUPPORTED_COMPRESSION,
         OPC_ERROR_DEFLATE,
-        OPC_ERROR_HEADER
+        OPC_ERROR_HEADER,
+        OPC_ERROR_MEMORY,
+        OPC_ERROR_XML, 
+        OPC_ERROR_USER // user triggered an abort
     } opc_error_t;
     
 #define opc_logf printf

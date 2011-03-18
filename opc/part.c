@@ -30,15 +30,34 @@
  OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 #include <opc/opc.h>
+#include "internal.h"
 
-opcPart *opcPartOpen(opcContainer *container, 
-                     const xmlChar *absolutePath, 
-                     opcType *type,                         
-                     int flags) {
+opcPart opcPartOpen(opcContainer *container, 
+                    const xmlChar *absolutePath, 
+                    opcType *type,                         
+                    int flags) {
     return NULL;
 }
 
-int opcPartRelease(opcPart *part) {
+const xmlChar *opcPartGetType(opcContainer *c,  opcPart part) {
+    OPC_ASSERT(part>=0 && part<c->part_items);
+    const xmlChar *type=c->part_array[part].type;
+    if (NULL==type) {
+        xmlChar *name=c->part_array[part].name;
+        int l=(NULL!=name?xmlStrlen(name):0);
+        while(l>0 && name[l]!='.') l--;
+        if (l>0) { //@TODO has ".rels" the extension "rels", if YES then l>=0
+            l++;
+            opcContainerExtension *ct=opcContainerInsertExtension(c, name+l, OPC_FALSE);
+            type=(NULL!=ct?ct->type:NULL);
+        } else {
+            type=NULL; // no extension
+        }
+    }
+    return type;
+}
+
+int opcPartRelease(opcPart part) {
     return 0;
 }
 

@@ -42,15 +42,14 @@
 extern "C" {
 #endif    
 
-    typedef struct OPC_TYPE_STRUCT opcType;
+    typedef opc_uint32_t opcType;
 
+    opcType opcTypeCreate(opcContainer *container, 
+                          const xmlChar *mimeType, 
+                          const xmlChar *extension,
+                          opcType *baseType);
     
-    opcType *opcTypeCreate(opcContainer *container, 
-                           const xmlChar *mimeType, 
-                           const xmlChar *extension,
-                           opcType *baseType);
-    
-    int opcTypeRelease(opcType *type);
+    int opcTypeRelease(opcType type);
     
     int opcTypeDelete(opcContainer *container, const xmlChar *mimeType);
     

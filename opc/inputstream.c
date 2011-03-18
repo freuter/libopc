@@ -31,6 +31,8 @@
  */
 #include <opc/opc.h>
 
+
+
 opcInputStream *opcInputStreamOpen(opcPart *part) {
     return NULL;
 }

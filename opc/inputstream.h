@@ -41,12 +41,12 @@
 #ifdef __cplusplus
 extern "C" {
 #endif    
-    typedef struct OPC_INPUTSTREAM_STRUCT opcInputStream;
-    
-    opcInputStream *opcInputStreamOpen(opcPart *part);
+    typedef struct OPC_CONTAINER_INPUTSTREAM_STRUCT opcInputStream;
+
+    opcInputStream *opcInputStreamOpen(opcPart part);
     int opcInputStreamRead(opcInputStream *stream, void *buf, size_t buf_size);
     int opcInputStreamClose(opcInputStream *stream);
-        
+
 #ifdef __cplusplus
 } /* extern "C" */
 #endif    

@@ -45,17 +45,19 @@ extern "C" {
      Handle to an OPC part created by \ref opcPartOpen.
      \see opcPartOpen.
      */
-    typedef struct OPC_PART_STRUCT opcPart;
+    typedef opc_uint32_t opcPart;
 
 #define OPC_PART_CREATE 0x1
 #define OPC_PART_COMPRESSED 0x2    
     
-    opcPart *opcPartOpen(opcContainer *container, 
-                         const xmlChar *absolutePath, 
-                         opcType *type,                         
-                         int flags);
+    opcPart opcPartOpen(opcContainer *container, 
+                        const xmlChar *absolutePath, 
+                        opcType *type,                         
+                        int flags);
     
-    int opcPartRelease(opcPart *part);
+    const xmlChar *opcPartGetType(opcContainer *c, opcPart part);
+
+    int opcPartRelease(opcPart part);
     
     int opcPartDelete(opcContainer *container, const xmlChar *absolutePath);
     
