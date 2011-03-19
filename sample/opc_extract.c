@@ -34,14 +34,14 @@
 
 int main( int argc, const char* argv[] )
 {
-	if (opcInitLibrary() && 3==argc) {
+	if (OPC_ERROR_NONE==opcInitLibrary() && 3==argc) {
 		opcContainer *c=NULL;
 		if (NULL!=(c=opcContainerOpen(_X(argv[1]), OPC_OPEN_READ_ONLY, NULL, NULL))) {
 			opcContainerDump(c, stdout);
-			opcPart *part=NULL;
-			if ((part=opcPartOpen(c, _X(argv[2]), NULL, 0))!=NULL) {
+			opcPart part=OPC_PART_INVALID;
+			if ((part=opcPartOpen(c, _X(argv[2]), NULL, 0))!=OPC_PART_INVALID) {
 				opcInputStream *stream=NULL;
-				if ((stream=opcInputStreamOpen(part))!=NULL){
+				if ((stream=opcInputStreamOpen(c, part))!=NULL){
 					char buf[100];
 					int len=0;
 					while((len=opcInputStreamRead(stream, buf, sizeof(buf)))>0) {
@@ -52,7 +52,7 @@ int main( int argc, const char* argv[] )
 				} else {
 					printf("ERROR: part \"%s\" could not be opened for reading.\n", argv[2]);
 				}
-				opcPartRelease(part);
+				opcPartRelease(c, part);
 			} else {
 				printf("ERROR: part \"%s\" could not be opened in \"%s\".\n", argv[2], argv[1]);
 			}

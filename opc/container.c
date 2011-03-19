@@ -98,7 +98,7 @@ static inline int part_cmp_fct(const void *key, const void *array_, opc_uint32_t
     return xmlStrcmp((xmlChar*)key, ((opcContainerPart*)array_)[item].name);
 }
 
-static opcContainerPart *insertPart(opcContainer *container, const xmlChar *name, opc_bool_t insert) {
+opcContainerPart *opcContainerInsertPart(opcContainer *container, const xmlChar *name, opc_bool_t insert) {
     opc_uint32_t i=0;
     if (findItem(container->part_array, container->part_items, name, part_cmp_fct, &i)) {
         return &container->part_array[i];
@@ -221,7 +221,7 @@ opcContainer* opcContainerOpen(const xmlChar *fileName,
                     c->content_types_segment_id=segment_id;
                     segment->next_segment_id=-1;
                 } else {
-                    opcContainerPart *part=insertPart(c, name, 0==segment_number /* only append, if segment number is 0 */);
+                    opcContainerPart *part=opcContainerInsertPart(c, name, 0==segment_number /* only append, if segment number is 0 */);
                     OPC_ASSERT(NULL!=part);
                     if (NULL!=part) {
                         if (rel_segment) {
@@ -253,7 +253,7 @@ opcContainer* opcContainerOpen(const xmlChar *fileName,
                 opc_bool_t rel_segment;
                 while(opcZipRawReadCentralDirectory(c->zip, &rawBuffer, &segment, &name, &segment_number, &last_segment, &rel_segment)) {
                     if (name[0]!=0 && xmlStrcmp(name, _X("[Content_Types].xml"))) {
-                        opcContainerPart *part=insertPart(c, name, OPC_FALSE);
+                        opcContainerPart *part=opcContainerInsertPart(c, name, OPC_FALSE);
                         OPC_ASSERT(NULL!=part); // not found in central dir??? why?
                     }
                     OPC_ENSURE(OPC_ERROR_NONE==opcZipCleanupSegment(&segment));
@@ -265,6 +265,7 @@ opcContainer* opcContainerOpen(const xmlChar *fileName,
                 }
             }
             if (-1!=c->content_types_segment_id) {
+                /*
                 opcContainerInputStream* stream=opcContainerOpenInputStreamEx(c, c->content_types_segment_id);
                 if (NULL!=stream) {
                     opc_uint8_t buf[1024];
@@ -274,6 +275,7 @@ opcContainer* opcContainerOpen(const xmlChar *fileName,
                     }
                     opcContainerCloseInputStream(stream);
                 }
+                */
                 opcXmlReader *reader=opcXmlReaderOpenEx(c, c ->content_types_segment_id, NULL, NULL, 0);
                 static char ns[]="http://schemas.openxmlformats.org/package/2006/content-types";
                 opc_xml_start_document(reader) {
@@ -317,7 +319,7 @@ opcContainer* opcContainerOpen(const xmlChar *fileName,
                                     opcContainerType*ct=insertType(c, type, NULL, OPC_TRUE);
                                     opc_xml_error(reader, NULL==ct, OPC_ERROR_MEMORY, NULL);
                                     opc_xml_error_strict(reader, '/'!=name[0], OPC_ERROR_XML, "Part %s MUST start with a '/'", name);
-                                    opcContainerPart *part=insertPart(c, (name[0]=='/'?name+1:name), OPC_FALSE);
+                                    opcContainerPart *part=opcContainerInsertPart(c, (name[0]=='/'?name+1:name), OPC_FALSE);
                                     opc_xml_error_strict(reader, NULL==part, OPC_ERROR_XML, "Part %s does not exist.", name);
                                     if (NULL!=part) {
                                         part->type=ct->type;
@@ -375,12 +377,15 @@ opc_error_t opcContainerClose(opcContainer *c, opcContainerCloseMode mode) {
 
 
 opc_error_t opcContainerDump(opcContainer *c, FILE *out) {
+    fprintf(out, "Content Types:\n");
     for(opc_uint32_t i=0;i<c->type_items;i++) {
         fprintf(out, "%s %s\n", c->type_array[i].type, c->type_array[i].basedOn);
     }
+    fprintf(out, "Registered Extensions:\n");
     for(opc_uint32_t i=0;i<c->extension_items;i++) {
         fprintf(out, "%s %s\n", c->extension_array[i].extension, c->extension_array[i].type);
     }
+    fprintf(out, "Parts:\n");
     for(opc_uint32_t i=0;i<c->part_items;i++) {
         const xmlChar *type=opcPartGetType(c, i);
         fprintf(out, "%s [%s]\n", c->part_array[i].name, type);
@@ -409,7 +414,7 @@ opcContainerInputStream* opcContainerOpenInputStreamEx(opcContainer *container, 
 }
 
 opcContainerInputStream* opcContainerOpenInputStream(opcContainer *container, xmlChar *name) {
-    opcContainerPart *part=insertPart(container, name, OPC_FALSE);
+    opcContainerPart *part=opcContainerInsertPart(container, name, OPC_FALSE);
     if (NULL!=part) {
         return opcContainerOpenInputStreamEx(container, part->first_segment_id);
     } else {
@@ -435,124 +440,6 @@ opc_error_t opcContainerCloseInputStream(opcContainerInputStream* stream) {
 }
 
 
-
-opcXmlReader* opcXmlReaderOpenEx(opcContainer *container, opc_uint32_t segment_id, const char * URL, const char * encoding, int options) {
-    opcContainerInputStream* stream=opcContainerOpenInputStreamEx(container, segment_id);
-    if (NULL!=stream) {
-        OPC_ASSERT(NULL==stream->reader);
-        stream->reader=xmlReaderForIO((xmlInputReadCallback)opcContainerReadInputStream, (xmlInputCloseCallback)opcContainerCloseInputStream, stream, URL, encoding, options);
-        return stream;
-    } else {
-        return NULL;
-    }
-}
-
-opc_error_t opcXmlReaderClose(opcXmlReader *reader) {
-    opc_error_t ret=OPC_ERROR_NONE;
-    if (NULL!=reader && NULL!=reader->reader) {
-        if (0!=xmlTextReaderClose(reader->reader) && OPC_ERROR_NONE==ret) {
-            ret=OPC_ERROR_STREAM;
-        }
-        OPC_ASSERT(NULL==reader->segmentInputStream);        
-    } else {
-        ret=OPC_ERROR_STREAM;
-    }
-    return ret;
-}
-
-
-void opcXmlReaderStartDocument(opcXmlReader *reader) {
-    if (OPC_ERROR_NONE==reader->error) {
-        if(1!=xmlTextReaderNext(reader->reader)) {
-            reader->error=OPC_ERROR_XML;
-        }
-    }
-}
-
-void opcXmlReaderEndDocument(opcXmlReader *reader) {
-    if (OPC_ERROR_NONE==reader->error) {
-        if(XML_READER_TYPE_NONE!=xmlTextReaderNodeType(reader->reader)) {
-            reader->error=OPC_ERROR_XML;
-        }
-    }
-}
-
-
-opc_bool_t opcXmlReaderStartElement(opcXmlReader *reader, xmlChar *ns, xmlChar *ln) {
-    return (OPC_ERROR_NONE==reader->error
-        && XML_READER_TYPE_ELEMENT==xmlTextReaderNodeType(reader->reader)
-        && (ln==NULL || xmlStrEqual(xmlTextReaderConstLocalName(reader->reader), ln))
-        && (ns==NULL || xmlStrEqual(xmlTextReaderConstNamespaceUri(reader->reader), ns)));
-}
-
-opc_bool_t opcXmlReaderStartAttribute(opcXmlReader *reader, xmlChar *ns, xmlChar *ln) {
-    return (OPC_ERROR_NONE==reader->error
-        && XML_READER_TYPE_ATTRIBUTE==xmlTextReaderNodeType(reader->reader)
-        && (ln==NULL || xmlStrEqual(xmlTextReaderConstLocalName(reader->reader), ln))
-        && (ns==NULL || xmlStrEqual(xmlTextReaderConstNamespaceUri(reader->reader), ns)));
-}
-
-
-opc_bool_t opcXmlReaderStartAttributes(opcXmlReader *reader) {
-    return OPC_ERROR_NONE==reader->error
-        && (1==xmlTextReaderHasAttributes(reader->reader)) 
-        && (1==xmlTextReaderMoveToFirstAttribute(reader->reader));
-}
-
-opc_bool_t opcXmlReaderEndAttributes(opcXmlReader *reader) {
-    if (OPC_ERROR_NONE==reader->error) {
-        if (1==xmlTextReaderMoveToNextAttribute(reader->reader)) {
-            return OPC_FALSE;
-        } else {
-            if(1!=xmlTextReaderMoveToElement(reader->reader)) {
-                reader->error=OPC_ERROR_XML;
-            }
-            return OPC_TRUE;
-        }
-    } else {
-        return OPC_TRUE;
-    }
-}
-
-
-opc_bool_t opcXmlReaderStartChildren(opcXmlReader *reader) {
-    if (OPC_ERROR_NONE==reader->error) {
-        if (0==xmlTextReaderIsEmptyElement(reader->reader)) {
-            if(1==xmlTextReaderRead(reader->reader)) {
-                return XML_READER_TYPE_END_ELEMENT!=xmlTextReaderNodeType(reader->reader);
-            } else {
-                reader->error=OPC_ERROR_XML;
-                return OPC_TRUE;
-            }
-        } else {
-            return OPC_FALSE;
-        }
-    } else {
-        return OPC_FALSE;
-    }
-}
-
-opc_bool_t opcXmlReaderEndChildren(opcXmlReader *reader) {
-    if (OPC_ERROR_NONE==reader->error) {
-        if (1==xmlTextReaderNext(reader->reader)) {
-            if (XML_READER_TYPE_END_ELEMENT==xmlTextReaderNodeType(reader->reader)) {
-                if (-1!=xmlTextReaderNext(reader->reader)) {
-                    return OPC_TRUE;
-                } else {
-                    reader->error=OPC_ERROR_XML;
-                    return OPC_TRUE;
-                }
-            } else {
-                return OPC_FALSE;
-            }
-        } else {
-            reader->error=OPC_ERROR_XML;
-            return OPC_TRUE;
-        }
-    } else {
-        return OPC_TRUE;
-    }
-}
 
 
 

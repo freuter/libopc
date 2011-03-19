@@ -46,6 +46,7 @@ extern "C" {
      \see opcPartOpen.
      */
     typedef opc_uint32_t opcPart;
+#define OPC_PART_INVALID -1
 
 #define OPC_PART_CREATE 0x1
 #define OPC_PART_COMPRESSED 0x2    
@@ -57,7 +58,7 @@ extern "C" {
     
     const xmlChar *opcPartGetType(opcContainer *c, opcPart part);
 
-    int opcPartRelease(opcPart part);
+    int opcPartRelease(opcContainer *c, opcPart part);
     
     int opcPartDelete(opcContainer *container, const xmlChar *absolutePath);
     

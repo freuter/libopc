@@ -46,6 +46,9 @@
       <file path="opc/xmlwriter.h" install="yes"/>
       <file path="opc/zip.h" install="yes"/>
     </header>
+    <header root="opc">
+      <file path="internal.h"/>
+    </header>
     <source root="opc">
       <file path="opc.c"/>
       <file path="container.c"/>
