@@ -31,4 +31,19 @@
       <file path="opc_dump.c"/>
     </source>
   </tool>
+  <tool name="opc_extract" dep="opc" mode="c99">
+    <source root=".">
+      <file path="opc_extract.c"/>
+    </source>
+  </tool>
+  <tool name="opc_xml" dep="opc" mode="c99">
+    <source root=".">
+      <file path="opc_xml.c"/>
+    </source>
+  </tool>
+  <tool name="opc_xml2" dep="opc" mode="c99">
+    <source root=".">
+      <file path="opc_xml2.c"/>
+    </source>
+  </tool>
 </project>

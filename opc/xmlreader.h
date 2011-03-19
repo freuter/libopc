@@ -45,21 +45,19 @@ extern "C" {
 
     typedef struct OPC_CONTAINER_INPUTSTREAM_STRUCT opcXmlReader;
 
-    opcXmlReader *opcXmlReaderOpen(opcPart *part);
-
-
+    opcXmlReader *opcXmlReaderOpen(opcContainer *c, opcPart part);
     opc_error_t opcXmlReaderClose(opcXmlReader *reader);
 
-    int opcXmlReaderNodeType(opcXmlReader *reader);
-    int opcXmlReaderIsEmptyElement(opcXmlReader *reader);
-    const xmlChar *opcXmlReaderLocalName(opcXmlReader *reader);    
-    
+    const xmlChar *opcXmlReaderLocalName(opcXmlReader *reader);
+    const xmlChar *opcXmlReaderConstValue(opcXmlReader *reader);
 
     void opcXmlReaderStartDocument(opcXmlReader *reader);
     void opcXmlReaderEndDocument(opcXmlReader *reader);
 
     opc_bool_t opcXmlReaderStartElement(opcXmlReader *reader, xmlChar *ns, xmlChar *ln);
     opc_bool_t opcXmlReaderStartAttribute(opcXmlReader *reader, xmlChar *ns, xmlChar *ln);
+    opc_bool_t opcXmlReaderSkipElement(opcXmlReader *reader, xmlChar *ns, xmlChar *ln);
+    opc_bool_t opcXmlReaderStartText(opcXmlReader *reader);
 
     opc_bool_t opcXmlReaderStartAttributes(opcXmlReader *reader);
     opc_bool_t opcXmlReaderEndAttributes(opcXmlReader *reader);
@@ -76,10 +74,8 @@ extern "C" {
 #define opc_xml_start_attributes(reader) if (opcXmlReaderStartAttributes(reader)) { do 
 #define opc_xml_end_attributes(reader) while(!opcXmlReaderEndAttributes(reader)); }
 #define opc_xml_attribute(reader, ns, ln) if (opcXmlReaderStartAttribute(reader, ns, ln))
-#define opc_xml_start_text(reader)
-#define opc_xml_end_text(reader)
-#define opc_xml_text(reader)
-#define opc_xml_const_value(reader) xmlTextReaderConstValue(reader->reader)
+#define opc_xml_text(reader) if (opcXmlReaderStartText(reader))
+#define opc_xml_const_value(reader) opcXmlReaderConstValue(reader)
 
 #define opc_xml_error_guard_start(reader) if (OPC_ERROR_NONE==reader->error) do 
 #define opc_xml_error_guard_end(reader)  while(0)

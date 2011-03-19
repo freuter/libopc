@@ -30,17 +30,22 @@
  OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 #include <opc/opc.h>
+#include "internal.h"
 
 
-
-opcInputStream *opcInputStreamOpen(opcPart *part) {
-    return NULL;
+opcInputStream *opcInputStreamOpen(opcContainer *c, opcPart part) {
+    OPC_ASSERT(part>=0 && part<c->part_items);
+    opcContainerPart *cp=&c->part_array[part];
+    OPC_ASSERT(cp->first_segment_id>=0 && cp->first_segment_id<c->segment_items);
+    opcContainerInputStream* stream=opcContainerOpenInputStreamEx(c, cp->first_segment_id);
+    return stream;
 }
 
 int opcInputStreamRead(opcInputStream *stream, void *buf, size_t buf_size) {
-    return 0;
+    return opcContainerReadInputStream(stream , (opc_uint8_t*)buf, buf_size);
 }
 
-int opcInputStreamClose(opcInputStream *stream) {
-    return 0;
+opc_error_t opcInputStreamClose(opcInputStream *stream) {
+    OPC_ASSERT(NULL!=stream);
+    return opcContainerCloseInputStream(stream);
 }

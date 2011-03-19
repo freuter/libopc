@@ -36,7 +36,15 @@ opcPart opcPartOpen(opcContainer *container,
                     const xmlChar *absolutePath, 
                     opcType *type,                         
                     int flags) {
-    return NULL;
+    opcContainerPart *part=opcContainerInsertPart(container, (absolutePath[0]=='/'?absolutePath+1:absolutePath), OPC_FALSE);
+    if (NULL!=part) {
+        OPC_ASSERT(container->part_array<=part && part<container->part_array+container->part_items);
+        opcPart ret=part-container->part_array;
+        OPC_ASSERT(container->part_array+ret==part);
+        return ret;
+    } else {
+        return OPC_PART_INVALID;
+    }
 }
 
 const xmlChar *opcPartGetType(opcContainer *c,  opcPart part) {
@@ -57,7 +65,7 @@ const xmlChar *opcPartGetType(opcContainer *c,  opcPart part) {
     return type;
 }
 
-int opcPartRelease(opcPart part) {
+int opcPartRelease(opcContainer *c,  opcPart part) {
     return 0;
 }
 
