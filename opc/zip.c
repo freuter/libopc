@@ -34,7 +34,6 @@
 #include <libxml/globals.h>
 #include <string.h>
 #include <stdio.h>
-#define OPC_MAXPATH 512
 #include "internal.h"
 
 

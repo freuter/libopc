@@ -84,6 +84,7 @@ const xmlChar *opcXmlReaderConstValue(opcXmlReader *reader) {
 }
 
 opc_bool_t opcXmlReaderStartElement(opcXmlReader *reader, xmlChar *ns, xmlChar *ln) {
+//    printf("%i %s %s\n", xmlTextReaderNodeType(reader->reader), xmlTextReaderConstLocalName(reader->reader), xmlTextReaderConstNamespaceUri(reader->reader));
     return (OPC_ERROR_NONE==reader->error
         && XML_READER_TYPE_ELEMENT==xmlTextReaderNodeType(reader->reader)
         && (ln==NULL || xmlStrEqual(xmlTextReaderConstLocalName(reader->reader), ln))
