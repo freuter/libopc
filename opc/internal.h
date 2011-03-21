@@ -40,6 +40,8 @@
 extern "C" {
 #endif    
 
+#define OPC_MAXPATH 512
+
     struct OPC_ZIP_STRUCT {
         opcZipReadCallback *_ioread;
         opcZipWriteCallback *_iowrite;
@@ -57,6 +59,22 @@ extern "C" {
         opcZipInflateState state;
     };
 
+    typedef struct OPC_CONTAINER_RELATION_TYPE_STRUCT {
+        xmlChar *type;
+    } opcContainerRelationType;
+
+    typedef struct OPC_CONTAINER_EXTERNAL_RELATION_STRUCT {
+        xmlChar *target;
+    } opcContainerExternalRelation;
+
+
+    typedef struct OPC_CONTAINER_RELATION_STRUCT {
+        opc_uint32_t relation_id;
+        xmlChar *relation_type; // owned by relationtypes_array
+        opc_uint32_t target_mode; // 0==internal, 1==external
+        xmlChar* target_ptr; // 0==targetMode: points to xmlChar owned part_array, 1==targetMode: points to xmlChar owned by externalrelation_array
+    } opcContainerRelation;
+
     typedef struct OPC_CONTAINER_PART_STRUCT {
         xmlChar *name;
         xmlChar *type; // owned by type_array
@@ -64,6 +82,8 @@ extern "C" {
         opc_uint32_t last_segment_id;
         opc_uint32_t segment_count;
         opc_uint32_t rel_segment_id;
+        opcContainerRelation *relation_array;
+        opc_uint32_t relation_items;
     } opcContainerPart;
 
     typedef struct OPC_CONTAINER_SEGMENT_STRUCT {
@@ -89,7 +109,6 @@ extern "C" {
         const xmlChar *type; // owned by opcContainerType
     } opcContainerExtension;
 
-
     typedef struct OPC_CONTAINER_INPUTSTREAM_STRUCT {
         opcZipSegmentInputStream *segmentInputStream;
         opc_uint32_t segment_id;
@@ -99,7 +118,6 @@ extern "C" {
         opc_uint32_t reader_consume_element : 1;
         opc_uint32_t reader_element_handled : 1;
     } opcContainerInputStream;
-
 
     struct OPC_CONTAINER_STRUCT {
         opcContainerPart *part_array;
@@ -114,9 +132,15 @@ extern "C" {
         opc_uint32_t extension_items;
         opcContainerInputStream **inputstream_array;
         opc_uint32_t inputstream_items;
+        opcContainerRelationType *relationtype_array;
+        opc_uint32_t relationtype_items;
+        opcContainerExternalRelation *externalrelation_array;
+        opc_uint32_t externalrelation_items;
         opcZip *zip;
         opc_uint32_t content_types_segment_id;
         opc_uint32_t rels_segment_id;
+        opcContainerRelation *relation_array;
+        opc_uint32_t relation_items;
     };
 
     opc_error_t opcContainerFree(opcContainer *c);
