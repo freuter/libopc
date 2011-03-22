@@ -34,10 +34,8 @@
 
 
 opcInputStream *opcInputStreamOpen(opcContainer *c, opcPart part) {
-    OPC_ASSERT(part>=0 && part<c->part_items);
-    opcContainerPart *cp=&c->part_array[part];
-    OPC_ASSERT(cp->first_segment_id>=0 && cp->first_segment_id<c->segment_items);
-    opcContainerInputStream* stream=opcContainerOpenInputStreamEx(c, cp->first_segment_id);
+    opcContainerPart *cp=(OPC_PART_INVALID!=part?opcContainerInsertPart(c, part, OPC_FALSE):NULL);
+    opcContainerInputStream* stream=(NULL!=cp?opcContainerOpenInputStreamEx(c, cp->first_segment_id):NULL);
     return stream;
 }
 

@@ -79,6 +79,15 @@ const xmlChar *opcXmlReaderLocalName(opcXmlReader *reader) {
     return xmlTextReaderConstLocalName(reader->reader);
 }
 
+const xmlChar *opcXmlReaderConstNamespaceUri(opcXmlReader *reader) {
+    return xmlTextReaderConstNamespaceUri(reader->reader);
+}
+
+const xmlChar *opcXmlReaderConstPrefix(opcXmlReader *reader) {
+    return xmlTextReaderConstPrefix(reader->reader);
+}
+
+
 const xmlChar *opcXmlReaderConstValue(opcXmlReader *reader) {
     return xmlTextReaderConstValue(reader->reader);
 }
@@ -176,9 +185,7 @@ opc_bool_t opcXmlReaderEndChildren(opcXmlReader *reader) {
 
 
 opcXmlReader *opcXmlReaderOpen(opcContainer *c, opcPart part) {
-    OPC_ASSERT(part>=0 && part<c->part_items);
-    opcContainerPart *cp=&c->part_array[part];
-    OPC_ASSERT(cp->first_segment_id>=0 && cp->first_segment_id<c->segment_items);
-    return opcXmlReaderOpenEx(c, cp->first_segment_id, NULL, NULL, 0);
+    opcContainerPart *cp=(OPC_PART_INVALID!=part?opcContainerInsertPart(c, part, OPC_FALSE):NULL);
+    return (NULL!=cp?opcXmlReaderOpenEx(c, cp->first_segment_id, NULL, NULL, 0):NULL);
 }
 

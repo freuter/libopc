@@ -38,20 +38,18 @@ opcPart opcPartOpen(opcContainer *container,
                     int flags) {
     opcContainerPart *part=opcContainerInsertPart(container, (absolutePath[0]=='/'?absolutePath+1:absolutePath), OPC_FALSE);
     if (NULL!=part) {
-        OPC_ASSERT(container->part_array<=part && part<container->part_array+container->part_items);
-        opcPart ret=part-container->part_array;
-        OPC_ASSERT(container->part_array+ret==part);
-        return ret;
+        return part->name;
     } else {
         return OPC_PART_INVALID;
     }
 }
 
 const xmlChar *opcPartGetType(opcContainer *c,  opcPart part) {
-    OPC_ASSERT(part>=0 && part<c->part_items);
-    const xmlChar *type=c->part_array[part].type;
-    if (NULL==type) {
-        xmlChar *name=c->part_array[part].name;
+    OPC_ASSERT(OPC_PART_INVALID!=part);
+    opcContainerPart *cp=(OPC_PART_INVALID!=part?opcContainerInsertPart(c, part, OPC_FALSE):NULL);
+    const xmlChar *type=(NULL!=cp?cp->type:NULL);
+    if (NULL==type && NULL!=cp) {
+        xmlChar *name=cp->name;
         int l=(NULL!=name?xmlStrlen(name):0);
         while(l>0 && name[l]!='.') l--;
         if (l>0) { //@TODO has ".rels" the extension "rels", if YES then l>=0
@@ -72,3 +70,14 @@ int opcPartRelease(opcContainer *c,  opcPart part) {
 int opcPartDelete(opcContainer *container, const xmlChar *absolutePath) {
     return 0;
 }
+
+
+opcPart opcPartGetFirst(opcContainer *container) {
+    return (NULL!=container && container->part_items>0?container->part_array[0].name:OPC_PART_INVALID);
+}
+
+opcPart opcPartGetNext(opcContainer *container, opcPart part) {
+    opcContainerPart *cp=(NULL!=container?opcContainerInsertPart(container, part, OPC_FALSE):NULL);
+    return (NULL!=cp && cp+1<container->part_array+container->part_items?(cp+1)->name:NULL);
+}
+
