@@ -578,7 +578,7 @@ static void opcContainerDumpString(FILE *out, const xmlChar *str, opc_uint32_t m
         for(opc_uint32_t i=len;i<max_len;i++) fputc(' ', out);
     } else {
         static const char prefix[]="...";
-        static opc_uint32_t prefix_len=strlen(prefix);
+        static opc_uint32_t prefix_len=sizeof(prefix)-1;
         opc_uint32_t ofs=len-max_len;
         if (ofs+prefix_len<len) ofs+=prefix_len; else ofs=len;
         fputs(prefix, out);

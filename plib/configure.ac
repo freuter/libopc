@@ -33,6 +33,7 @@ AC_INIT([plib])
 AC_CHECK_HEADERS([stdint.h])
 AC_CHECK_HEADERS([stddef.h])
 AC_CHECK_HEADERS([stdio.h])
+AC_CHECK_HEADERS([string.h])
 AC_CONFIG_HEADERS([include/plib/plib.h:include/plib/plib.h.in])
 AC_OUTPUT
 

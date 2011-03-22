@@ -79,7 +79,11 @@ extern "C" {
 
 #define opc_xml_error_guard_start(reader) if (OPC_ERROR_NONE==reader->error) do 
 #define opc_xml_error_guard_end(reader)  while(0)
-#define opc_xml_error(reader, guard, err, msg, ...) if (guard) { reader->error=(err); fprintf(stderr, msg, __VA_ARGS__ ); continue; }
+#if defined(__GNUC__)
+#define opc_xml_error(reader, guard, err, msg, ...) if (guard) { reader->error=(err); fprintf(stderr, msg, ##__VA_ARGS__ );  continue; }
+#else
+#define opc_xml_error(reader, guard, err, msg, ...) if (guard) { reader->error=(err); fprintf(stderr, msg, __VA_ARGS__ );  continue; }
+#endif
 #define opc_xml_error_strict opc_xml_error
 #ifdef __cplusplus
 } /* extern "C" */
