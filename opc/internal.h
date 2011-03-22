@@ -68,6 +68,11 @@ extern "C" {
     } opcContainerExternalRelation;
 
 
+    struct OPC_RELATION_STRUCT {
+        xmlChar *part_name; // owned by part array
+        xmlChar *relation_id; // owned by relation array
+    };
+
     typedef struct OPC_CONTAINER_RELATION_STRUCT {
         opc_uint32_t relation_id;
         xmlChar *relation_type; // owned by relationtypes_array
@@ -96,12 +101,11 @@ extern "C" {
         xmlChar *prefix;
     } opcContainerRelPrefix;
 
-    #define OPC_CONTAINER_RELID_COUNTER(part) ((part)&0xFFFF)
-    #define OPC_CONTAINER_RELID_PREFIX(part) (((part)>>16)&0xFFFF)
+    #define OPC_CONTAINER_RELID_COUNTER(rel) ((rel)&0xFFFF)
+    #define OPC_CONTAINER_RELID_PREFIX(rel) (((rel)>>16)&0xFFFF)
 
     typedef struct OPC_CONTAINER_TYPE_STRUCT {
         xmlChar *type;
-        xmlChar *basedOn;
     } opcContainerType;
 
     typedef struct OPC_CONTAINER_EXTENSION_STRUCT {
@@ -154,6 +158,13 @@ extern "C" {
 
     opcContainerExtension *opcContainerInsertExtension(opcContainer *container, const xmlChar *extension, opc_bool_t insert);
     opcContainerPart *opcContainerInsertPart(opcContainer *container, const xmlChar *name, opc_bool_t insert);
+    opcContainerRelationType *opcContainerInsertRelationType(opcContainer *container, const xmlChar *type, opc_bool_t insert);
+    opcContainerRelation *opcContainerInsertRelation(opcContainerRelation **relation_array, opc_uint32_t *relation_items, 
+                                            opc_uint32_t relation_id,
+                                            xmlChar *relation_type,
+                                            opc_uint32_t target_mode, xmlChar *target_ptr);
+    opcContainerRelation *opcContainerFindRelation(opcContainer *container, opcContainerRelation *relation_array, opc_uint32_t relation_items, opcRelation relation);
+    opcContainerRelation *opcContainerFindRelationById(opcContainer *container, opcContainerRelation *relation_array, opc_uint32_t relation_items, const xmlChar *relation_id);
 
 #ifdef __cplusplus
 } /* extern "C" */

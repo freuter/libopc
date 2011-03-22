@@ -46,4 +46,14 @@
       <file path="opc_xml2.c"/>
     </source>
   </tool>
+  <tool name="opc_part" dep="opc" mode="c99">
+    <source root=".">
+      <file path="opc_part.c"/>
+    </source>
+  </tool>
+  <tool name="opc_relation" dep="opc" mode="c99">
+    <source root=".">
+      <file path="opc_relation.c"/>
+    </source>
+  </tool>
 </project>

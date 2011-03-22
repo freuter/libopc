@@ -49,6 +49,8 @@ extern "C" {
     opc_error_t opcXmlReaderClose(opcXmlReader *reader);
 
     const xmlChar *opcXmlReaderLocalName(opcXmlReader *reader);
+    const xmlChar *opcXmlReaderConstNamespaceUri(opcXmlReader *reader);
+    const xmlChar *opcXmlReaderConstPrefix(opcXmlReader *reader);
     const xmlChar *opcXmlReaderConstValue(opcXmlReader *reader);
 
     void opcXmlReaderStartDocument(opcXmlReader *reader);

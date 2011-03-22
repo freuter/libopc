@@ -45,15 +45,15 @@ extern "C" {
      Handle to an OPC part created by \ref opcPartOpen.
      \see opcPartOpen.
      */
-    typedef opc_uint32_t opcPart;
-#define OPC_PART_INVALID -1
+    typedef xmlChar* opcPart;
+#define OPC_PART_INVALID NULL
 
 #define OPC_PART_CREATE 0x1
 #define OPC_PART_COMPRESSED 0x2    
     
     opcPart opcPartOpen(opcContainer *container, 
                         const xmlChar *absolutePath, 
-                        opcType *type,                         
+                        opcType *type,
                         int flags);
     
     const xmlChar *opcPartGetType(opcContainer *c, opcPart part);
@@ -61,7 +61,10 @@ extern "C" {
     int opcPartRelease(opcContainer *c, opcPart part);
     
     int opcPartDelete(opcContainer *container, const xmlChar *absolutePath);
-    
+
+    opcPart opcPartGetFirst(opcContainer *container);
+    opcPart opcPartGetNext(opcContainer *container, opcPart part);
+
 #ifdef __cplusplus
 } /* extern "C" */
 #endif    

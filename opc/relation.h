@@ -42,25 +42,24 @@
 extern "C" {
 #endif    
 
-    typedef struct OPC_RELATION_STRUCT opcRelation;
+    typedef opc_uint32_t opcRelation;
+#define OPC_RELATION_INVALID (-1)
 
-    opcRelation *opcRelationCreateRoot(opcContainer *container, const xmlChar *relationId, const xmlChar *mimeType);
-    opcRelation *opcRelationCreatePart(opcPart *part, const xmlChar *relationId, const xmlChar *mimeType);
+    opcRelation opcRelationCreate(opcContainer *container, opcPart part, const xmlChar *relationId, const xmlChar *mimeType);
+    opc_error_t opcRelationRelease(opcContainer *container, opcPart part, opcRelation relation);
+    int opcRelationDelete(opcContainer *container, opcPart part, const xmlChar *relationId);
+
+    opcRelation opcRelationFirst(opcContainer *container, opcPart part);
+    opcRelation opcRelationNext(opcContainer *container, opcPart part, opcRelation relation);
     
-    int opcRelationRelease(opcRelation *relation);
-    
-    int opcRelationDeleteRoot(opcContainer *container, const xmlChar *relationId);
-    int opcRelationDeletePart(opcPart *part, const xmlChar *relationId);
-    
-    opcRelation *opcRelationFirstRoot(opcContainer *container);
-    opcRelation *opcRelationFirstPart(opcContainer *container);
-    opcRelation *opcRelationNext(opcRelation *relation);
-    
-    opcPart *opcRelationGetSource(opcRelation *relation);
-    opcPart *opcRelationGetInternalTarget(opcRelation *relation);
-    xmlChar *opcRelationGetExternalTarget(opcRelation *relation);
-    xmlChar *opcRelationGetType(opcRelation *relation);
-    
+    opcPart opcRelationGetInternalTarget(opcContainer *container, opcPart part, opcRelation relation);
+    const xmlChar *opcRelationGetExternalTarget(opcContainer *container, opcPart part, opcRelation relation);
+    const xmlChar *opcRelationGetType(opcContainer *container, opcPart part, opcRelation relation);
+
+    opcRelation opcRelationFind(opcContainer *container, opcPart part, const xmlChar *relationId, const xmlChar *mimeType);
+
+    void opcRelationGetInformation(opcContainer *container, opcPart part, opcRelation relation, const xmlChar **prefix, opc_uint32_t *counter, const xmlChar **type);
+
 #ifdef __cplusplus
 } /* extern "C" */
 #endif    

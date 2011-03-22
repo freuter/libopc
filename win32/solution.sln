@@ -26,6 +26,10 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "opc_xml", "opc_xml\opc_xml.
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "opc_xml2", "opc_xml2\opc_xml2.vcxproj", "{75D8C77F-F4BA-564A-8596-BE3D368408E8}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "opc_part", "opc_part\opc_part.vcxproj", "{F24388BC-E9FF-5F03-8312-770FA7CDB4DF}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "opc_relation", "opc_relation\opc_relation.vcxproj", "{DCE7DAA3-2BAA-5970-B1BB-82AD0087DCE6}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
@@ -84,6 +88,14 @@ Global
 		{75D8C77F-F4BA-564A-8596-BE3D368408E8}.Debug|Win32.Build.0 = Debug|Win32
 		{75D8C77F-F4BA-564A-8596-BE3D368408E8}.Release|Win32.ActiveCfg = Release|Win32
 		{75D8C77F-F4BA-564A-8596-BE3D368408E8}.Release|Win32.Build.0 = Release|Win32
+		{F24388BC-E9FF-5F03-8312-770FA7CDB4DF}.Debug|Win32.ActiveCfg = Debug|Win32
+		{F24388BC-E9FF-5F03-8312-770FA7CDB4DF}.Debug|Win32.Build.0 = Debug|Win32
+		{F24388BC-E9FF-5F03-8312-770FA7CDB4DF}.Release|Win32.ActiveCfg = Release|Win32
+		{F24388BC-E9FF-5F03-8312-770FA7CDB4DF}.Release|Win32.Build.0 = Release|Win32
+		{DCE7DAA3-2BAA-5970-B1BB-82AD0087DCE6}.Debug|Win32.ActiveCfg = Debug|Win32
+		{DCE7DAA3-2BAA-5970-B1BB-82AD0087DCE6}.Debug|Win32.Build.0 = Debug|Win32
+		{DCE7DAA3-2BAA-5970-B1BB-82AD0087DCE6}.Release|Win32.ActiveCfg = Release|Win32
+		{DCE7DAA3-2BAA-5970-B1BB-82AD0087DCE6}.Release|Win32.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
