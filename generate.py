@@ -24,13 +24,13 @@ def platformSubseteqTest(a, b):
 	while i<len(a3) and i<len(b3):		
 		ret=ret and (a3[i]==b3[i] or b3[i]=="*")
 		i=i+1
-#	print("platformSubseteqTest("+a+", "+b+")="+str(ret))
+#	sys.stderr.write("platformSubseteqTest("+a+", "+b+")="+str(ret))
 	return ret
 
 def parseFile(node, ctx, list):
 	path=node.attrib["path"]
 	abs_path=os.path.join(ctx["base"], ctx["root"], path)
-#	print "path="+abs_path
+#	sys.stderr.write "path="+abs_path
 	filterMatch=True
 	if "platform" in node.attrib:
 		filter=node.attrib["platform"]
@@ -44,7 +44,7 @@ def parseFile(node, ctx, list):
 				install=None
 				if "install" in node.attrib and node.attrib["install"]=="yes":				
 					install=os.path.dirname(os.path.relpath(abs_path, ctx["root"]))
-#					print install
+##					sys.stderr.write install
 
 				list.append({ "path": abs_path, "ext": ext, "install": install })
 			else:
@@ -106,28 +106,32 @@ def parseDeps(node):
 def parseLibrary(conf, node, ctx, seq_type):
 	lib_name=node.attrib["name"]
 	lib_uuid=uuid.uuid5(uuid.NAMESPACE_URL, "urn:lib:"+lib_name)
-	lib={"name": lib_name, "uuid": lib_uuid, "source": { "files": []}, "header": { "files": [], "target": "", "includes": [] }, "defines": {}, "exports": {}, "deps": parseDeps(node), "mode": "c90", "align": "" }	
+	lib={"name": lib_name, "uuid": lib_uuid, "source": { "files": []}, "header": { "files": [], "target": "", "includes": [] }, "defines": {}, "exports": {}, "deps": parseDeps(node), "mode": "c90", "align": "", "external": False }	
 	ctx=updateCtx(ctx, node)
 	setAttr(lib, node, "mode")
 	setAttr(lib, node, "align")
-	for child in list(node):
-		if child.tag=="source":
-			parseFiles(lib["source"]["files"], list(child), updateCtx(ctx, child))
-		elif child.tag=="header":
-			setAttr(lib["header"], child, "target")
-			child_ctx=updateCtx(ctx, child)
-			lib["header"]["includes"].append(child_ctx["root"])
-			parseFiles(lib["header"]["files"], list(child), child_ctx)
-		elif child.tag=="settings":
-			parseSettings(conf, child, ctx, lib)
-		elif child.tag=="export":
-			parseSettings(conf, child, ctx, lib)
-		else:
-			parseError("unhanded element: "+child.tag)
+	if not(lib_name in ctx["externals"]) or not("external" in ctx["externals"][lib_name]) or not(ctx["externals"][lib_name]["external"]):
+		for child in list(node):
+			if child.tag=="source":
+				parseFiles(lib["source"]["files"], list(child), updateCtx(ctx, child))
+			elif child.tag=="header":
+				setAttr(lib["header"], child, "target")
+				child_ctx=updateCtx(ctx, child)
+				lib["header"]["includes"].append(child_ctx["root"])
+				parseFiles(lib["header"]["files"], list(child), child_ctx)
+			elif child.tag=="settings":
+				parseSettings(conf, child, ctx, lib)
+			elif child.tag=="export":
+				parseSettings(conf, child, ctx, lib)
+			else:
+				parseError("unhanded element: "+child.tag)
+	else:
+		sys.stderr.write("using external "+lib_name)
+		lib["external"]=True
 	conf[seq_type].append(lib)
 
 def isExcluded(conf, ctx, lib):
-#	print conf["platforms"]
+#	sys.stderr.write conf["platforms"]
 	if ctx["platform"] in conf["platforms"]:
 		platform=conf["platforms"][ctx["platform"]]
 		return lib in platform["exclude"]
@@ -149,7 +153,7 @@ def parsePlatform(conf, node, ctx):
 		if "exclude" in node.attrib:
 			for prj in node.attrib["exclude"].split(" "):
 				platform["exclude"][prj]=None
-#			print platform["exclude"]
+#			sys.stderr.write platform["exclude"]
 		if "libs" in node.attrib:
 			platform["libs"].extend(node.attrib["libs"].split(" "))
 		conf["platforms"][name]=platform
@@ -181,7 +185,7 @@ def parseConfiguration(conf, filename, ctx):
 	else:
 		parseError("failed to open file \""+filename+"\"")
 
-def depClosure(conf, deps):
+def depClosure(conf, deps, ignoreExternal):
 	ret=copy.copy(deps)
 	change=True
 	while change:
@@ -193,8 +197,16 @@ def depClosure(conf, deps):
 					if not lib_dep in ret:
 						ret.append(lib_dep)
 						change=True
-#	print str(deps)+"==>"+str(ret)
-	return ret
+#	sys.stderr.write str(deps)+"==>"+str(ret)
+	if ignoreExternal:
+		ret_clean=[]
+		for lib in conf["libraries"]:
+			for dep in ret:
+				if lib["name"]==dep and not(lib["external"]):
+					ret_clean.append(dep)
+		return ret_clean
+	else:
+		return ret
 
 def gatherIncludeDirs(conf, ctx, deps):
 	ret=[]
@@ -209,7 +221,7 @@ def gatherIncludeDirs(conf, ctx, deps):
 					if dir not in aux:
 						aux[dir]=None
 						ret.append(dir)
-#	print ret
+#	sys.stderr.write ret
 	return ret
 
 def gatherSources(conf, ctx, lib):
@@ -256,14 +268,22 @@ def generateCPPFLAGS(conf, ctx, lib, build_dir):
 	for dir in lib["header"]["includes"]:
 		abs_dir=os.path.abspath(dir)
 		rel_dir=os.path.relpath(abs_dir, os.path.join(ctx["base"], build_dir))
-#		print("abs_dir="+str(abs_dir)+" build_dir="+os.path.join(ctx["base"], build_dir)+" rel_dir="+str(rel_dir))
+#		sys.stderr.write("abs_dir="+str(abs_dir)+" build_dir="+os.path.join(ctx["base"], build_dir)+" rel_dir="+str(rel_dir))
 		cppflags=cppflags+" -I"+rel_dir
-	dep_dirs=gatherIncludeDirs(conf, ctx, depClosure(conf, lib["deps"]))
+	dep_closure=depClosure(conf, lib["deps"], False)
+	dep_dirs=gatherIncludeDirs(conf, ctx, dep_closure)
 	for dir in dep_dirs:
 		abs_dir=os.path.abspath(dir)
 		rel_dir=os.path.relpath(abs_dir, os.path.join(ctx["base"], build_dir))
-#		print("abs_dir="+str(abs_dir)+" build_dir="+os.path.join(ctx["base"], build_dir)+" rel_dir="+str(rel_dir))
+#		sys.stderr.write("abs_dir="+str(abs_dir)+" build_dir="+os.path.join(ctx["base"], build_dir)+" rel_dir="+str(rel_dir))
 		cppflags=cppflags+" -I"+rel_dir
+	for dep_lib in conf["libraries"]:
+		if dep_lib["name"] in ctx["externals"]:
+			ext_lib=ctx["externals"][dep_lib["name"]]
+			if "external" in ext_lib and ext_lib["external"]:						
+				if "cppflags" in ext_lib:
+					cppflags=cppflags+" "+ext_lib["cppflags"]
+
 	return cppflags
 
 
@@ -313,7 +333,7 @@ def generateVCXPROJ(conf, ctx, lib, type):
         out.write("<PropertyGroup />\n");
         out.write("<ItemDefinitionGroup>\n");
 	out.write("<ClCompile>\n");
-	dep_closure=depClosure(conf, lib["deps"])
+	dep_closure=depClosure(conf, lib["deps"], False)
 	cpp_defs="WIN32;"
 	for define in lib["defines"]:
 		if lib["defines"][define] is None:
@@ -351,9 +371,9 @@ def generateVCXPROJ(conf, ctx, lib, type):
 			ext_libs=conf["platforms"][ctx["platform"]]["libs"]
 		else:
 			ext_libs={}
-#		print ext_libs
+#		sys.stderr.write ext_libs
 		for ext_lib in ext_libs:
-#			print ext_lib
+#			sys.stderr.write ext_lib
 			out.write(ext_lib+";")
 		out.write("%(AdditionalDependencies)</AdditionalDependencies> \n")
 		out.write("</Link>\n");
@@ -431,8 +451,8 @@ def generateConfiguration(ctx, includes, platform):
 def generateWin32(ctx, source):
 	platform=ctx["platforms"][0]
 	conf=generateConfiguration(ctx, [source], platform)
-#	print conf
-        print "generate win32 project"
+#	sys.stderr.write conf
+        sys.stderr.write("generate win32 project")
 	for lib in conf["libraries"]:
 		if not isExcluded(conf, ctx, lib["name"]):
 			generateVCXPROJ(conf, ctx, lib, "StaticLibrary")
@@ -526,12 +546,20 @@ def generateToolMakefile(conf, ctx, tool, filename, build_dir, src_dir):
 	out.write("all: $(BUILD_DIR)/"+ tool["name"]+"\n\n")
 	writeSourceRules(conf, ctx, out, tool, build_dir)
 	out.write(tool["name"]+"_ld=")
-	deps=depClosure(conf, tool["deps"])
+	deps=depClosure(conf, tool["deps"], True)
 	for dep in deps:
 		out.write(" $(BUILD_DIR)/lib"+ dep +".a")
 	out.write("\n")
+	ext_ldflags=""
+	for dep_lib in conf["libraries"]:
+		if dep_lib["name"] in ctx["externals"]:
+			ext_lib=ctx["externals"][dep_lib["name"]]
+			if "external" in ext_lib and ext_lib["external"]:						
+				if "ldflags" in ext_lib:
+					ext_ldflags=ext_ldflags+" "+ext_lib["ldflags"]
+
 	out.write("$(BUILD_DIR)/"+tool["name"]+": $(objs_"+tool["name"]+") $("+tool["name"]+"_ld)\n")			
-	out.write("\t$(CC) $(CFLAGS) $(CPPFLAGS) -o $(BUILD_DIR)/"+tool["name"]+" $(objs_"+tool["name"]+") $("+tool["name"]+"_ld)\n")
+	out.write("\t$(CC) $(CFLAGS) $(CPPFLAGS) -o $(BUILD_DIR)/"+tool["name"]+" $(objs_"+tool["name"]+") $("+tool["name"]+"_ld)"+ ext_ldflags+"\n")
 	out.write("\n")
 	out.write("clean:\n")
 	out.write("\trm -f $(BUILD_DIR)/"+tool["name"]+" $(objs_"+tool["name"]+")\n")
@@ -549,14 +577,16 @@ def generateMakefile(conf, ctx):
 	# generate phony targets
 	out.write(".phony: all clean tools dep")
 	for lib in conf["libraries"]:
-		out.write(" "+lib["name"])
+		if not lib["external"]:
+			out.write(" "+lib["name"])
 	for tool in conf["tools"]:
 		out.write(" "+tool["name"])
 	out.write("\n")
 	# all
 	out.write("all:")
 	for lib in conf["libraries"]:
-		out.write(" "+lib["name"])
+		if not lib["external"]:
+			out.write(" "+lib["name"])
 	out.write(" tools\n")
 	# tools
 	out.write("tools:")
@@ -566,21 +596,22 @@ def generateMakefile(conf, ctx):
 
 	# generate libs
 	for lib in conf["libraries"]:
-		makefile=os.path.join(obj_dir, "Makefile."+lib["name"])
-		generateLibraryMakefile(conf, ctx, lib, makefile, obj_dir, os.path.join("..", ".."))
-		out.write(lib["name"]+":")
-		deps=depClosure(conf, lib["deps"])
-		for dep in deps:
-			out.write(" "+dep)
-		out.write("\n")
-		out.write("\t$(MAKE) -f "+"Makefile."+lib["name"]+"\n\n")
+		if not lib["external"]:
+			makefile=os.path.join(obj_dir, "Makefile."+lib["name"])
+			generateLibraryMakefile(conf, ctx, lib, makefile, obj_dir, os.path.join("..", ".."))
+			out.write(lib["name"]+":")
+			deps=depClosure(conf, lib["deps"], True)
+			for dep in deps:
+				out.write(" "+dep)
+			out.write("\n")
+			out.write("\t$(MAKE) -f "+"Makefile."+lib["name"]+"\n\n")
 	
 	# generate tools
 	for tool in conf["tools"]:
 		makefile=os.path.join(obj_dir, "Makefile."+tool["name"])
 		generateToolMakefile(conf, ctx, tool, makefile, obj_dir, os.path.join("..", ".."))
 		out.write(tool["name"]+":")
-		deps=depClosure(conf, lib["deps"])
+		deps=depClosure(conf, lib["deps"], True)
 		for dep in deps:
 			out.write(" "+dep)
 		out.write("\n")
@@ -588,7 +619,8 @@ def generateMakefile(conf, ctx):
 
 	out.write("clean:\n")
 	for lib in conf["libraries"]:
-		out.write("\t$(MAKE) -f "+"Makefile."+lib["name"]+" clean\n")
+		if not lib["external"]:
+			out.write("\t$(MAKE) -f "+"Makefile."+lib["name"]+" clean\n")
 	for tool in conf["tools"]:
 		out.write("\t$(MAKE) -f "+"Makefile."+tool["name"]+" clean\n")
 
@@ -607,9 +639,9 @@ def generateMakefiles(ctx, source):
 			generateMakefile(conf, ctx)
 		else:
 			parseError("platform "+ctx["platform"]+" is unknown.")
-			print("available platforms:");
+			sys.stderr.write("available platforms:");
 			for platform in conf["platforms"]:
-				print(platform)
+				sys.stderr.write(platform)
 	out=open("Makefile", "w")
 	out.write(".phony: all clean");
 	for platform in ctx["platforms"]:
@@ -644,9 +676,17 @@ def dumpEnvironment(ctx, includes, platform):
 			)
 	else:
 		parseError("platform "+platform+" is unknown.")
-		print("available platforms:");
+		sys.stderr.write("available platforms:");
 		for platform in conf["platforms"]:
-			print(platform)	
+			sys.stderr.write(platform)	
+
+def set_external_flag(ctx, lib, flag, value):
+#	sys.stderr.write("SETTING "+lib+" "+flag+" "+str(value)+"\n")
+	if lib in ctx["externals"]:
+		ctx["externals"][lib][flag]=value
+	else:
+		ctx["externals"][lib]={flag: value}
+
 
 def usage():
 	print("usage:")
@@ -656,13 +696,15 @@ def usage():
 
 if __name__ == "__main__":	
 	try:
-		opts, args = getopt.getopt(sys.argv[1:], "h", ["help", "include=", "config-dir=", "print-env="])
+		opts, args = getopt.getopt(sys.argv[1:], "h", ["help", "include=", "config-dir=", "print-env=", 
+			"with-zlib-cppflags=", "with-zlib-ldflags=", "with-zlib=",
+			"with-libxml-cppflags=", "with-libxml-ldflags=", "with-libxml="])
 	except getopt.GetoptError, err:
 		# print help information and exit:
 		print str(err) # will print something like "option -a not recognized"
 		usage()
 		sys.exit(2)
-	ctx={ "base": os.path.abspath(os.curdir), "root": os.path.abspath(os.curdir), "platform": "?-?-?", "platforms": [] }
+	ctx={ "base": os.path.abspath(os.curdir), "root": os.path.abspath(os.curdir), "platform": "?-?-?", "platforms": [], "externals": {} }
 	ctx["config"]=os.path.join(ctx["base"], "config")
 	includes=[]
 	dump_env=[]
@@ -677,6 +719,18 @@ if __name__ == "__main__":
 		elif o in ("--print-env"):
 			args=[]
 			dump_env=[a]
+		elif o in ("--with-zlib"):
+			set_external_flag(ctx, "zlib", "external", "yes"==a)
+		elif o in ("--with-zlib-cppflags"):
+			set_external_flag(ctx, "zlib", "cppflags", a)
+		elif o in ("--with-zlib-ldflags"):
+			set_external_flag(ctx, "zlib", "ldflags", a)
+		elif o in ("--with-libxml"):
+			set_external_flag(ctx, "xml", "external", "yes"==a)
+		elif o in ("--with-libxml-cppflags"):
+			set_external_flag(ctx, "xml", "cppflags", a)
+		elif o in ("--with-libxml-ldflags"):
+			set_external_flag(ctx, "xml", "ldflags", a)
 
 	for platform in args:
 		ctx["platforms"].append(platform)

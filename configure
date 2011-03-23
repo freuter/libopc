@@ -4,6 +4,13 @@ OS=`uname -s | tr '[:upper:]' '[:lower:]'`
 TARGET=debug
 TOOLCHAIN=gcc
 HOST=""
+EXTERNAL_ZLIB="no"
+EXTERNAL_ZLIB_CPPFLAGS=""
+EXTERNAL_ZLIB_LDFLAGS=""
+EXTERNAL_LIBXML="no"
+EXTERNAL_LIBXML_CPPFLAGS=""
+EXTERNAL_LIBXML_LDFLAGS=""
+
 
 while test $# -ge 1
 do
@@ -21,6 +28,12 @@ case "$1" in
 	--target=*) TARGET=`echo $1 | sed 's/.*=//'`; shift ;;
 	--toolchain=*) TOOLCHAIN=`echo $1 | sed 's/.*=//'`; shift ;;
 	--os=*) OS=`echo $1 | sed 's/.*=//'`; shift ;;
+	--with-zlib=*) EXTERNAL_ZLIB=`echo $1 | sed 's/.*=//'`; shift ;;
+	--with-zlib-cppflags=*) EXTERNAL_ZLIB_CPPFLAGS=`echo $1 | sed 's/.*=//'`; shift ;;
+	--with-zlib-ldflags=*) EXTERNAL_ZLIB_LDFLAGS=`echo $1 | sed 's/.*=//'`; shift ;;
+	--with-libxml=*) EXTERNAL_LIBXML=`echo $1 | sed 's/.*=//'`; shift ;;
+	--with-libxml-cppflags=*) EXTERNAL_LIBXML_CPPFLAGS=`echo $1 | sed 's/.*=//'`; shift ;;
+	--with-libxml-ldflags=*) EXTERNAL_LIBXML_LDFLAGS=`echo $1 | sed 's/.*=//'`; shift ;;
 	*) echo "unknown option: $1"; echo "$0 --help for help"; exit 1 ;;
 esac
 done
@@ -128,17 +141,21 @@ fi
 if [[ $PLATFORM =~ ^[^-]+-[^-]+-[^-]+$ ]]; then
 	PYTHON_VERSION="`$PYTHON_PATH -V 2>&1`"
 	if [[ $PYTHON_VERSION =~ ^"Python 2.6."[1-9][0-9]*$|^"Python 2."[7-9][0-9]*(\.[0-9]*)?$|^"Python "[3][0-9]*(\.[0-9]*(\.[0-9]*))?$ ]]; then
-		FLAGS=`$PYTHON_PATH generate.py --include Makefile.platform.xml --config-dir $BUILDDIR --print-env $PLATFORM`
+		FLAGS=`$PYTHON_PATH generate.py --include Makefile.platform.xml --config-dir $BUILDDIR --with-zlib=$EXTERNAL_ZLIB --with-zlib-cppflags="$EXTERNAL_ZLIB_CPPFLAGS" --with-zlib-ldflags="$EXTERNAL_ZLIB_LDFLAGS" --with-libxml=$EXTERNAL_LIBXML --with-libxml-cppflags="$EXTERNAL_LIBXML_CPPFLAGS" --with-libxml-ldflags="$EXTERNAL_LIBXML_LDFLAGS" --print-env $PLATFORM`
+		echo FLAGS=$FLAGS
 		eval $FLAGS
-#		echo $FLAGS
 		CONFIG_OPT=""
 		if [ x"" != x$HOST ]; then
 			CONFIG_OPT="--host=$HOST"
 		fi
 		execConfigure "." "plib" "$PLIBCONFIG" "$PLIBFILES" ""
-		execConfigure "third_party" "zlib-1.2.5" "$ZLIBCONFIG" "$ZLIBFILES" ""
-		execConfigure "third_party" "libxml2-2.7.7" "$LIBXMLCONFIG" "$LIBXMLFILES" "$CONFIG_OPT"
-		$PYTHON_PATH generate.py --include Makefile.xml --config-dir $BUILDDIR $PLATFORM
+		if [ x"no" == x$EXTERNAL_ZLIB ]; then 
+			execConfigure "third_party" "zlib-1.2.5" "$ZLIBCONFIG" "$ZLIBFILES" ""
+		fi
+		if [ x"no" == x$EXTERNAL_LIBXML ]; then 
+			execConfigure "third_party" "libxml2-2.7.7" "$LIBXMLCONFIG" "$LIBXMLFILES" "$CONFIG_OPT"
+		fi
+		$PYTHON_PATH generate.py --include Makefile.xml --config-dir $BUILDDIR --with-zlib=$EXTERNAL_ZLIB --with-zlib-cppflags="$EXTERNAL_ZLIB_CPPFLAGS" --with-zlib-ldflags="$EXTERNAL_ZLIB_LDFLAGS" --with-libxml=$EXTERNAL_LIBXML --with-libxml-cppflags="$EXTERNAL_LIBXML_CPPFLAGS" --with-libxml-ldflags="$EXTERNAL_LIBXML_LDFLAGS" $PLATFORM
 		if [ $? -ne 0 ]; then
 			echo "*** error generating Makefile!"
 			exit 1
