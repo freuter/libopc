@@ -722,7 +722,7 @@ opc_error_t opcContainerDump(opcContainer *c, FILE *out) {
         opcContainerDumpString(out, c->part_array[i].name, max_part);
         fputc(' ', out);
         const xmlChar *type=opcPartGetType(c, c->part_array[i].name);
-        opcContainerDumpString(out, type, 79-max_part-1);
+        opcContainerDumpString(out, (NULL==type?_X("n/a"):type), 79-max_part-1);
         /*
         fprintf(out, "%s [%s]\n", c->part_array[i].name, type);
         */
