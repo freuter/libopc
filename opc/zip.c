@@ -199,6 +199,55 @@ opcZip *opcZipOpenIO(opcZipReadCallback *ioread,
     return zip;
 }
 
+
+struct __opcZipMemContext {
+    const opc_uint8_t *data;
+    opc_uint32_t data_len;
+    opc_uint32_t data_pos;    
+};
+
+static int __opcZipMemRead(void *iocontext, char *buffer, int len) {
+    struct __opcZipMemContext *mem=(struct __opcZipMemContext*)iocontext;
+    opc_uint32_t max=(mem->data_pos+len<=mem->data_len?len:mem->data_pos+len-mem->data_len);
+    OPC_ASSERT(max>=0 && max<mem->data_len);
+    memcpy(buffer, mem->data+mem->data_pos, max);
+    mem->data_pos+=max;    
+    return max;
+}
+
+static int __opcZipMemWrite(void *iocontext, const char *buffer, int len) {
+    OPC_ASSERT(0); // not valid for mem
+    return 0;
+}
+
+static int __opcZipMemClose(void *iocontext) {
+    struct __opcZipMemContext *mem=(struct __opcZipMemContext*)iocontext;
+    xmlFree(mem);
+    return 0;
+}
+
+static opc_ofs_t __opcZipMemSeek(void *iocontext, opc_ofs_t ofs) {
+    struct __opcZipMemContext *mem=(struct __opcZipMemContext*)iocontext;
+    if (ofs<=mem->data_len) {
+        mem->data_pos=ofs;
+    } else {
+        mem->data_pos=mem->data_len;
+    }
+    return mem->data_pos;
+}
+
+
+opcZip *opcZipOpenMemory(const opc_uint8_t *data, opc_uint32_t data_len) {
+    struct __opcZipMemContext *mem=xmlMalloc(sizeof(struct __opcZipMemContext));
+    memset(mem, 0, sizeof(*mem));
+    mem->data_len=data_len;
+    mem->data_pos=0;
+    mem->data=data;
+    return opcZipOpenIO(__opcZipMemRead, __opcZipMemWrite, __opcZipMemClose, __opcZipMemSeek, mem, data_len, 0);
+
+}
+
+
 void opcZipClose(opcZip *zip) {
     if (NULL!=zip) {
         OPC_ENSURE(OPC_ERROR_NONE==_opcZipFileClose(zip));

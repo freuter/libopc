@@ -70,7 +70,7 @@ static opcContainerExternalRelation* ensureExternalRelation(opcContainer *contai
 }
 
 
-static opc_bool_t findItem(void *array_, opc_uint32_t items, const void *key1, const void *key2, int (*cmp_fct)(const void *key1, const void *key2, const void *array_, opc_uint32_t item), opc_uint32_t *pos) {
+static opc_bool_t findItem(void *array_, opc_uint32_t items, const void *key1, opc_uint32_t key2, int (*cmp_fct)(const void *key1, opc_uint32_t key2, const void *array_, opc_uint32_t item), opc_uint32_t *pos) {
     opc_uint32_t i=0;
     opc_uint32_t j=items;
     while(i<j) {
@@ -102,13 +102,13 @@ static opc_bool_t findItem(void *array_, opc_uint32_t items, const void *key1, c
 }
 
 
-static inline int part_cmp_fct(const void *key, const void *, const void *array_, opc_uint32_t item) {
+static inline int part_cmp_fct(const void *key, opc_uint32_t v, const void *array_, opc_uint32_t item) {
     return xmlStrcmp((xmlChar*)key, ((opcContainerPart*)array_)[item].name);
 }
 
 opcContainerPart *opcContainerInsertPart(opcContainer *container, const xmlChar *name, opc_bool_t insert) {
     opc_uint32_t i=0;
-    if (findItem(container->part_array, container->part_items, name, NULL, part_cmp_fct, &i)) {
+    if (findItem(container->part_array, container->part_items, name, 0, part_cmp_fct, &i)) {
         return &container->part_array[i];
     } else if (insert && NULL!=ensurePart(container)) {
         ensureGap(container, part_array, part_items, i);
@@ -167,12 +167,12 @@ static opc_uint32_t createRelId(opcContainer *container, const xmlChar *relPrefi
 }
 
 
-static inline int type_cmp_fct(const void *key, const void *, const void *array_, opc_uint32_t item) {
+static inline int type_cmp_fct(const void *key, opc_uint32_t v, const void *array_, opc_uint32_t item) {
     return xmlStrcmp((xmlChar*)key, ((opcContainerType*)array_)[item].type);
 }
 static opcContainerType *insertType(opcContainer *container, const xmlChar *type, opc_bool_t insert) {
     opc_uint32_t i=0;
-    if (findItem(container->type_array, container->type_items, type, NULL, type_cmp_fct, &i)) {
+    if (findItem(container->type_array, container->type_items, type, 0, type_cmp_fct, &i)) {
         return &container->type_array[i];
     } else if (insert && NULL!=ensureType(container)) {
         ensureGap(container, type_array, type_items, i);
@@ -183,12 +183,12 @@ static opcContainerType *insertType(opcContainer *container, const xmlChar *type
     }
 }
 
-static inline int extension_cmp_fct(const void *key, const void *, const void *array_, opc_uint32_t item) {
+static inline int extension_cmp_fct(const void *key, opc_uint32_t v, const void *array_, opc_uint32_t item) {
     return xmlStrcmp((xmlChar*)key, ((opcContainerExtension*)array_)[item].extension);
 }
 opcContainerExtension *opcContainerInsertExtension(opcContainer *container, const xmlChar *extension, opc_bool_t insert) {
     opc_uint32_t i=0;
-    if (findItem(container->extension_array, container->extension_items, extension, NULL, extension_cmp_fct, &i)) {
+    if (findItem(container->extension_array, container->extension_items, extension, 0, extension_cmp_fct, &i)) {
         return &container->extension_array[i];
     } else if (insert && NULL!=ensureExtension(container)) {
         ensureGap(container, extension_array, extension_items, i);
@@ -199,12 +199,12 @@ opcContainerExtension *opcContainerInsertExtension(opcContainer *container, cons
     }
 }
 
-static inline int relationtype_cmp_fct(const void *key, const void *, const void *array_, opc_uint32_t item) {
+static inline int relationtype_cmp_fct(const void *key, opc_uint32_t v, const void *array_, opc_uint32_t item) {
     return xmlStrcmp((xmlChar*)key, ((opcContainerRelationType*)array_)[item].type);
 }
 opcContainerRelationType *opcContainerInsertRelationType(opcContainer *container, const xmlChar *type, opc_bool_t insert) {
     opc_uint32_t i=0;
-    if (findItem(container->relationtype_array, container->relationtype_items, type, NULL, relationtype_cmp_fct, &i)) {
+    if (findItem(container->relationtype_array, container->relationtype_items, type, 0, relationtype_cmp_fct, &i)) {
         return &container->relationtype_array[i];
     } else if (insert && NULL!=ensureRelationType(container)) {
         ensureGap(container, relationtype_array, relationtype_items, i);
@@ -215,12 +215,12 @@ opcContainerRelationType *opcContainerInsertRelationType(opcContainer *container
     }
 }
 
-static inline int externalrelation_cmp_fct(const void *key, const void *, const void *array_, opc_uint32_t item) {
+static inline int externalrelation_cmp_fct(const void *key, opc_uint32_t v, const void *array_, opc_uint32_t item) {
     return xmlStrcmp((xmlChar*)key, ((opcContainerExternalRelation*)array_)[item].target);
 }
 static opcContainerExternalRelation*insertExternalRelation(opcContainer *container, const xmlChar *target, opc_bool_t insert) {
     opc_uint32_t i=0;
-    if (findItem(container->externalrelation_array, container->externalrelation_items, target, NULL, externalrelation_cmp_fct, &i)) {
+    if (findItem(container->externalrelation_array, container->externalrelation_items, target, 0, externalrelation_cmp_fct, &i)) {
         return &container->externalrelation_array[i];
     } else if (insert && NULL!=ensureExternalRelation(container)) {
         ensureGap(container, externalrelation_array, externalrelation_items, i);
@@ -232,8 +232,8 @@ static opcContainerExternalRelation*insertExternalRelation(opcContainer *contain
 }
 
 
-static inline int relation_cmp_fct(const void *key, const void *, const void *array_, opc_uint32_t item) {
-    opcRelation r1=((opc_uint32_t)key);
+static inline int relation_cmp_fct(const void *key, opc_uint32_t v, const void *array_, opc_uint32_t item) {
+    opcRelation r1=v;
     opcRelation r2=((opcContainerRelation*)array_)[item].relation_id;
     if (OPC_CONTAINER_RELID_PREFIX(r1)==OPC_CONTAINER_RELID_PREFIX(r2)) {
         if (-1==OPC_CONTAINER_RELID_COUNTER(r1)) {
@@ -255,7 +255,7 @@ opcContainerRelation *opcContainerInsertRelation(opcContainerRelation **relation
                                             opc_uint32_t target_mode, xmlChar *target_ptr) {
     opc_uint32_t i=0;
     if (relation_items>0) {
-        opc_bool_t ret=findItem(*relation_array, *relation_items, (void*)relation_id, NULL, relation_cmp_fct, &i);
+        opc_bool_t ret=findItem(*relation_array, *relation_items, (void*)relation_id, 0, relation_cmp_fct, &i);
         if (ret) { // error, relation already exists!
             return NULL;
         }
@@ -279,7 +279,7 @@ opcContainerRelation *opcContainerInsertRelation(opcContainerRelation **relation
 
 opcContainerRelation *opcContainerFindRelation(opcContainer *container, opcContainerRelation *relation_array, opc_uint32_t relation_items, opcRelation relation) {
     opc_uint32_t i=0;
-    opc_bool_t ret=findItem(relation_array, relation_items, (void*)relation, NULL, relation_cmp_fct, &i);
+    opc_bool_t ret=findItem(relation_array, relation_items, NULL, relation, relation_cmp_fct, &i);
     return (ret?&relation_array[i]:NULL);
 }
 
@@ -290,7 +290,7 @@ struct OPC_CONTAINER_FIND_RELATIONBYID_CONTEXT {
     opc_uint32_t id_len;
 };
 
-static inline int relation_ctx_cmp_fct(const void *key, const void *, const void *array_, opc_uint32_t item) {
+static inline int relation_ctx_cmp_fct(const void *key, opc_uint32_t v, const void *array_, opc_uint32_t item) {
     struct OPC_CONTAINER_FIND_RELATIONBYID_CONTEXT *ctx=(struct OPC_CONTAINER_FIND_RELATIONBYID_CONTEXT*)key;
     opcRelation r2=((opcContainerRelation*)array_)[item].relation_id;
     OPC_ASSERT(OPC_CONTAINER_RELID_PREFIX(r2)>=0 && OPC_CONTAINER_RELID_PREFIX(r2)<ctx->c->relprefix_items);
@@ -427,17 +427,14 @@ void opcConstainerParseRels(opcContainer *c, const xmlChar *base, opc_uint32_t r
     OPC_ENSURE(OPC_ERROR_NONE==opcXmlReaderClose(reader));
 }
 
-opcContainer* opcContainerOpen(const xmlChar *fileName, 
-                               opcContainerOpenMode mode, 
-                               void *userContext, 
-                               const xmlChar *destName) {
+static opcContainer* _opcInitContainer(void *userContext, opcZip *zip) {
     opcContainer *c=(opcContainer *)xmlMalloc(sizeof(opcContainer));
     if (NULL!=c) {
         opc_bzero_mem(c, sizeof(*c));
         int open_flags=OPC_ZIP_READ;
         c->rels_segment_id=-1;
         c->content_types_segment_id=-1;
-        c->zip=opcZipOpenFile(fileName, OPC_ZIP_READ);
+        c->zip=zip;
         if (NULL!=c->zip) {
             // scan local files
             opcZipRawBuffer rawBuffer;
@@ -502,18 +499,18 @@ opcContainer* opcContainerOpen(const xmlChar *fileName,
                     opcContainerFree(c); c=NULL; // error
                 }
             }
-            if (-1!=c->content_types_segment_id) {
+            if (NULL!=c && -1!=c->content_types_segment_id) {
                 /*
-                opcContainerInputStream* stream=opcContainerOpenInputStreamEx(c, c->content_types_segment_id);
-                if (NULL!=stream) {
-                    opc_uint8_t buf[1024];
-                    opc_uint32_t len=0;
-                    while((len=opcContainerReadInputStream(stream, buf, sizeof(buf)))>0) {
-                        printf("%.*s", len, buf);
-                    }
-                    opcContainerCloseInputStream(stream);
-                }
-                */
+                 opcContainerInputStream* stream=opcContainerOpenInputStreamEx(c, c->content_types_segment_id);
+                 if (NULL!=stream) {
+                 opc_uint8_t buf[1024];
+                 opc_uint32_t len=0;
+                 while((len=opcContainerReadInputStream(stream, buf, sizeof(buf)))>0) {
+                 printf("%.*s", len, buf);
+                 }
+                 opcContainerCloseInputStream(stream);
+                 }
+                 */
                 opcXmlReader *reader=opcXmlReaderOpenEx(c, c ->content_types_segment_id, NULL, NULL, 0);
                 static char ns[]="http://schemas.openxmlformats.org/package/2006/content-types";
                 opc_xml_start_document(reader) {
@@ -580,12 +577,26 @@ opcContainer* opcContainerOpen(const xmlChar *fileName,
                     opcConstainerParseRels(c, part->name, part->rel_segment_id, &part->relation_array, &part->relation_items);
                 }
             }
-        } else {
+        } else if (NULL!=c) {
             xmlFree(c); c=NULL; // error
         }
     }
-    return c;
+    return c;    
 }
+
+opcContainer* opcContainerOpen(const xmlChar *fileName, 
+                               opcContainerOpenMode mode, 
+                               void *userContext, 
+                               const xmlChar *destName) {
+    return _opcInitContainer(userContext, opcZipOpenFile(fileName, OPC_ZIP_READ));
+}
+
+opcContainer* opcContainerOpenMem(const opc_uint8_t *data, opc_uint32_t data_len,
+                                  opcContainerOpenMode mode, 
+                                  void *userContext) {
+    return _opcInitContainer(userContext, opcZipOpenMemory(data, data_len));    
+}
+
 
 opc_error_t opcContainerFree(opcContainer *c) {
     if (NULL!=c) {
