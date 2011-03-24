@@ -69,6 +69,7 @@ extern "C" {
                          void *iocontext,
                          pofs_t file_size,
                          int flags);
+    opcZip *opcZipOpenMemory(const opc_uint8_t *data, opc_uint32_t data_len);
     void opcZipClose(opcZip *zip);
 
     typedef struct OPC_ZIPSEGMENT_STRUCT {
