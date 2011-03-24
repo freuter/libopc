@@ -44,11 +44,9 @@ int main( int argc, const char* argv[] )
         fseek(f, 0, SEEK_END);
         opc_uint32_t data_len=ftell(f);
         fseek(f, 0, SEEK_SET);
-        opc_uint8_t *data=xmlMalloc(data_len);
+        opc_uint8_t *data=(opc_uint8_t *)xmlMalloc(data_len);
         fread(data, 1, data_len, f);
         fclose(f);
-        printf("%s %i\n", data, data_len);
-#if 1
         if (NULL!=(c=opcContainerOpenMem(data, data_len, OPC_OPEN_READ_ONLY, NULL))) {
             opcContainerDump(c, stdout);
             opcContainerClose(c, OPC_CLOSE_NOW);
@@ -56,7 +54,6 @@ int main( int argc, const char* argv[] )
             printf("ERROR: \"%s\" could not be opened.\n", argv[1]);
             err=OPC_ERROR_STREAM;
         }
-#endif
         xmlFree(data);
         opcFreeLibrary();
     } else if (2==argc) {

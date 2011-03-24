@@ -20,6 +20,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "opc_zipwrite", "opc_zipwrit
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "opc_dump", "opc_dump\opc_dump.vcxproj", "{EBE78ECC-AC47-5D69-9E4B-E3B5748428A5}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "opc_mem", "opc_mem\opc_mem.vcxproj", "{9828E898-97C7-5BC7-BA09-E9811D1C0ED3}"
+EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "opc_extract", "opc_extract\opc_extract.vcxproj", "{6CBF6B9A-EC18-518B-8F5D-76E736F1E79B}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "opc_xml", "opc_xml\opc_xml.vcxproj", "{CF1E1592-536A-5D2E-8F0A-1CFD6D1039C3}"
@@ -76,6 +78,10 @@ Global
 		{EBE78ECC-AC47-5D69-9E4B-E3B5748428A5}.Debug|Win32.Build.0 = Debug|Win32
 		{EBE78ECC-AC47-5D69-9E4B-E3B5748428A5}.Release|Win32.ActiveCfg = Release|Win32
 		{EBE78ECC-AC47-5D69-9E4B-E3B5748428A5}.Release|Win32.Build.0 = Release|Win32
+		{9828E898-97C7-5BC7-BA09-E9811D1C0ED3}.Debug|Win32.ActiveCfg = Debug|Win32
+		{9828E898-97C7-5BC7-BA09-E9811D1C0ED3}.Debug|Win32.Build.0 = Debug|Win32
+		{9828E898-97C7-5BC7-BA09-E9811D1C0ED3}.Release|Win32.ActiveCfg = Release|Win32
+		{9828E898-97C7-5BC7-BA09-E9811D1C0ED3}.Release|Win32.Build.0 = Release|Win32
 		{6CBF6B9A-EC18-518B-8F5D-76E736F1E79B}.Debug|Win32.ActiveCfg = Debug|Win32
 		{6CBF6B9A-EC18-518B-8F5D-76E736F1E79B}.Debug|Win32.Build.0 = Debug|Win32
 		{6CBF6B9A-EC18-518B-8F5D-76E736F1E79B}.Release|Win32.ActiveCfg = Release|Win32

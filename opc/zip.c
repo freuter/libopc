@@ -208,8 +208,8 @@ struct __opcZipMemContext {
 
 static int __opcZipMemRead(void *iocontext, char *buffer, int len) {
     struct __opcZipMemContext *mem=(struct __opcZipMemContext*)iocontext;
-    opc_uint32_t max=(mem->data_pos+len<=mem->data_len?len:mem->data_pos+len-mem->data_len);
-    OPC_ASSERT(max>=0 && max<mem->data_len);
+    opc_uint32_t max=(mem->data_pos+len<=mem->data_len?len:mem->data_len-mem->data_pos);
+    OPC_ASSERT(max>=0 && mem->data_pos+max<=mem->data_len);
     memcpy(buffer, mem->data+mem->data_pos, max);
     mem->data_pos+=max;    
     return max;
@@ -238,7 +238,7 @@ static opc_ofs_t __opcZipMemSeek(void *iocontext, opc_ofs_t ofs) {
 
 
 opcZip *opcZipOpenMemory(const opc_uint8_t *data, opc_uint32_t data_len) {
-    struct __opcZipMemContext *mem=xmlMalloc(sizeof(struct __opcZipMemContext));
+    struct __opcZipMemContext *mem=(struct __opcZipMemContext *)xmlMalloc(sizeof(struct __opcZipMemContext));
     memset(mem, 0, sizeof(*mem));
     mem->data_len=data_len;
     mem->data_pos=0;
