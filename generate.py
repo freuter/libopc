@@ -738,6 +738,11 @@ if __name__ == "__main__":
 	if 1==len(ctx["platforms"]) and platformSubseteqTest(ctx["platforms"][0], "win32-*-*") and 1==len(includes):
 		generateWin32(ctx, includes[0])
 	else:
+		if not os.path.exists("build"):
+			os.makedirs("build")
+		f=open("build"+os.sep+"configure.ctx", "w")
+		f.write(str(ctx))
+		f.close()		
 		for include in includes:
 			generateMakefiles(ctx, include)
 
