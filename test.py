@@ -36,6 +36,11 @@ def opc_image_test(path):
 	test.call(test.build("opc_image"), [], [test.docs(path), test.tmp("")], test.tmp(path+".opc_image"), [])
 	test.regr(test.docs(path+".opc_image"), test.tmp(path+".opc_image"), True)
 
+def opc_text_test(path):
+	test.call(test.build("opc_text"), [], [test.docs(path)], test.tmp(path+".opc_text.html"), [])
+	test.regr(test.docs(path+".opc_text.html"), test.tmp(path+".opc_text.html"), True)
+
+
 if __name__ == "__main__":
 #	opc_zipread_test("simple.zip")
 	opc_zipread_test("OOXMLI1.docx")
@@ -57,6 +62,9 @@ if __name__ == "__main__":
 
 	opc_image_test("OOXMLI1.docx")
 	opc_image_test("OOXMLI4.docx")
+
+	opc_text_test("OOXMLI1.docx")
+	opc_text_test("OOXMLI4.docx")
 
 	test.rm(test.tmp("out.zip"))
 #	text.exist("zip_write.zip")
