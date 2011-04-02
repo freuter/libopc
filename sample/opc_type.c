@@ -31,48 +31,27 @@
  */
 #include <opc/opc.h>
 
-static void traverse(opcContainer *c, opcPart source) {
-    for(opcRelation rel=opcRelationFirst(c, source);OPC_RELATION_INVALID!=rel;rel=opcRelationNext(c, source, rel)) {
-        opcPart target=opcRelationGetInternalTarget(c, source, rel);
-        if (OPC_PART_INVALID!=target) {
-            const xmlChar *prefix=NULL;
-            opc_uint32_t counter=-1;
-            const xmlChar *type=NULL;
-            opcRelationGetInformation(c, source, rel, &prefix, &counter, &type);
-            char buf[20]="";
-            if (-1!=counter) {
-                sprintf(buf, "%i", counter);
-            }
-            printf("%s %s%s %s %s\n", source, prefix, buf, target, type);
-            traverse(c, target);
-        }
-    }
-}
-
 int main( int argc, const char* argv[] )
 {
     opcInitLibrary();
-    opcContainer *c=opcContainerOpen(_X(argv[1]), OPC_OPEN_READ_ONLY, NULL, NULL);
-    if (NULL!=c) {
-        if (3==argc) {
-            opcRelation rel=opcRelationFind(c, OPC_PART_INVALID, _X(argv[2]), NULL);
-            if (OPC_RELATION_INVALID!=rel) {
-                const xmlChar *type=NULL;
-                opcRelationGetInformation(c, OPC_PART_INVALID, rel, NULL, NULL, &type);
-                printf("type=%s\n", type);
-            }
-        } else if (4==argc) {
-            opcPart part=opcPartOpen(c, _X(argv[2]), NULL, 0);
-            if (OPC_PART_INVALID!=part) {
-                opcRelation rel=opcRelationFind(c, part, _X(argv[3]), NULL);
-                if (OPC_RELATION_INVALID!=rel) {
-                    const xmlChar *type=NULL;
-                    opcRelationGetInformation(c, part, rel, NULL, NULL, &type);
-                    printf("type=%s\n", type);
+    for(int i=1;i<argc;i++) {
+        opcContainer *c=opcContainerOpen(_X(argv[1]), OPC_OPEN_READ_ONLY, NULL, NULL);
+        opcRelation rel=opcRelationFind(c, OPC_PART_INVALID, NULL, _X("http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument"));
+        if (OPC_RELATION_INVALID!=rel) {
+            opcPart main=opcRelationGetInternalTarget(c, OPC_PART_INVALID, rel);
+            if (OPC_PART_INVALID!=main) {
+                const xmlChar *type=opcPartGetType(c, main);
+                printf("Office Document Type: %s\n", type);
+                if (0==xmlStrcmp(type, _X("application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"))) {
+                    printf("WORD Document\n");
+                } else if (0==xmlStrcmp(type, _X("application/vnd.openxmlformats-officedocument.presentationml.presentation.main+xml"))) {
+                    printf("POWERPOINT Document\n");
+                } else if (0==xmlStrcmp(type, _X("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"))) {
+                    printf("EXCEL Document\n");
                 }
+                opcPartRelease(c, main);
             }
-        } else {
-            traverse(c, OPC_PART_INVALID);
+            opcRelationRelease(c, OPC_PART_INVALID, rel);
         }
         opcContainerClose(c, OPC_CLOSE_NOW);
     }
