@@ -32,6 +32,7 @@
 #include <opc/opc.h>
 #include "internal.h"
 
+
 opcContainerRelation *opcContainerFindRelationByType(opcContainer *container, opcContainerRelation *relation_array, opc_uint32_t relation_items, const xmlChar *mimeType) {
     for(opc_uint32_t i=0;i<relation_items;i++) {
         if (0==xmlStrcmp(relation_array[i].relation_type, mimeType)) {
@@ -135,3 +136,4 @@ void opcRelationGetInformation(opcContainer *container, opcPart part, opcRelatio
         *type=(NULL!=rel?rel->relation_type:NULL);
     }
 }
+

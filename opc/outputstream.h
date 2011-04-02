@@ -41,11 +41,11 @@
 #ifdef __cplusplus
 extern "C" {
 #endif    
-    typedef struct OPC_OUTPUTSTREAM_STRUCT opcOutputStream;
+    typedef struct OPC_CONTAINER_OUTPUTSTREAM_STRUCT opcContainerOutputStream;
         
-    opcOutputStream *opcOutputStreamOpen(opcPart *part, int growth_hint);
-    int opcOutputStreamWrite(opcOutputStream *stream, const void *buf, size_t buf_len);
-    int opcOutputStreamClose(opcOutputStream *stream);
+    opc_uint32_t opcContainerWriteOutputStream(opcContainerOutputStream* stream, const opc_uint8_t *buffer, opc_uint32_t buffer_len);
+    opc_error_t opcContainerCloseOutputStream(opcContainerOutputStream* stream);
+    opc_error_t opcContainerCloseOutputStream(opcContainerOutputStream* stream);
         
 #ifdef __cplusplus
 } /* extern "C" */

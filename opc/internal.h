@@ -35,28 +35,88 @@
 
 #include <opc/config.h>
 #include <opc/container.h>
+#include <opc/zip.h>
+#include <zlib.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif    
 
-#define OPC_MAXPATH 512
+    extern const xmlChar OPC_SEGMENT_CONTENTTYPES[];
+    extern const xmlChar OPC_SEGMENT_ROOTRELS[];
+
+    typedef struct OPC_FILERAWBUFFER_STRUCT {
+        opcFileRawState state;
+        puint32_t   buf_ofs;
+        puint32_t   buf_len;
+        opc_uint8_t buf[OPC_DEFLATE_BUFFER_SIZE];
+    } opcFileRawBuffer;
+
+
+    typedef struct OPC_ZIPSEGMENT_STRUCT {
+        opc_uint32_t deleted_segment :1;
+        opc_uint32_t rels_segment :1;
+        opc_uint32_t next_segment_id;
+        const xmlChar *partName; // NOT!!! owned by me... owned by opcContainer
+        opc_ofs_t stream_ofs;
+        opc_ofs_t segment_size;
+        opc_uint16_t padding;
+        opc_uint32_t header_size;
+        opc_uint16_t bit_flag;
+        opc_uint32_t crc32;
+        opc_uint16_t compression_method;
+        opc_ofs_t compressed_size;
+        opc_ofs_t uncompressed_size;
+        opc_uint32_t growth_hint; 
+    } opcZipSegment;
 
     struct OPC_ZIP_STRUCT {
-        opcZipReadCallback *_ioread;
-        opcZipWriteCallback *_iowrite;
-        opcZipCloseCallback *_ioclose;
-        opcZipSeekCallback *_ioseek;
-        void *iocontext;
-        int flags;
-        opcZipRawState state;
-        opc_ofs_t file_size;
-        opc_ofs_t append_ofs; // last offset in zip where data can be appended
+        opcIO_t *io;
+        opcZipSegment *segment_array;
+        opc_uint32_t segment_items;
     };
 
-    struct OPC_ZIPSEGMENTINPUTSTREAM_STRUCT {
-        opcZipRawBuffer raw;
-        opcZipInflateState state;
+    typedef struct OPC_ZIPINFLATESTATE_STRUCT {
+        z_stream stream;
+        opc_uint16_t compression_method;
+        int inflate_state;
+        opc_ofs_t compressed_size;
+    } opcZipInflateState;
+
+    struct OPC_ZIPOUTPUTSTREAM_STRUCT {
+        opc_uint32_t segment_id;
+        opc_uint16_t compression_method;
+        opc_uint32_t crc32;
+        z_stream stream;
+        int inflate_state;
+        opc_uint32_t buf_len;
+        opc_uint32_t buf_ofs;
+        opc_uint32_t buf_size;
+        opc_uint8_t *buf /*[buf_size]*/;
+    };
+
+    struct OPC_ZIPINPUTSTREAM_STRUCT {
+        opc_uint32_t segment_id;
+        opcZipInflateState inflateState;
+        opcFileRawBuffer rawBuffer;
+    };
+
+    struct OPC_CONTAINER_INPUTSTREAM_STRUCT {
+//        opc_uint32_t slot; //@TODO
+        opcZipInputStream *stream;
+        opcContainer *container; // weak reference
+        xmlTextReaderPtr reader; // in case we have an xmlTextReader associated
+        opc_error_t error;
+        opc_uint32_t reader_consume_element : 1;
+        opc_uint32_t reader_element_handled : 1;
+    };
+
+    struct OPC_CONTAINER_OUTPUTSTREAM_STRUCT {
+        opcZipOutputStream *stream;
+        opc_uint32_t segment_id;  
+        opcContainer *container; // weak reference
+        const xmlChar *partName;
+        opc_bool_t rels_segment;
     };
 
     typedef struct OPC_CONTAINER_RELATION_TYPE_STRUCT {
@@ -91,12 +151,6 @@ extern "C" {
         opc_uint32_t relation_items;
     } opcContainerPart;
 
-    typedef struct OPC_CONTAINER_SEGMENT_STRUCT {
-        opcZipSegment zipSegment;
-        xmlChar *part_name; // owned by part_array
-        opc_uint32_t next_segment_id;
-    } opcContainerSegment;
-
     typedef struct OPC_CONTAINER_PART_PREFIX_STRUCT {
         xmlChar *prefix;
     } opcContainerRelPrefix;
@@ -113,57 +167,52 @@ extern "C" {
         const xmlChar *type; // owned by opcContainerType
     } opcContainerExtension;
 
-    typedef struct OPC_CONTAINER_INPUTSTREAM_STRUCT {
-        opcZipSegmentInputStream *segmentInputStream;
-        opc_uint32_t segment_id;
-        opcContainer *container; // weak reference
-        xmlTextReaderPtr reader; // in case we have an xmlTextReader associated
-        opc_error_t error;
-        opc_uint32_t reader_consume_element : 1;
-        opc_uint32_t reader_element_handled : 1;
-    } opcContainerInputStream;
-
     struct OPC_CONTAINER_STRUCT {
+        opcIO_t io;
+        opcZip *storage;
+        opcContainerOpenMode mode;
+
         opcContainerPart *part_array;
         opc_uint32_t part_items;
-        opcContainerSegment *segment_array;
-        opc_uint32_t segment_items;
         opcContainerRelPrefix *relprefix_array;
         opc_uint32_t relprefix_items;
         opcContainerType *type_array;
         opc_uint32_t type_items;
         opcContainerExtension *extension_array;
         opc_uint32_t extension_items;
+#if 0
         opcContainerInputStream **inputstream_array;
         opc_uint32_t inputstream_items;
+#endif
         opcContainerRelationType *relationtype_array;
         opc_uint32_t relationtype_items;
         opcContainerExternalRelation *externalrelation_array;
         opc_uint32_t externalrelation_items;
-        opcZip *zip;
         opc_uint32_t content_types_segment_id;
         opc_uint32_t rels_segment_id;
         opcContainerRelation *relation_array;
         opc_uint32_t relation_items;
+        void *userContext;
     };
 
-    opc_error_t opcContainerFree(opcContainer *c);
+    opcXmlReader* opcXmlReaderOpenEx(opcContainer *container, const xmlChar *partName, opc_bool_t rels_segment, const char * URL, const char * encoding, int options);
+    opcContainerInputStream* opcContainerOpenInputStreamEx(opcContainer *container, const xmlChar *name, opc_bool_t rels_segment);
+    opcContainerOutputStream* opcContainerCreateOutputStreamEx(opcContainer *container, const xmlChar *name, opc_bool_t rels_segment);
 
-
-    opcContainerInputStream* opcContainerOpenInputStreamEx(opcContainer *container, opc_uint32_t segment_id);
-    opcContainerInputStream* opcContainerOpenInputStream(opcContainer *container, xmlChar *name);
-    opc_uint32_t opcContainerReadInputStream(opcContainerInputStream* stream, opc_uint8_t *buffer, opc_uint32_t buffer_len);
-    opc_error_t opcContainerCloseInputStream(opcContainerInputStream* stream);
-    opcXmlReader* opcXmlReaderOpenEx(opcContainer *container, opc_uint32_t segment_id, const char * URL, const char * encoding, int options);
 
     opcContainerExtension *opcContainerInsertExtension(opcContainer *container, const xmlChar *extension, opc_bool_t insert);
     opcContainerPart *opcContainerInsertPart(opcContainer *container, const xmlChar *name, opc_bool_t insert);
-    opcContainerRelationType *opcContainerInsertRelationType(opcContainer *container, const xmlChar *type, opc_bool_t insert);
-    opcContainerRelation *opcContainerInsertRelation(opcContainerRelation **relation_array, opc_uint32_t *relation_items, 
-                                            opc_uint32_t relation_id,
-                                            xmlChar *relation_type,
-                                            opc_uint32_t target_mode, xmlChar *target_ptr);
     opcContainerRelation *opcContainerFindRelation(opcContainer *container, opcContainerRelation *relation_array, opc_uint32_t relation_items, opcRelation relation);
+    opcContainerRelation *opcContainerInsertRelation(opcContainerRelation **relation_array, opc_uint32_t *relation_items, 
+                                                     opc_uint32_t relation_id,
+                                                     xmlChar *relation_type,
+                                                     opc_uint32_t target_mode, xmlChar *target_ptr);
+    opcContainerExternalRelation*insertExternalRelation(opcContainer *container, const xmlChar *target, opc_bool_t insert);
+    opcContainerRelationType *opcContainerInsertRelationType(opcContainer *container, const xmlChar *type, opc_bool_t insert);
+    opcContainerType *insertType(opcContainer *container, const xmlChar *type, opc_bool_t insert);
+
+    opc_bool_t opcContainerDeletePartEx(opcContainer *container, const xmlChar *partName, opc_bool_t rels_segment);
+
     opcContainerRelation *opcContainerFindRelationById(opcContainer *container, opcContainerRelation *relation_array, opc_uint32_t relation_items, const xmlChar *relation_id);
 
 #ifdef __cplusplus

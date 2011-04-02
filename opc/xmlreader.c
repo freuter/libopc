@@ -32,16 +32,21 @@
 #include <opc/opc.h>
 #include "internal.h"
 
-
-opcXmlReader* opcXmlReaderOpenEx(opcContainer *container, opc_uint32_t segment_id, const char * URL, const char * encoding, int options) {
-    opcContainerInputStream* stream=opcContainerOpenInputStreamEx(container, segment_id);
+opcXmlReader* opcXmlReaderOpenEx(opcContainer *container, const xmlChar *partName, opc_bool_t rels_segment, const char * URL, const char * encoding, int options) {
+    opcContainerInputStream* stream=opcContainerOpenInputStreamEx(container, partName, rels_segment);
     if (NULL!=stream) {
         OPC_ASSERT(NULL==stream->reader);
-        stream->reader=xmlReaderForIO((xmlInputReadCallback)opcContainerReadInputStream, (xmlInputCloseCallback)opcContainerCloseInputStream, stream, URL, encoding, options);
+        stream->reader=xmlReaderForIO((xmlInputReadCallback)opcContainerReadInputStream, 
+                                      (xmlInputCloseCallback)opcContainerCloseInputStream, 
+                                      stream, URL, encoding, options);
         return stream;
     } else {
         return NULL;
     }
+}
+
+opcXmlReader* opcXmlReaderOpen(opcContainer *container, const xmlChar *partName, const char * URL, const char * encoding, int options) {
+    return opcXmlReaderOpenEx(container, partName, OPC_FALSE, URL, encoding, options);
 }
 
 opc_error_t opcXmlReaderClose(opcXmlReader *reader) {
@@ -50,7 +55,7 @@ opc_error_t opcXmlReaderClose(opcXmlReader *reader) {
         if (0!=xmlTextReaderClose(reader->reader) && OPC_ERROR_NONE==ret) {
             ret=OPC_ERROR_STREAM;
         }
-        OPC_ASSERT(NULL==reader->segmentInputStream);        
+        // WARNING: reader is not longer valid here, since xmlTextReaderClose call stream close which will kill reader
     } else {
         ret=OPC_ERROR_STREAM;
     }
@@ -185,7 +190,6 @@ opc_bool_t opcXmlReaderEndChildren(opcXmlReader *reader) {
 
 
 opcXmlReader *opcXmlReaderOpen(opcContainer *c, opcPart part) {
-    opcContainerPart *cp=(OPC_PART_INVALID!=part?opcContainerInsertPart(c, part, OPC_FALSE):NULL);
-    return (NULL!=cp?opcXmlReaderOpenEx(c, cp->first_segment_id, NULL, NULL, 0):NULL);
+    return opcXmlReaderOpenEx(c, part, OPC_FALSE, NULL, NULL, 0);
 }
 

@@ -135,14 +135,14 @@ static void extract(opcContainer *c, opcPart p) {
     if (p[i]=='/') i++;
     FILE *out=fopen((char *)(p+i), "wb");
     if (NULL!=out) {
-        opcInputStream *stream=opcInputStreamOpen(c, p);
+        opcContainerInputStream *stream=opcContainerOpenInputStream(c, p);
         if (NULL!=stream) {
-            int ret=0;
-            char buf[100];
-            while((ret=opcInputStreamRead(stream, buf, sizeof(buf)))>0) {
+            opc_uint32_t  ret=0;
+            opc_uint8_t buf[100];
+            while((ret=opcContainerReadInputStream(stream, buf, sizeof(buf)))>0) {
                 fwrite(buf, sizeof(char), ret, out);
             }
-            opcInputStreamClose(stream);
+            opcContainerCloseInputStream(stream);
         }
         fclose(out);
     }
@@ -168,18 +168,18 @@ int main( int argc, const char* argv[] )
         }
         opcPart part=opcPartOpen(c, _X("/word/document.xml"), NULL, 0);
         if (OPC_PART_INVALID!=part) {
-            opcInputStream *stream=opcInputStreamOpen(c, part);
+            opcContainerInputStream *stream=opcContainerOpenInputStream(c, part);
             if (NULL!=stream) {
-                int ret=0;
-                char buf[100];
-                while((ret=opcInputStreamRead(stream, buf, sizeof(buf)))>0) {
+                opc_uint32_t ret=0;
+                opc_uint8_t buf[100];
+                while((ret=opcContainerReadInputStream(stream, buf, sizeof(buf)))>0) {
                     printf("%.*s", ret, buf);
                 }
-                opcInputStreamClose(stream);
+                opcContainerCloseInputStream(stream);
                 printf("\n");
             }
             {
-                opcXmlReader *reader=opcXmlReaderOpen(c, part);
+                opcXmlReader *reader=opcXmlReaderOpen(c, part, NULL, 0, 0);
                 if (NULL!=reader) {
                     opcXmlReaderStartDocument(reader);
                     dumpXml(reader);
@@ -188,7 +188,7 @@ int main( int argc, const char* argv[] )
                 }
             }
             {
-                opcXmlReader *reader=opcXmlReaderOpen(c, part);
+                opcXmlReader *reader=opcXmlReaderOpen(c, part, NULL, 0, 0);
                 if (NULL!=reader) {
                     opcXmlReaderStartDocument(reader);
                     printf("<html>\n");

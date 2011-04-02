@@ -34,7 +34,8 @@
  
  */
 #include <opc/config.h>
-#include <zlib.h>
+#include <opc/file.h>
+#include <opc/container.h>
 
 #ifndef OPC_ZIP_H
 #define OPC_ZIP_H
@@ -42,102 +43,66 @@
 #ifdef __cplusplus
 extern "C" {
 #endif    
+
     #define OPC_DEFAULT_GROWTH_HINT 512
-
     typedef struct OPC_ZIP_STRUCT opcZip;
+    typedef struct OPC_ZIPINPUTSTREAM_STRUCT opcZipInputStream;
+    typedef struct OPC_ZIPOUTPUTSTREAM_STRUCT opcZipOutputStream;
 
-    typedef enum OPC_ZIPSEEKMODE_ENUM {
-        opcZipSeekSet = SEEK_SET,
-        opcZipSeekCur = SEEK_CUR,
-        opcZipSeekEnd = SEEK_END
-    } opcZipSeekMode;
-
-    typedef int opcZipReadCallback(void *iocontext, char *buffer, int len);
-    typedef int opcZipWriteCallback(void *iocontext, const char *buffer, int len);
-    typedef int opcZipCloseCallback(void *iocontext);
-    typedef opc_ofs_t opcZipSeekCallback(void *iocontext, opc_ofs_t ofs);
-
-#define OPC_ZIP_READ  0x1
-#define OPC_ZIP_WRITE 0x2
-#define OPC_ZIP_STREAM  0x4
-
-    opcZip *opcZipOpenFile(const xmlChar *fileName, int flags);
-    opcZip *opcZipOpenIO(opcZipReadCallback *ioread,
-                         opcZipWriteCallback *iowrite,
-                         opcZipCloseCallback *ioclose,
-                         opcZipSeekCallback *ioseek,
-                         void *iocontext,
-                         pofs_t file_size,
-                         int flags);
-    opcZip *opcZipOpenMemory(const opc_uint8_t *data, opc_uint32_t data_len);
-    void opcZipClose(opcZip *zip);
-
-    typedef struct OPC_ZIPSEGMENT_STRUCT {
-        opc_uint16_t bit_flag;
-        opc_uint32_t crc32;
-        opc_uint16_t compression_method;
-        opc_ofs_t stream_ofs;
+    typedef struct OPC_ZIP_SEGMENT_INFO_STRUCT {
+        xmlChar name[OPC_MAX_PATH]; 
+        opc_uint32_t name_len;
+        opc_uint32_t segment_number;
+        opc_bool_t   last_segment;
+        opc_bool_t   rels_segment;
         opc_uint32_t header_size;
-        opc_ofs_t compressed_size;
-        opc_ofs_t uncompressed_size;
-        opc_uint32_t growth_hint; 
-    } opcZipSegment;
-
-    opc_error_t opcZipInitSegment(opcZipSegment *segment);
-    opc_error_t opcZipCleanupSegment(opcZipSegment *segment);
-
-    typedef struct OPC_ZIPSTREAMSTATE_STRUCT {
-        opc_error_t err;
-        opc_ofs_t   buf_pos; // current pos in file
-    } opcZipRawState;
-
-    opc_error_t opcZipInitRawState(opcZip *zip, opcZipRawState *rawState);
-
-    typedef struct OPC_ZIPRAWBUFFER_STRUCT {
-        opcZipRawState state;
-        puint32_t   buf_ofs;
-        puint32_t   buf_len;
-        opc_uint8_t buf[OPC_DEFLATE_BUFFER_SIZE];
-    } opcZipRawBuffer;
-
-    opc_error_t opcZipInitRawBuffer(opcZip *zip, opcZipRawBuffer *rawBuffer);
-
-    typedef struct OPC_ZIPINFLATESTATE_STRUCT {
-        z_stream stream;
+        opc_uint32_t min_header_size;
+        opc_uint32_t compressed_size;
+        opc_uint32_t uncompressed_size;
+        opc_uint16_t bit_flag;
+        opc_uint32_t data_crc;
         opc_uint16_t compression_method;
-        int inflate_state;
-        opc_ofs_t compressed_size;
-    } opcZipInflateState;
+        opc_ofs_t    stream_ofs;
+        opc_uint16_t growth_hint;
+    } opcZipSegmentInfo_t;
+    typedef opc_error_t (opcZipLoaderSegmentCallback_t)(void *iocontext, void *userctx, opcZipSegmentInfo_t *info, opcFileOpenCallback *open, opcFileReadCallback *read, opcFileCloseCallback *close, opcFileSkipCallback *skip);
+    opc_error_t opcZipLoader(opcIO_t *io, void *userctx, opcZipLoaderSegmentCallback_t *segmentCallback);
 
-    opc_error_t opcZipInitInflateState(opcZipRawState *rawState, opcZipSegment *segment, opcZipInflateState *state);
-    opc_error_t opcZipCleanupInflateState(opcZipRawState *rawState, opcZipSegment *segment, opcZipInflateState *state);
+    opcZip *opcZipCreate(opcIO_t *io);
+    void opcZipClose(opcZip *zip);
+    opc_error_t opcZipCommit(opcZip *zip, opc_bool_t trim);
+    opc_error_t opcZipGC(opcZip *zip);
 
-    opc_bool_t opcZipRawReadLocalFile(opcZip *zip, opcZipRawBuffer *rawBuffer, opcZipSegment *segment, xmlChar **name, opc_uint32_t *segment_number, opc_bool_t *last_segment, opc_bool_t *rel_segment);
-    opc_uint32_t opcZipRawReadFileData(opcZip *zip, opcZipRawBuffer *rawBuffer, opcZipInflateState *state, opc_uint8_t *buffer, opc_uint32_t buf_len);
-    opc_error_t opcZipRawReadDataDescriptor(opcZip *zip, opcZipRawBuffer *rawBuffer, opcZipSegment *segment);
-    opc_error_t opcZipRawSkipFileData(opcZip *zip, opcZipRawBuffer *rawBuffer, opcZipSegment *segment);
+    opc_uint32_t opcZipLoadSegment(opcZip *zip, const xmlChar *partName, opc_bool_t rels_segment, opcZipSegmentInfo_t *info);
+    opc_uint32_t opcZipCreateSegment(opcZip *zip, 
+                                     const xmlChar *partName, 
+                                     opc_bool_t relsSegment, 
+                                     opc_uint32_t segment_size, 
+                                     opc_uint32_t growth_hint,
+                                     opc_uint16_t compression_method,
+                                     opc_uint16_t bit_flag);
 
-    opc_bool_t opcZipRawReadCentralDirectory(opcZip *zip, opcZipRawBuffer *rawBuffer, opcZipSegment *segment, xmlChar **name, opc_uint32_t *segment_number, opc_bool_t *last_segment, opc_bool_t *rel_segment);
-    opc_bool_t opcZipRawReadEndOfCentralDirectory(opcZip *zip, opcZipRawBuffer *rawBuffer, opc_uint16_t *central_dir_entries);
+    opcZipInputStream *opcZipOpenInputStream(opcZip *zip, opc_uint32_t segment_id);
+    opcZipOutputStream *opcZipCreateOutputStream(opcZip *zip, 
+                                             opc_uint32_t *segment_id, 
+                                             const xmlChar *partName, 
+                                             opc_bool_t relsSegment, 
+                                             opc_uint32_t segment_size, 
+                                             opc_uint32_t growth_hint,
+                                             opc_uint16_t compression_method,
+                                             opc_uint16_t bit_flag);
+    opc_error_t opcZipCloseInputStream(opcZip *zip, opcZipInputStream *stream);
+    opc_uint32_t opcZipReadInputStream(opcZip *zip, opcZipInputStream *stream, opc_uint8_t *buf, opc_uint32_t buf_len);
 
-    typedef struct OPC_ZIPSEGMENTINPUTSTREAM_STRUCT opcZipSegmentInputStream;
+    opcZipOutputStream *opcZipOpenOutputStream(opcZip *zip, opc_uint32_t *segment_id);
+    opc_error_t opcZipCloseOutputStream(opcZip *zip, opcZipOutputStream *stream, opc_uint32_t *segment_id);
+    opc_uint32_t opcZipWriteOutputStream(opcZip *zip, opcZipOutputStream *stream, const opc_uint8_t *buf, opc_uint32_t buf_len);
 
-    opcZipSegmentInputStream* opcZipCreateSegmentInputStream(opcZip *zip, opcZipSegment *segment);
-    opc_uint32_t opcZipReadSegmentInputStream(opcZip *zip, opcZipSegmentInputStream *stream, opc_uint8_t *buf, opc_uint32_t buf_len);
-    opc_error_t opcZipCloseSegmentInputStream(opcZip *zip, opcZipSegment *segment, opcZipSegmentInputStream *stream);
-    opc_error_t opcZipSegmentInputStreamState(opcZipSegmentInputStream *stream);
+    opc_uint32_t opcZipGetFirstSegmentId(opcZip *zip);
+    opc_uint32_t opcZipGetNextSegmentId(opcZip *zip, opc_uint32_t segment_id);
+    opc_error_t opcZipGetSegmentInfo(opcZip *zip, opc_uint32_t segment_id, const xmlChar **name, opc_bool_t *rels_segment, opc_uint32_t *crc);
 
-    typedef struct OPC_ZIPSEGMENTBUFFER_STRUCT opcZipSegmentBuffer;
-
-    opcZipSegmentBuffer* opcZipCreateSegment(opcZip *zip, opcZipRawState *rawState, opcZipSegment *segment, xmlChar *name, opc_uint32_t segment_number, opc_uint16_t compression_method, opc_uint32_t growth_hint, opc_uint32_t max_size);
-    opcZipSegmentBuffer* opcZipFinalizeSegment(opcZip *zip, opcZipRawState *rawState, opcZipSegment *segment, opcZipSegmentBuffer* buffer); 
-    opc_error_t opcZipUpdateHeader(opcZip *zip, opcZipRawState *rawState, opcZipSegment *segment, xmlChar *name, opc_uint32_t segment_number, opc_bool_t last_segment);
-
-    opc_uint32_t opcZipSegmentBufferWrite(opcZip *zip, opcZipRawState *rawState, opcZipSegmentBuffer* buffer, const opc_uint8_t *buf, opc_uint32_t buf_len);
-    opc_bool_t opcZipSegmentBufferClose(opcZip *zip, opcZipRawState *rawState, opcZipSegmentBuffer* buffer);
-
-    opc_error_t opcZipWriteCentralDirectory(opcZip *zip, opcZipRawState *rawState, opcZipSegment* segment, xmlChar *name, opc_uint32_t segment_number, opc_bool_t last_segment);
-    opc_error_t opcZipWriteEndOfCentralDirectory(opcZip *zip, opcZipRawState *rawState, opc_ofs_t central_dir_start_ofs, opc_uint32_t segments);
+    opc_bool_t opcZipSegmentDelete(opcZip *zip, opc_uint32_t *first_segment, opc_uint32_t *last_segment);
 
 #ifdef __cplusplus
 } /* extern "C" */
