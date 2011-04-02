@@ -128,44 +128,11 @@ static void dumpText(opcXmlReader *reader) {
     }
 }
 
-
-static void extract(opcContainer *c, opcPart p) {
-    opc_uint32_t i=xmlStrlen(p);
-    while(i>0 && p[i]!='/') i--;
-    if (p[i]=='/') i++;
-    FILE *out=fopen((char *)(p+i), "wb");
-    if (NULL!=out) {
-        opcContainerInputStream *stream=opcContainerOpenInputStream(c, p);
-        if (NULL!=stream) {
-            opc_uint32_t  ret=0;
-            opc_uint8_t buf[100];
-            while((ret=opcContainerReadInputStream(stream, buf, sizeof(buf)))>0) {
-                fwrite(buf, sizeof(char), ret, out);
-            }
-            opcContainerCloseInputStream(stream);
-        }
-        fclose(out);
-    }
-}
-
-
 int main( int argc, const char* argv[] )
 {
     opcInitLibrary();
     opcContainer *c=opcContainerOpen(_X(argv[1]), OPC_OPEN_READ_ONLY, NULL, NULL);
     if (NULL!=c) {
-        {
-        for(opcPart part=opcPartGetFirst(c);OPC_PART_INVALID!=part;part=opcPartGetNext(c, part)) {
-            const xmlChar *type=opcPartGetType(c, part);
-            if (xmlStrcmp(type, _X("image/jpeg"))==0) {
-                extract(c, part);
-            } else if (xmlStrcmp(type, _X("image/png"))==0) {
-                extract(c, part);
-            } else {
-                printf("skipped %s of type %s\n", part, type);
-            }
-        }
-        }
         opcPart part=opcPartOpen(c, _X("/word/document.xml"), NULL, 0);
         if (OPC_PART_INVALID!=part) {
             opcContainerInputStream *stream=opcContainerOpenInputStream(c, part);
