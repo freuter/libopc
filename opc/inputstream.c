@@ -32,18 +32,3 @@
 #include <opc/opc.h>
 #include "internal.h"
 
-
-opcInputStream *opcInputStreamOpen(opcContainer *c, opcPart part) {
-    opcContainerPart *cp=(OPC_PART_INVALID!=part?opcContainerInsertPart(c, part, OPC_FALSE):NULL);
-    opcContainerInputStream* stream=(NULL!=cp?opcContainerOpenInputStreamEx(c, cp->first_segment_id):NULL);
-    return stream;
-}
-
-int opcInputStreamRead(opcInputStream *stream, void *buf, size_t buf_size) {
-    return opcContainerReadInputStream(stream , (opc_uint8_t*)buf, buf_size);
-}
-
-opc_error_t opcInputStreamClose(opcInputStream *stream) {
-    OPC_ASSERT(NULL!=stream);
-    return opcContainerCloseInputStream(stream);
-}

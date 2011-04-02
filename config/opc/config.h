@@ -69,6 +69,7 @@ extern "C" {
     typedef pint64_t opc_int64_t;
 
 #define OPC_DEFLATE_BUFFER_SIZE 4096
+#define OPC_MAX_PATH 512
 
     typedef enum OPC_ERROR_ENUM {
         OPC_ERROR_NONE,

@@ -36,82 +36,82 @@
 const char PROP_NS[]="http://schemas.openxmlformats.org/officeDocument/2006/extended-properties";
 
 typedef struct {
-	xmlChar *application;
-	int words;
-	int lines;
-	int pages;
+    xmlChar *application;
+    int words;
+    int lines;
+    int pages;
 } AppDocProps;
 
 int main( int argc, const char* argv[] )
 {
-	if (OPC_ERROR_NONE==opcInitLibrary() && 2==argc) {
-		opcContainer *c=NULL;
-		if (NULL!=(c=opcContainerOpen(_X(argv[1]), OPC_OPEN_READ_ONLY, NULL, NULL))) {
-			opcContainerDump(c, stdout);
+    if (OPC_ERROR_NONE==opcInitLibrary() && 2==argc) {
+        opcContainer *c=NULL;
+        if (NULL!=(c=opcContainerOpen(_X(argv[1]), OPC_OPEN_READ_ONLY, NULL, NULL))) {
+            opcContainerDump(c, stdout);
             opcPart part=OPC_PART_INVALID;
-			AppDocProps props;
-			memset(&props, 0, sizeof(props));
-			if ((part=opcPartOpen(c, _X("docProps/app.xml"), NULL, 0))!=NULL) {
-				opcXmlReader *reader=NULL;
-				if ((reader=opcXmlReaderOpen(c, part))!=NULL){
-					opc_xml_start_document(reader) {
-						opc_xml_element(reader, _X(PROP_NS), _X("Properties")) {
-							opc_xml_start_children(reader) {
-								opc_xml_element(reader, _X(PROP_NS), _X("Application")) {
-									if (props.application!=NULL) {
-										xmlFree(props.application);
-										props.application=NULL;
-									}
-									opc_xml_start_children(reader) {
-										opc_xml_text(reader) {
-											props.application=xmlStrdup(opc_xml_const_value(reader));
-										};
-									} opc_xml_end_children(reader);
-								} else opc_xml_element(reader, _X(PROP_NS), _X("Words")) {
-									props.words=0;
-									opc_xml_start_children(reader) {
-										opc_xml_text(reader) {
-											props.words=atoi((char*)opc_xml_const_value(reader));
-										};
-									} opc_xml_end_children(reader);
-								} else opc_xml_element(reader, _X(PROP_NS), _X("Lines")) {
-									props.lines=0;
-									opc_xml_start_children(reader) {
-										opc_xml_text(reader) {
-											props.lines=atoi((char*)opc_xml_const_value(reader));
-										};
-									} opc_xml_end_children(reader);
-								} else opc_xml_element(reader, _X(PROP_NS), _X("Pages")) {
-									props.pages=0;
-									opc_xml_start_children(reader) {
-										opc_xml_text(reader) {
-											props.pages=atoi((char*)opc_xml_const_value(reader));
-										};
-									} opc_xml_end_children(reader);
-								};
-							} opc_xml_end_children(reader);
-						};
-					} opc_xml_end_document(reader);
-					opcXmlReaderClose(reader);
-				}
-				opcPartRelease(c, part);
-			}			
-			opcContainerClose(c, OPC_CLOSE_NOW);
-			printf("application: %s\n", props.application);
-			printf("words: %i\n", props.words);
-			printf("lines: %i\n", props.lines);
+            AppDocProps props;
+            memset(&props, 0, sizeof(props));
+            if ((part=opcPartOpen(c, _X("docProps/app.xml"), NULL, 0))!=NULL) {
+                opcXmlReader *reader=NULL;
+                if ((reader=opcXmlReaderOpen(c, part, NULL, NULL, 0))!=NULL){
+                    opc_xml_start_document(reader) {
+                        opc_xml_element(reader, _X(PROP_NS), _X("Properties")) {
+                            opc_xml_start_children(reader) {
+                                opc_xml_element(reader, _X(PROP_NS), _X("Application")) {
+                                    if (props.application!=NULL) {
+                                        xmlFree(props.application);
+                                        props.application=NULL;
+                                    }
+                                    opc_xml_start_children(reader) {
+                                        opc_xml_text(reader) {
+                                            props.application=xmlStrdup(opc_xml_const_value(reader));
+                                        };
+                                    } opc_xml_end_children(reader);
+                                } else opc_xml_element(reader, _X(PROP_NS), _X("Words")) {
+                                    props.words=0;
+                                    opc_xml_start_children(reader) {
+                                        opc_xml_text(reader) {
+                                            props.words=atoi((char*)opc_xml_const_value(reader));
+                                        };
+                                    } opc_xml_end_children(reader);
+                                } else opc_xml_element(reader, _X(PROP_NS), _X("Lines")) {
+                                    props.lines=0;
+                                    opc_xml_start_children(reader) {
+                                        opc_xml_text(reader) {
+                                            props.lines=atoi((char*)opc_xml_const_value(reader));
+                                        };
+                                    } opc_xml_end_children(reader);
+                                } else opc_xml_element(reader, _X(PROP_NS), _X("Pages")) {
+                                    props.pages=0;
+                                    opc_xml_start_children(reader) {
+                                        opc_xml_text(reader) {
+                                            props.pages=atoi((char*)opc_xml_const_value(reader));
+                                        };
+                                    } opc_xml_end_children(reader);
+                                };
+                            } opc_xml_end_children(reader);
+                        };
+                    } opc_xml_end_document(reader);
+                    opcXmlReaderClose(reader);
+                }
+                opcPartRelease(c, part);
+            }            
+            opcContainerClose(c, OPC_CLOSE_NOW);
+            printf("application: %s\n", props.application);
+            printf("words: %i\n", props.words);
+            printf("lines: %i\n", props.lines);
             printf("pages: %i\n", props.pages);
-			xmlFree(props.application);
-		} else {
-			printf("ERROR: file \"%s\" could not be opened.\n", argv[1]);
-		}
-		opcFreeLibrary();
-	} else if (2==argc) {
-		printf("ERROR: initialization of libopc failed.\n");	
-	} else {
-		printf("opc_extract FILENAME.\n\n");
-		printf("Sample: opc_extract test.docx word/document.xml\n");
-	}
-	return 0;
+            xmlFree(props.application);
+        } else {
+            printf("ERROR: file \"%s\" could not be opened.\n", argv[1]);
+        }
+        opcFreeLibrary();
+    } else if (2==argc) {
+        printf("ERROR: initialization of libopc failed.\n");    
+    } else {
+        printf("opc_extract FILENAME.\n\n");
+        printf("Sample: opc_extract test.docx word/document.xml\n");
+    }
+    return 0;
 }
 

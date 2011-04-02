@@ -40,15 +40,15 @@ int main( int argc, const char* argv[] )
 			opcContainerDump(c, stdout);
 			opcPart part=OPC_PART_INVALID;
 			if ((part=opcPartOpen(c, _X(argv[2]), NULL, 0))!=OPC_PART_INVALID) {
-				opcInputStream *stream=NULL;
-				if ((stream=opcInputStreamOpen(c, part))!=NULL){
-					char buf[100];
-					int len=0;
-					while((len=opcInputStreamRead(stream, buf, sizeof(buf)))>0) {
+                opcContainerInputStream *stream=NULL;
+                if ((stream=opcContainerOpenInputStream(c, part))!=NULL){
+                    opc_uint8_t buf[100];
+                    opc_uint32_t len=0;
+                    while((len=opcContainerReadInputStream(stream, buf, sizeof(buf)))>0) {
 						printf("%.*s", len, buf);
 					}
 					printf("\n");
-					opcInputStreamClose(stream);
+                    opcContainerCloseInputStream(stream);
 				} else {
 					printf("ERROR: part \"%s\" could not be opened for reading.\n", argv[2]);
 				}

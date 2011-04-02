@@ -61,7 +61,7 @@ typedef size_t pofs_t; // maximum file offset for eg. read write ops
 #include <stdio.h>
 #elif defined(WIN32)
 #include <stdio.h>
-
+#include <io.h>
 #else
 #error "system io can not be determined"
 #endif

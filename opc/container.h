@@ -45,6 +45,7 @@
  
  */
 #include <opc/config.h>
+#include <opc/file.h>
 
 #ifndef OPC_CONTAINER_H
 #define OPC_CONTAINER_H
@@ -126,7 +127,17 @@ extern "C" {
     opcContainer* opcContainerOpenMem(const opc_uint8_t *data, opc_uint32_t data_len,
                                       opcContainerOpenMode mode, 
                                       void *userContext);
-    
+
+    opcContainer* opcContainerOpenIO(opcFileReadCallback *ioread,
+                                     opcFileWriteCallback *iowrite,
+                                     opcFileCloseCallback *ioclose,
+                                     opcFileSeekCallback *ioseek,
+                                     opcFileTrimCallback *iotrim,
+                                     opcFileFlushCallback *ioflush,
+                                     void *iocontext,
+                                     pofs_t file_size,
+                                     opcContainerOpenMode mode, 
+                                     void *userContext);
     
     /**
      Close an OPC container.

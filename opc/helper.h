@@ -30,25 +30,23 @@
  OF THE POSSIBILITY OF SUCH DAMAGE.
  
 */
-/** @file opc/inputstream.h
- 
- */
+/** @file opc/helper.h
+*/
 #include <opc/config.h>
 
-#ifndef OPC_INPUTSTREAM_H
-#define OPC_INPUTSTREAM_H
+#ifndef OPC_HELPER_H
+#define OPC_HELPER_H
 
 #ifdef __cplusplus
 extern "C" {
 #endif    
-    typedef struct OPC_CONTAINER_INPUTSTREAM_STRUCT opcContainerInputStream;
 
-    opcContainerInputStream* opcContainerOpenInputStream(opcContainer *container, const xmlChar *name);
-    opc_uint32_t opcContainerReadInputStream(opcContainerInputStream* stream, opc_uint8_t *buffer, opc_uint32_t buffer_len);
-    opc_error_t opcContainerCloseInputStream(opcContainerInputStream* stream);
 
 #ifdef __cplusplus
 } /* extern "C" */
 #endif    
-        
-#endif /* OPC_INPUTSTREAM_H */
+
+    opc_uint16_t opcHelperAssembleSegmentName(char *out, opc_uint16_t out_size, const xmlChar *name, opc_uint32_t segment_number, opc_uint32_t next_segment_id, opc_bool_t rels_segment, opc_uint16_t *out_max);
+    opc_error_t opcHelperSplitFilename(opc_uint8_t *filename, opc_uint32_t filename_length, opc_uint32_t *segment_number, opc_bool_t *last_segment, opc_bool_t *rel_segment);
+
+#endif /* OPC_HELPER_H */

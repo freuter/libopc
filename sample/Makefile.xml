@@ -31,6 +31,11 @@
       <file path="opc_dump.c"/>
     </source>
   </tool>
+  <tool name="opc_trim" dep="opc" mode="c99">
+    <source root=".">
+      <file path="opc_trim.c"/>
+    </source>
+  </tool>
   <tool name="opc_mem" dep="opc" mode="c99">
     <source root=".">
       <file path="opc_mem.c"/>

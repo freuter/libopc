@@ -32,6 +32,7 @@
 #include <opc/opc.h>
 #include "internal.h"
 
+
 opcPart opcPartOpen(opcContainer *container, 
                     const xmlChar *absolutePath, 
                     opcType *type,                         
@@ -80,4 +81,5 @@ opcPart opcPartGetNext(opcContainer *container, opcPart part) {
     opcContainerPart *cp=(NULL!=container?opcContainerInsertPart(container, part, OPC_FALSE):NULL);
     return (NULL!=cp && cp+1<container->part_array+container->part_items?(cp+1)->name:NULL);
 }
+
 

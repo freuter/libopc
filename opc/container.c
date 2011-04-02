@@ -32,6 +32,7 @@
 #include <opc/opc.h>
 #include "internal.h"
 
+
 static void* ensureItem(void **array_, puint32_t items, puint32_t item_size) {
     *array_=xmlRealloc(*array_, (items+1)*item_size);
     return *array_;
@@ -39,10 +40,6 @@ static void* ensureItem(void **array_, puint32_t items, puint32_t item_size) {
 
 static opcContainerPart* ensurePart(opcContainer *container) {
     return ((opcContainerPart*)ensureItem((void**)&container->part_array, container->part_items, sizeof(opcContainerPart)))+container->part_items;
-}
-
-static opcContainerSegment* ensureSegment(opcContainer *container) {
-    return ((opcContainerSegment*)ensureItem((void**)&container->segment_array, container->segment_items, sizeof(opcContainerSegment)))+container->segment_items;
 }
 
 static opcContainerRelPrefix* ensureRelPrefix(opcContainer *container) {
@@ -57,9 +54,11 @@ static opcContainerExtension* ensureExtension(opcContainer *container) {
     return ((opcContainerExtension*)ensureItem((void**)&container->extension_array, container->extension_items, sizeof(opcContainerExtension)))+container->extension_items;
 }
 
+#if 0
 static opcContainerInputStream** ensureInputStream(opcContainer *container) {
     return ((opcContainerInputStream**)ensureItem((void**)&container->inputstream_array, container->inputstream_items, sizeof(opcContainerInputStream*)))+container->inputstream_items;
 }
+#endif
 
 static opcContainerRelationType* ensureRelationType(opcContainer *container) {
     return ((opcContainerRelationType*)ensureItem((void**)&container->relationtype_array, container->relationtype_items, sizeof(opcContainerRelationType)))+container->relationtype_items;
@@ -105,6 +104,7 @@ static opc_bool_t findItem(void *array_, opc_uint32_t items, const void *key1, o
 static inline int part_cmp_fct(const void *key, opc_uint32_t v, const void *array_, opc_uint32_t item) {
     return xmlStrcmp((xmlChar*)key, ((opcContainerPart*)array_)[item].name);
 }
+
 
 opcContainerPart *opcContainerInsertPart(opcContainer *container, const xmlChar *name, opc_bool_t insert) {
     opc_uint32_t i=0;
@@ -170,7 +170,8 @@ static opc_uint32_t createRelId(opcContainer *container, const xmlChar *relPrefi
 static inline int type_cmp_fct(const void *key, opc_uint32_t v, const void *array_, opc_uint32_t item) {
     return xmlStrcmp((xmlChar*)key, ((opcContainerType*)array_)[item].type);
 }
-static opcContainerType *insertType(opcContainer *container, const xmlChar *type, opc_bool_t insert) {
+
+opcContainerType *insertType(opcContainer *container, const xmlChar *type, opc_bool_t insert) {
     opc_uint32_t i=0;
     if (findItem(container->type_array, container->type_items, type, 0, type_cmp_fct, &i)) {
         return &container->type_array[i];
@@ -186,6 +187,7 @@ static opcContainerType *insertType(opcContainer *container, const xmlChar *type
 static inline int extension_cmp_fct(const void *key, opc_uint32_t v, const void *array_, opc_uint32_t item) {
     return xmlStrcmp((xmlChar*)key, ((opcContainerExtension*)array_)[item].extension);
 }
+
 opcContainerExtension *opcContainerInsertExtension(opcContainer *container, const xmlChar *extension, opc_bool_t insert) {
     opc_uint32_t i=0;
     if (findItem(container->extension_array, container->extension_items, extension, 0, extension_cmp_fct, &i)) {
@@ -218,7 +220,8 @@ opcContainerRelationType *opcContainerInsertRelationType(opcContainer *container
 static inline int externalrelation_cmp_fct(const void *key, opc_uint32_t v, const void *array_, opc_uint32_t item) {
     return xmlStrcmp((xmlChar*)key, ((opcContainerExternalRelation*)array_)[item].target);
 }
-static opcContainerExternalRelation*insertExternalRelation(opcContainer *container, const xmlChar *target, opc_bool_t insert) {
+
+opcContainerExternalRelation*insertExternalRelation(opcContainer *container, const xmlChar *target, opc_bool_t insert) {
     opc_uint32_t i=0;
     if (findItem(container->externalrelation_array, container->externalrelation_items, target, 0, externalrelation_cmp_fct, &i)) {
         return &container->externalrelation_array[i];
@@ -255,7 +258,7 @@ opcContainerRelation *opcContainerInsertRelation(opcContainerRelation **relation
                                             opc_uint32_t target_mode, xmlChar *target_ptr) {
     opc_uint32_t i=0;
     if (relation_items>0) {
-        opc_bool_t ret=findItem(*relation_array, *relation_items, (void*)relation_id, 0, relation_cmp_fct, &i);
+        opc_bool_t ret=findItem(*relation_array, *relation_items, NULL, relation_id, relation_cmp_fct, &i);
         if (ret) { // error, relation already exists!
             return NULL;
         }
@@ -324,7 +327,7 @@ opcContainerRelation *opcContainerFindRelationById(opcContainer *container, opcC
 }
 
 
-void opc_container_normalize_part_to_helper_buffer(opcContainer *c,
+static void opc_container_normalize_part_to_helper_buffer(opcContainer *c,
                                                    xmlChar *buf, int buf_len,
                                                    const xmlChar *base,
                                                    const xmlChar *name) {
@@ -365,9 +368,8 @@ void opc_container_normalize_part_to_helper_buffer(opcContainer *c,
   buf[j]=0;
 }
 
-
-void opcConstainerParseRels(opcContainer *c, const xmlChar *base, opc_uint32_t rel_segment_id, opcContainerRelation **relation_array, opc_uint32_t *relation_items) {
-    opcXmlReader *reader=opcXmlReaderOpenEx(c, rel_segment_id, NULL, NULL, 0);
+static void opcConstainerParseRels(opcContainer *c, const xmlChar *partName, opcContainerRelation **relation_array, opc_uint32_t *relation_items) {
+    opcXmlReader *reader=opcXmlReaderOpenEx(c, partName, OPC_TRUE, NULL, NULL, 0);
     static char ns[]="http://schemas.openxmlformats.org/package/2006/relationships";
     opc_xml_start_document(reader) {
         opc_xml_element(reader, _X(ns), _X("Relationships")) {
@@ -401,11 +403,11 @@ void opcConstainerParseRels(opcContainer *c, const xmlChar *base, opc_uint32_t r
                         ((xmlChar *)id)[id_len]=0;
                         opc_uint32_t rel_id=createRelId(c, id, counter);
                         if (NULL==mode || 0==xmlStrcasecmp(mode, _X("Internal"))) {
-                            xmlChar target_part_name[OPC_MAXPATH];
-                            opc_container_normalize_part_to_helper_buffer(c, target_part_name, sizeof(target_part_name), base, target);
+                            xmlChar target_part_name[OPC_MAX_PATH];
+                            opc_container_normalize_part_to_helper_buffer(c, target_part_name, sizeof(target_part_name), partName, target);
     //                        printf("%s (%s;%s)\n", target_part_name, base, target);
                             opcContainerPart *target_part=opcContainerInsertPart(c, target_part_name, OPC_FALSE);
-                            opc_xml_error(reader, NULL==target_part, OPC_ERROR_XML, "Referenced part %s (%s;%s) does not exists!", target_part_name, base, target);
+                            opc_xml_error(reader, NULL==target_part, OPC_ERROR_XML, "Referenced part %s (%s;%s) does not exists!", target_part_name, partName, target);
 //                            printf("%s %i %s %s\n", id, counter, rel_type->type, target_part->name);
                             opcContainerRelation *rel=opcContainerInsertRelation(relation_array, relation_items, rel_id, rel_type->type, 0, target_part->name);
                             OPC_ASSERT(NULL!=rel);
@@ -427,185 +429,16 @@ void opcConstainerParseRels(opcContainer *c, const xmlChar *base, opc_uint32_t r
     OPC_ENSURE(OPC_ERROR_NONE==opcXmlReaderClose(reader));
 }
 
-static opcContainer* _opcInitContainer(void *userContext, opcZip *zip) {
-    opcContainer *c=(opcContainer *)xmlMalloc(sizeof(opcContainer));
+const xmlChar OPC_SEGMENT_CONTENTTYPES[]={'[', 'C', 'o', 'n', 't', 'e', 'n', 't', '_', 'T', 'y', 'p', 'e', 's', ']', '.', 'x', 'm', 'l', 0};
+const xmlChar OPC_SEGMENT_ROOTRELS[]={0};
+
+static opc_error_t opcContainerFree(opcContainer *c) {
     if (NULL!=c) {
-        opc_bzero_mem(c, sizeof(*c));
-        int open_flags=OPC_ZIP_READ;
-        c->rels_segment_id=-1;
-        c->content_types_segment_id=-1;
-        c->zip=zip;
-        if (NULL!=c->zip) {
-            // scan local files
-            opcZipRawBuffer rawBuffer;
-            OPC_ENSURE(OPC_ERROR_NONE==opcZipInitRawBuffer(c->zip, &rawBuffer));
-            opcContainerSegment *segment=NULL;
-            xmlChar *name=NULL;
-            opc_uint32_t segment_number;
-            opc_bool_t last_segment;
-            opc_bool_t rel_segment;
-            while(NULL!=(segment=ensureSegment(c)) && opcZipRawReadLocalFile(c->zip, &rawBuffer, &segment->zipSegment, &name, &segment_number, &last_segment, &rel_segment)) {
-                opc_uint32_t segment_id=c->segment_items++;
-                if (name[0]==0) {
-                    OPC_ASSERT(rel_segment); // empty names are not allowed!
-                    OPC_ASSERT(-1==c->rels_segment_id); // set twice??? why?
-                    c->rels_segment_id=segment_id;
-                    segment->next_segment_id=-1;
-                } else if (!rel_segment && 0==xmlStrcmp(name, _X("[Content_Types].xml"))) {
-                    OPC_ASSERT(-1==c->content_types_segment_id); // set twice??? why?
-                    c->content_types_segment_id=segment_id;
-                    segment->next_segment_id=-1;
-                } else {
-                    opcContainerPart *part=opcContainerInsertPart(c, name, 0==segment_number /* only append, if segment number is 0 */);
-                    OPC_ASSERT(NULL!=part);
-                    if (NULL!=part) {
-                        if (rel_segment) {
-                            OPC_ASSERT(-1==part->rel_segment_id); // set twice??? why?
-                            part->rel_segment_id=segment_id;
-                            segment->next_segment_id=-1;
-                        } else {
-                            if (-1==part->first_segment_id) {
-                                OPC_ASSERT(-1==part->last_segment_id);
-                                part->first_segment_id=segment_id;
-                            }
-                            segment->next_segment_id=part->last_segment_id;
-                            part->last_segment_id=segment_id;
-                            OPC_ASSERT(segment_number==part->segment_count); // segments out of order?
-                            part->segment_count++;
-                        }
-                        segment->part_name=part->name;
-                    }
-                }
-                xmlFree(name); name=NULL;
-                OPC_ENSURE(OPC_ERROR_NONE==opcZipRawSkipFileData(c->zip, &rawBuffer, &segment->zipSegment));
-                OPC_ENSURE(OPC_ERROR_NONE==opcZipRawReadDataDescriptor(c->zip, &rawBuffer, &segment->zipSegment));
-            }
-            if (1) { // check central directory
-                opcZipSegment segment;
-                xmlChar *name=NULL;
-                opc_uint32_t segment_number;
-                opc_bool_t last_segment;
-                opc_bool_t rel_segment;
-                while(opcZipRawReadCentralDirectory(c->zip, &rawBuffer, &segment, &name, &segment_number, &last_segment, &rel_segment)) {
-                    if (name[0]!=0 && xmlStrcmp(name, _X("[Content_Types].xml"))) {
-                        opcContainerPart *part=opcContainerInsertPart(c, name, OPC_FALSE);
-                        OPC_ASSERT(NULL!=part); // not found in central dir??? why?
-                    }
-                    OPC_ENSURE(OPC_ERROR_NONE==opcZipCleanupSegment(&segment));
-                    xmlFree(name);
-                }
-                opc_uint16_t central_dir_entries=0;
-                if(!opcZipRawReadEndOfCentralDirectory(c->zip, &rawBuffer, &central_dir_entries)) {
-                    opcContainerFree(c); c=NULL; // error
-                }
-            }
-            if (NULL!=c && -1!=c->content_types_segment_id) {
-                /*
-                 opcContainerInputStream* stream=opcContainerOpenInputStreamEx(c, c->content_types_segment_id);
-                 if (NULL!=stream) {
-                 opc_uint8_t buf[1024];
-                 opc_uint32_t len=0;
-                 while((len=opcContainerReadInputStream(stream, buf, sizeof(buf)))>0) {
-                 printf("%.*s", len, buf);
-                 }
-                 opcContainerCloseInputStream(stream);
-                 }
-                 */
-                opcXmlReader *reader=opcXmlReaderOpenEx(c, c ->content_types_segment_id, NULL, NULL, 0);
-                static char ns[]="http://schemas.openxmlformats.org/package/2006/content-types";
-                opc_xml_start_document(reader) {
-                    opc_xml_element(reader, _X(ns), _X("Types")) {
-                        opc_xml_start_attributes(reader) {
-                        } opc_xml_end_attributes(reader);
-                        opc_xml_start_children(reader) {
-                            opc_xml_element(reader, NULL, _X("Default")) {
-                                const xmlChar *ext=NULL;
-                                const xmlChar *type=NULL;
-                                opc_xml_start_attributes(reader) {
-                                    opc_xml_attribute(reader, NULL, _X("Extension")) {
-                                        ext=opc_xml_const_value(reader);
-                                    } else opc_xml_attribute(reader, NULL, _X("ContentType")) {
-                                        type=opc_xml_const_value(reader);
-                                    }
-                                } opc_xml_end_attributes(reader);
-                                opc_xml_error_guard_start(reader) {
-                                  opc_xml_error(reader, NULL==ext || ext[0]==0, OPC_ERROR_XML, "Missing @Extension attribute!");
-                                  opc_xml_error(reader, NULL==type || type[0]==0, OPC_ERROR_XML, "Missing @ContentType attribute!");
-                                  opcContainerType *ct=insertType(c, type, OPC_TRUE);
-                                  opc_xml_error(reader, NULL==ct, OPC_ERROR_MEMORY, NULL);
-                                  opcContainerExtension *ce=opcContainerInsertExtension(c, ext, OPC_TRUE);
-                                  opc_xml_error(reader, NULL==ce, OPC_ERROR_MEMORY, NULL);
-                                  opc_xml_error(reader, NULL!=ce->type && 0!=xmlStrcmp(ce->type, type), OPC_ERROR_XML, "Extension \"%s\" is mapped to type \"%s\" as well as \"%s\"", ext, type, ce->type);
-                                  ce->type=ct->type;
-                                } opc_xml_error_guard_end(reader);
-                                opc_xml_start_children(reader) {
-                                } opc_xml_end_children(reader);
-                            } else opc_xml_element(reader, NULL, _X("Override")) {
-                                const xmlChar *name=NULL;
-                                const xmlChar *type=NULL;
-                                opc_xml_start_attributes(reader) {
-                                    opc_xml_attribute(reader, NULL, _X("PartName")) {
-                                        name=opc_xml_const_value(reader);
-                                    } else opc_xml_attribute(reader, NULL, _X("ContentType")) {
-                                        type=opc_xml_const_value(reader);
-                                    }
-                                } opc_xml_end_attributes(reader);
-                                opc_xml_error_guard_start(reader) {
-                                    opcContainerType*ct=insertType(c, type, OPC_TRUE);
-                                    opc_xml_error(reader, NULL==ct, OPC_ERROR_MEMORY, NULL);
-                                    opc_xml_error_strict(reader, '/'!=name[0], OPC_ERROR_XML, "Part %s MUST start with a '/'", name);
-                                    opcContainerPart *part=opcContainerInsertPart(c, (name[0]=='/'?name+1:name), OPC_FALSE);
-                                    opc_xml_error_strict(reader, NULL==part, OPC_ERROR_XML, "Part %s does not exist.", name);
-                                    if (NULL!=part) {
-                                        part->type=ct->type;
-                                    }
-                                } opc_xml_error_guard_end(reader);
-                                opc_xml_start_children(reader) {
-                                } opc_xml_end_children(reader);
-                            }
-                        } opc_xml_end_children(reader);
-                    } 
-                } opc_xml_end_document(reader);
-                OPC_ENSURE(OPC_ERROR_NONE==opcXmlReaderClose(reader));
-            }
-            if (-1!=c->rels_segment_id) {
-                opcConstainerParseRels(c, _X(""), c->rels_segment_id, &c->relation_array, &c->relation_items);
-            }
-            for(opc_uint32_t i=0;i<c->part_items;i++) {
-                opcContainerPart *part=&c->part_array[i];
-                if (-1!=part->rel_segment_id) {
-                    opcConstainerParseRels(c, part->name, part->rel_segment_id, &part->relation_array, &part->relation_items);
-                }
-            }
-        } else if (NULL!=c) {
-            xmlFree(c); c=NULL; // error
-        }
-    }
-    return c;    
-}
-
-opcContainer* opcContainerOpen(const xmlChar *fileName, 
-                               opcContainerOpenMode mode, 
-                               void *userContext, 
-                               const xmlChar *destName) {
-    return _opcInitContainer(userContext, opcZipOpenFile(fileName, OPC_ZIP_READ));
-}
-
-opcContainer* opcContainerOpenMem(const opc_uint8_t *data, opc_uint32_t data_len,
-                                  opcContainerOpenMode mode, 
-                                  void *userContext) {
-    return _opcInitContainer(userContext, opcZipOpenMemory(data, data_len));    
-}
-
-
-opc_error_t opcContainerFree(opcContainer *c) {
-    if (NULL!=c) {
+#if 0
         for(opc_uint32_t i=0;i<c->inputstream_items;i++) {
-            OPC_ASSERT(NULL!=c->inputstream_array[i] && NULL==c->inputstream_array[i]->segmentInputStream); // not closed???
-            xmlFree(c->inputstream_array[i]); c->inputstream_array[i]=NULL;
+            OPC_ASSERT(NULL==c->inputstream_array[i]); // not closed???
         }
-        for(opc_uint32_t i=0;i<c->segment_items;i++) {
-        }
+#endif
         for(opc_uint32_t i=0;i<c->extension_items;i++) {
             xmlFree(c->extension_array[i].extension);
         }
@@ -626,21 +459,17 @@ opc_error_t opcContainerFree(opcContainer *c) {
         for(opc_uint32_t i=0;i<c->relprefix_items;i++) {
             xmlFree(c->relprefix_array[i].prefix);
         }
+#if 0
         xmlFree(c->segment_array);
-        xmlFree(c->part_array);        
-        opcZipClose(c->zip);
+#endif
+        xmlFree(c->part_array);  //@TODO make sure all other arrays are free'd
+        opcZipClose(c->storage);
         xmlFree(c);
     }
     return OPC_ERROR_NONE;
 }
 
-opc_error_t opcContainerClose(opcContainer *c, opcContainerCloseMode mode) {
-    opc_error_t err=OPC_ERROR_NONE;
-    err=(OPC_ERROR_NONE==err?opcContainerFree(c):err);
-    return err;
-}
-
-static void opcContainerDumpString(FILE *out, const xmlChar *str, opc_uint32_t max_len) {
+static void opcContainerDumpString(FILE *out, const xmlChar *str, opc_uint32_t max_len, opc_bool_t new_line) {
     opc_uint32_t len=xmlStrlen(str);
     if (len<=max_len) {
         fputs((const char *)str, out);
@@ -653,17 +482,21 @@ static void opcContainerDumpString(FILE *out, const xmlChar *str, opc_uint32_t m
         fputs(prefix, out);
         fputs((const char *)(str+ofs), out);
     }
-}
-
-static void opcContainerDumpType(opcContainer *c, FILE *out, opcContainerType *type, opc_uint32_t level) {
-    if (level>0) {
-        for(opc_uint32_t i=0;i<level;i++) fprintf(out, " ");
-        fputs("|", out);
+    if (new_line) {
+        fputc('\n', out);
     }
-    opcContainerDumpString(out, type->type, 79-(level>0?1+level:0));
-    fputs("\n", out);
 }
 
+static void opcContainerDumpLine(FILE *out, const xmlChar line_char, opc_uint32_t max_len, opc_bool_t new_line) {
+    for(opc_uint32_t i=0;i<max_len;i++) {
+        fputc(line_char, out);
+    }
+    if (new_line) {
+        fputc('\n', out);
+    }
+}
+
+#if 0
 static void opcContainerDumpRel(opcContainer *c, FILE *out, opcContainerRelation *rel, opc_uint32_t max_part_name_len) {
     fputs("[", out);
     OPC_ASSERT(OPC_CONTAINER_RELID_PREFIX(rel->relation_id)>=0 && OPC_CONTAINER_RELID_PREFIX(rel->relation_id)<c->relation_items);
@@ -678,38 +511,205 @@ static void opcContainerDumpRel(opcContainer *c, FILE *out, opcContainerRelation
     opc_uint32_t type_len=(l+max_part_name_len<79?79-(l+max_part_name_len):10);
     opcContainerDumpString(out, rel->relation_type, type_len);
     fputs("\n", out);
+}
+#endif
 
+static void opcContainerRelCalcMax(opcContainer *c, 
+                                   const xmlChar *part_name,
+                                   opcContainerRelation *relation_array, opc_uint32_t relation_items, 
+                                   opc_uint32_t *max_rel_src,
+                                   opc_uint32_t *max_rel_id,
+                                   opc_uint32_t *max_rel_dest,
+                                   opc_uint32_t *max_rel_type) {
+    if (relation_items>0) {
+        opc_uint32_t const src_len=xmlStrlen(part_name); 
+        if (src_len>*max_rel_src) *max_rel_src=src_len;
+        for(opc_uint32_t j=0;j<relation_items;j++) {
+            const xmlChar *prefix=NULL;
+            opc_uint32_t counter=-1;
+            const xmlChar *type=NULL;
+            char buf[20]="";
+            opcRelationGetInformation(c, (opcPart)part_name, relation_array[j].relation_id, &prefix, &counter, &type);
+            if (-1!=counter) {
+                sprintf(buf, "%i", counter);
+            }
+            opc_uint32_t const type_len=xmlStrlen(type); 
+            if (type_len>*max_rel_type) *max_rel_type=type_len;
+            opc_uint32_t const id_len=xmlStrlen(prefix)+xmlStrlen(_X(buf)); 
+            if (id_len>*max_rel_id) *max_rel_id=id_len;
+            opc_uint32_t const dest_len=xmlStrlen(relation_array[j].target_ptr); 
+            if (dest_len>*max_rel_dest) *max_rel_dest=dest_len;
+        }
+    }
+}
+
+static void opcContainerRelDump(opcContainer *c, 
+                                FILE *out,
+                                const xmlChar *part_name,
+                                opcContainerRelation *relation_array, opc_uint32_t relation_items, 
+                                opc_uint32_t max_rel_src,
+                                opc_uint32_t max_rel_id,
+                                opc_uint32_t max_rel_dest,
+                                opc_uint32_t max_rel_type) {
+    for(opc_uint32_t j=0;j<relation_items;j++) {
+        opcContainerDumpString(out, (part_name==NULL?_X("[root]"):part_name), max_rel_src, OPC_FALSE); fputc('|', out);
+        const xmlChar *prefix=NULL;
+        opc_uint32_t counter=-1;
+        const xmlChar *type=NULL;
+        char buf[20]="";
+        opcRelationGetInformation(c, (opcPart)part_name, relation_array[j].relation_id, &prefix, &counter, &type);
+        if (-1!=counter) {
+            sprintf(buf, "%i", counter);
+        }
+        opc_uint32_t prefix_len=xmlStrlen(prefix);
+        opcContainerDumpString(out, prefix, prefix_len, OPC_FALSE);
+        OPC_ASSERT(xmlStrlen(_X(buf))+prefix_len<=max_rel_id);
+        opcContainerDumpString(out, _X(buf), max_rel_id-prefix_len, OPC_FALSE); fputc('|', out);
+        opcContainerDumpString(out, relation_array[j].target_ptr, max_rel_dest, OPC_FALSE); fputc('|', out);
+        opcContainerDumpString(out, type, max_rel_type, OPC_TRUE);
+    }
 }
 
 opc_error_t opcContainerDump(opcContainer *c, FILE *out) {
-    fprintf(out, "Content Types:\n");
-    fprintf(out, "-------------------------------------------------------------------------------\n");
+    opc_uint32_t max_content_type_len=xmlStrlen(_X("Content Types")); 
+    for(opc_uint32_t i=0;i<c->type_items;i++) { 
+        opc_uint32_t const len=xmlStrlen(c->type_array[i].type); 
+        if (len>max_content_type_len) max_content_type_len=len;
+    }
+    opc_uint32_t max_extension_len=xmlStrlen(_X("Extension")); 
+    opc_uint32_t max_extension_type_len=xmlStrlen(_X("Type")); 
+    for(opc_uint32_t i=0;i<c->extension_items;i++) { 
+        opc_uint32_t const len=xmlStrlen(c->extension_array[i].extension); 
+        if (len>max_extension_len) max_extension_len=len;
+        opc_uint32_t const type_len=xmlStrlen(c->extension_array[i].type); 
+        if (type_len>max_extension_type_len) max_extension_type_len=type_len;
+    }
+    opc_uint32_t max_rel_type_len=xmlStrlen(_X("Relation Types")); 
+    for(opc_uint32_t i=0;i<c->relationtype_items;i++) { 
+        opc_uint32_t const len=xmlStrlen(c->relationtype_array[i].type); 
+        if (len>max_rel_type_len) max_rel_type_len=len;
+    }
+
+    opc_uint32_t max_ext_rel_len=xmlStrlen(_X("External Relations")); 
+    for(opc_uint32_t i=0;i<c->externalrelation_items;i++) { 
+        opc_uint32_t const len=xmlStrlen(c->externalrelation_array[i].target); 
+        if (len>max_ext_rel_len) max_ext_rel_len=len;
+    }
+    opc_uint32_t max_part_name=xmlStrlen(_X("Part")); 
+    opc_uint32_t max_part_type=xmlStrlen(_X("Type")); 
+    for(opc_uint32_t i=0;i<c->part_items;i++) { 
+        opc_uint32_t const name_len=xmlStrlen(c->part_array[i].name); 
+        if (name_len>max_part_name) max_part_name=name_len;
+        opc_uint32_t const type_len=xmlStrlen(opcPartGetType(c, c->part_array[i].name)); 
+        if (type_len>max_part_type) max_part_type=type_len;
+    }
+
+    opc_uint32_t max_rel_src=xmlStrlen(_X("Source")); 
+    opc_uint32_t max_rel_id=xmlStrlen(_X("Id")); 
+    opc_uint32_t max_rel_dest=xmlStrlen(_X("Destination")); 
+    opc_uint32_t max_rel_type=xmlStrlen(_X("Type")); 
+    if (c->relationtype_items>0) {
+        opc_uint32_t const src_len=xmlStrlen(_X("[root]")); 
+        if (src_len>max_rel_src) max_rel_src=src_len;
+        opcContainerRelCalcMax(c, NULL, c->relation_array, c->relation_items, &max_rel_src, &max_rel_id, &max_rel_dest, &max_rel_type);
+    }
+    for(opc_uint32_t i=0;i<c->part_items;i++) { 
+        if (c->part_array[i].relation_items>0) {
+            opcContainerRelCalcMax(c, 
+                                   c->part_array[i].name, 
+                                   c->part_array[i].relation_array, c->part_array[i].relation_items, 
+                                   &max_rel_src, 
+                                   &max_rel_id, 
+                                   &max_rel_dest, 
+                                   &max_rel_type);
+        }
+    }
+
+    opcContainerDumpString(out, _X("Content Types"), max_content_type_len, OPC_TRUE);
+    opcContainerDumpLine(out, '-', max_content_type_len, OPC_TRUE);
     for(opc_uint32_t i=0;i<c->type_items;i++) {
-        opcContainerDumpType(c, out, &c->type_array[i], 0);
+        opcContainerDumpString(out, c->type_array[i].type, max_content_type_len, OPC_TRUE);
     }
-    fputs("\n", out);
-    fprintf(out, "Registered Extensions:\n");
-    fprintf(out, "-------------------------------------------------------------------------------\n");
+    opcContainerDumpLine(out, '-', max_content_type_len, OPC_TRUE);
+    opcContainerDumpString(out, _X(""), 0, OPC_TRUE);
+
+    opcContainerDumpString(out, _X("Extension"), max_extension_len, OPC_FALSE); fputc('|', out);
+    opcContainerDumpString(out, _X("Type"), max_extension_type_len, OPC_TRUE);
+    opcContainerDumpLine(out, '-', max_extension_len, OPC_FALSE); fputc('|', out);
+    opcContainerDumpLine(out, '-', max_extension_type_len, OPC_TRUE);
     for(opc_uint32_t i=0;i<c->extension_items;i++) {
-        opcContainerDumpString(out, c->extension_array[i].extension, 11);
-        opcContainerDumpString(out, c->extension_array[i].type, 68);
-        fputs("\n", out);
+        opcContainerDumpString(out, c->extension_array[i].extension, max_extension_len, OPC_FALSE); fputc('|', out);
+        opcContainerDumpString(out, c->extension_array[i].type, max_extension_type_len, OPC_TRUE);
     }
-    fputs("\n", out);
-    fprintf(out, "Relation Types:\n");
-    fprintf(out, "-------------------------------------------------------------------------------\n");
+    opcContainerDumpLine(out, '-', max_extension_len, OPC_FALSE); fputc('|', out);
+    opcContainerDumpLine(out, '-', max_extension_type_len, OPC_TRUE);
+    opcContainerDumpString(out, _X(""), 0, OPC_TRUE);
+
+    opcContainerDumpString(out, _X("Relation Types"), max_rel_type_len, OPC_TRUE);
+    opcContainerDumpLine(out, '-', max_rel_type_len, OPC_TRUE);
     for(opc_uint32_t i=0;i<c->relationtype_items;i++) {
-        opcContainerDumpString(out, c->relationtype_array[i].type, 79);
-        fputs("\n", out);
+        opcContainerDumpString(out, c->relationtype_array[i].type, max_rel_type_len, OPC_TRUE);
     }
-    fputs("\n", out);
-    fprintf(out, "External Relations:\n");
-    fprintf(out, "-------------------------------------------------------------------------------\n");
+    opcContainerDumpLine(out, '-', max_rel_type_len, OPC_TRUE);
+    opcContainerDumpString(out, _X(""), 0, OPC_TRUE);
+
+    opcContainerDumpString(out, _X("External Relations"), max_ext_rel_len, OPC_TRUE);
+    opcContainerDumpLine(out, '-', max_ext_rel_len, OPC_TRUE);
     for(opc_uint32_t i=0;i<c->externalrelation_items;i++) {
-        opcContainerDumpString(out, c->externalrelation_array[i].target, 79);
-        fputs("\n", out);
+        opcContainerDumpString(out, c->externalrelation_array[i].target, max_ext_rel_len, OPC_TRUE);
     }
-    fputs("\n", out);
+    opcContainerDumpLine(out, '-', max_ext_rel_len, OPC_TRUE);
+    opcContainerDumpString(out, _X(""), 0, OPC_TRUE);
+
+    opcContainerDumpString(out, _X("Part"), max_part_name, OPC_FALSE); fputc('|', out);
+    opcContainerDumpString(out, _X("Type"), max_part_type, OPC_TRUE);
+    opcContainerDumpLine(out, '-', max_part_name, OPC_FALSE); fputc('|', out);
+    opcContainerDumpLine(out, '-', max_part_type, OPC_TRUE);
+    for(opc_uint32_t i=0;i<c->part_items;i++) {
+        opcContainerDumpString(out, c->part_array[i].name, max_part_name, OPC_FALSE); fputc('|', out);
+        opcContainerDumpString(out, opcPartGetType(c, c->part_array[i].name), max_part_type, OPC_TRUE);
+    }
+    opcContainerDumpLine(out, '-', max_part_name, OPC_FALSE); fputc('|', out);
+    opcContainerDumpLine(out, '-', max_part_type, OPC_TRUE);
+    opcContainerDumpString(out, _X(""), 0, OPC_TRUE);
+
+    opcContainerDumpString(out, _X("Source"), max_rel_src, OPC_FALSE); fputc('|', out);
+    opcContainerDumpString(out, _X("Id"), max_rel_id, OPC_FALSE); fputc('|', out);
+    opcContainerDumpString(out, _X("Destination"), max_rel_dest, OPC_FALSE); fputc('|', out);
+    opcContainerDumpString(out, _X("Type"), max_rel_type, OPC_TRUE);
+    opcContainerDumpLine(out, '-', max_rel_src, OPC_FALSE); fputc('|', out);
+    opcContainerDumpLine(out, '-', max_rel_id, OPC_FALSE); fputc('|', out);
+    opcContainerDumpLine(out, '-', max_rel_dest, OPC_FALSE); fputc('|', out);
+    opcContainerDumpLine(out, '-', max_rel_type, OPC_TRUE);
+    if (c->relation_items>0) {
+        opcContainerRelDump(c, 
+                            out, 
+                            NULL, 
+                            c->relation_array, 
+                            c->relation_items, 
+                            max_rel_src, 
+                            max_rel_id, 
+                            max_rel_dest, 
+                            max_rel_type);
+    }
+    for(opc_uint32_t i=0;i<c->part_items;i++) { 
+        if (c->part_array[i].relation_items>0) {
+            opcContainerRelDump(c, 
+                                out,
+                                c->part_array[i].name, 
+                                c->part_array[i].relation_array, c->part_array[i].relation_items, 
+                                max_rel_src, 
+                                max_rel_id, 
+                                max_rel_dest, 
+                                max_rel_type);
+        }
+    }
+    opcContainerDumpLine(out, '-', max_rel_src, OPC_FALSE); fputc('|', out);
+    opcContainerDumpLine(out, '-', max_rel_id, OPC_FALSE); fputc('|', out);
+    opcContainerDumpLine(out, '-', max_rel_dest, OPC_FALSE); fputc('|', out);
+    opcContainerDumpLine(out, '-', max_rel_type, OPC_TRUE);
+
+#if 0
     fprintf(out, "Parts:               Type:\n");
     fprintf(out, "-------------------------------------------------------------------------------\n");
     opc_uint32_t max_part=0;
@@ -718,6 +718,10 @@ opc_error_t opcContainerDump(opcContainer *c, FILE *out) {
         if (len>max_part) max_part=len;
     }
     if (max_part>60) max_part=60;
+    for(opc_uint32_t j=0;j<c->relation_items;j++) {
+        opcContainerRelation *rel=&c->relation_array[j];
+        opcContainerDumpRel(c, out, rel, max_part);
+    }
     for(opc_uint32_t i=0;i<c->part_items;i++) {
         opcContainerDumpString(out, c->part_array[i].name, max_part);
         fputc(' ', out);
@@ -732,57 +736,444 @@ opc_error_t opcContainerDump(opcContainer *c, FILE *out) {
             opcContainerDumpRel(c, out, rel, max_part);
         }
     }
+#endif
     return OPC_ERROR_NONE;
 }
 
-opcContainerInputStream* opcContainerOpenInputStreamEx(opcContainer *container, opc_uint32_t segment_id) {
-    OPC_ASSERT(segment_id>=0 && segment_id<container->segment_items);
-    opcContainerInputStream **stream=NULL;
-    //@TODO search for closed stream we can reuse
-    if (segment_id>=0 && segment_id<container->segment_items && NULL!=(stream=ensureInputStream(container))) {
-        *stream=(opcContainerInputStream*)xmlMalloc(sizeof(opcContainerInputStream));
-        if (NULL!=*stream) {
-            opc_bzero_mem((*stream), sizeof(*(*stream)));
-            if (NULL!=((*stream)->segmentInputStream=opcZipCreateSegmentInputStream(container->zip, &container->segment_array[segment_id].zipSegment))) {
-                container->inputstream_items++;
-                (*stream)->container=container;
-                (*stream)->segment_id=segment_id;
+static opc_error_t opcContainerZipLoaderLoadSegment(void *iocontext, 
+                              void *userctx, 
+                              opcZipSegmentInfo_t *info, 
+                              opcFileOpenCallback *open, 
+                              opcFileReadCallback *read, 
+                              opcFileCloseCallback *close, 
+                              opcFileSkipCallback *skip) {
+    opc_error_t err=OPC_ERROR_NONE;
+    opcContainer *c=(opcContainer *)userctx;
+    OPC_ENSURE(0==skip(iocontext));
+    if (info->rels_segment) {
+        if (info->name[0]==0) {
+            OPC_ASSERT(-1==c->rels_segment_id); // loaded twice??
+            c->rels_segment_id=opcZipLoadSegment(c->storage, OPC_SEGMENT_ROOTRELS, info->rels_segment, info);
+            OPC_ASSERT(-1!=c->rels_segment_id); // not loaded??
+        } else {
+            opcContainerPart *part=opcContainerInsertPart(c, info->name, OPC_TRUE);
+            if (NULL!=part) {
+                OPC_ASSERT(-1==part->rel_segment_id); // loaded twice??
+                OPC_ASSERT(NULL!=part->name); // no name given???
+                part->rel_segment_id=opcZipLoadSegment(c->storage, part->name, info->rels_segment, info);
+                OPC_ASSERT(-1!=part->rel_segment_id);  // not loaded???
             } else {
-                xmlFree(*stream); *stream=NULL;
+                err=OPC_ERROR_MEMORY;
+            }
+        }
+    } else if (xmlStrcmp(info->name, OPC_SEGMENT_CONTENTTYPES)==0) {
+        OPC_ASSERT(-1==c->content_types_segment_id); // loaded twice??
+        c->content_types_segment_id=opcZipLoadSegment(c->storage, OPC_SEGMENT_CONTENTTYPES, info->rels_segment, info);
+        OPC_ASSERT(-1!=c->content_types_segment_id); // not loaded??
+    } else {
+        opcContainerPart *part=opcContainerInsertPart(c, info->name, OPC_TRUE);
+        if (NULL!=part) {
+            OPC_ASSERT(-1==part->first_segment_id); // loaded twice???
+            OPC_ASSERT(NULL!=part->name); // no name given???
+            part->first_segment_id=opcZipLoadSegment(c->storage, part->name, info->rels_segment, info);
+            OPC_ASSERT(-1!=part->first_segment_id);  // not loaded???
+        } else {
+            err=OPC_ERROR_MEMORY;
+        }
+    }
+    return err;
+}
+
+static void opcContainerGetOutputPartSegment(opcContainer *container, const xmlChar *name, opc_bool_t rels_segment, opc_uint32_t **first_segment_ref, opc_uint32_t **last_segment_ref) {
+    if (OPC_SEGMENT_CONTENTTYPES==name) {
+        OPC_ASSERT(!rels_segment);
+        *first_segment_ref=&container->content_types_segment_id;
+        *last_segment_ref=NULL;
+    } else if (OPC_SEGMENT_ROOTRELS==name) {
+        OPC_ASSERT(rels_segment);
+        *first_segment_ref=&container->rels_segment_id;
+        *last_segment_ref=NULL;
+    } else {
+        opcContainerPart *part=opcContainerInsertPart(container, name, OPC_FALSE);
+        if (NULL!=part) {
+            if (rels_segment) {
+                *first_segment_ref=&part->rel_segment_id;
+                *last_segment_ref=NULL;
+            } else {
+                *first_segment_ref=&part->first_segment_id;
+                *last_segment_ref=&part->last_segment_id;
+            }
+        } else {
+            OPC_ASSERT(OPC_FALSE); // should not happen
+            *first_segment_ref=NULL;
+            *last_segment_ref=NULL;
+        }
+    }
+}
+
+
+opcContainerInputStream* opcContainerOpenInputStreamEx(opcContainer *container, const xmlChar *name, opc_bool_t rels_segment) {
+    opcContainerInputStream* ret=NULL;
+    opc_uint32_t *first_segment=NULL;
+    opc_uint32_t *last_segment=NULL;
+    opcContainerGetOutputPartSegment(container, name, rels_segment, &first_segment, &last_segment);
+    OPC_ASSERT(NULL!=first_segment);
+    if (NULL!=first_segment) {
+        ret=(opcContainerInputStream*)xmlMalloc(sizeof(opcContainerInputStream));
+        if (NULL!=ret) {
+            opc_bzero_mem(ret, sizeof(*ret));
+            ret->container=container;
+            ret->stream=opcZipOpenInputStream(container->storage, *first_segment);
+            if (NULL==ret->stream) {
+                xmlFree(ret); ret=NULL; // error
             }
         }
     }
-    return (NULL!=stream?*stream:NULL);
+    return ret;
 }
 
-opcContainerInputStream* opcContainerOpenInputStream(opcContainer *container, xmlChar *name) {
-    opcContainerPart *part=opcContainerInsertPart(container, name, OPC_FALSE);
-    if (NULL!=part) {
-        return opcContainerOpenInputStreamEx(container, part->first_segment_id);
-    } else {
-        return NULL;
-    }
+opcContainerInputStream* opcContainerOpenInputStream(opcContainer *container, const xmlChar *name) {
+    return opcContainerOpenInputStreamEx(container, name, OPC_FALSE);
 }
 
 opc_uint32_t opcContainerReadInputStream(opcContainerInputStream* stream, opc_uint8_t *buffer, opc_uint32_t buffer_len) {
-    opc_uint32_t ret=0;
-    if (NULL!=stream) {
-        ret=opcZipReadSegmentInputStream(stream->container->zip, stream->segmentInputStream, buffer, buffer_len);
-    }
-    return ret;
+    return opcZipReadInputStream(stream->container->storage, stream->stream, buffer, buffer_len);
 }
 
 opc_error_t opcContainerCloseInputStream(opcContainerInputStream* stream) {
-    opc_error_t ret=OPC_ERROR_STREAM;
-    if (NULL!=stream) {
-        ret=opcZipCloseSegmentInputStream(stream->container->zip, &stream->container->segment_array[stream->segment_id].zipSegment, stream->segmentInputStream);
-        stream->segmentInputStream=NULL;
-    }
+    opc_error_t ret=opcZipCloseInputStream(stream->container->storage, stream->stream);
+    xmlFree(stream);
     return ret;
 }
 
 
 
+//@TODO add compression method etc..
+opcContainerOutputStream* opcContainerCreateOutputStreamEx(opcContainer *container, const xmlChar *name, opc_bool_t rels_segment) {
+    opcContainerOutputStream* ret=NULL;
+    opc_uint32_t *first_segment=NULL;
+    opc_uint32_t *last_segment=NULL;
+    opcContainerGetOutputPartSegment(container, name, rels_segment, &first_segment, &last_segment);
+    OPC_ASSERT(NULL!=first_segment);
+    if (NULL!=first_segment) {
+        ret=(opcContainerOutputStream*)xmlMalloc(sizeof(opcContainerOutputStream));
+        if (NULL!=ret) {
+            opc_bzero_mem(ret, sizeof(*ret));
+            ret->container=container;
+            ret->stream=opcZipCreateOutputStream(container->storage, first_segment, name, rels_segment, 0, 0, 8, 6);
+            ret->partName=name;
+            ret->rels_segment=rels_segment;
+            if (NULL==ret->stream) {
+                xmlFree(ret); ret=NULL; // error
+            }
+        }
+    }
+    return ret;
+}
+
+opc_uint32_t opcContainerWriteOutputStream(opcContainerOutputStream* stream, const opc_uint8_t *buffer, opc_uint32_t buffer_len) {
+    return opcZipWriteOutputStream(stream->container->storage, stream->stream, buffer, buffer_len);
+}
+
+opc_error_t opcContainerCloseOutputStream(opcContainerOutputStream* stream) {
+    opc_error_t ret=OPC_ERROR_MEMORY;
+    opc_uint32_t *first_segment=NULL;
+    opc_uint32_t *last_segment=NULL;
+    opcContainerGetOutputPartSegment(stream->container, stream->partName, stream->rels_segment, &first_segment, &last_segment);
+    OPC_ASSERT(NULL!=first_segment);
+    if (NULL!=first_segment) {
+        ret=opcZipCloseOutputStream(stream->container->storage, stream->stream, first_segment);
+        xmlFree(stream);
+    }
+    return ret;
+}
+
+static opc_error_t opcContainerInit(opcContainer *c, opcContainerOpenMode mode, void *userContext) {
+    opc_bzero_mem(c, sizeof(*c));
+    c->content_types_segment_id=-1;
+    c->rels_segment_id=-1;
+    c->mode=mode;
+    c->userContext=userContext;
+    return OPC_ERROR_NONE;
+}
+
+static opcContainer *opcContainerLoadFromZip(opcContainer *c) {
+    OPC_ASSERT(NULL==c->storage); // loaded twice??
+    c->storage=opcZipCreate(&c->io);
+    if (NULL!=c->storage) {
+        if (OPC_ERROR_NONE==opcZipLoader(&c->io, c, opcContainerZipLoaderLoadSegment)) {
+            // successfull loaded!
+            OPC_ENSURE(OPC_ERROR_NONE==opcZipGC(c->storage));
+            if (-1!=c->content_types_segment_id) {
+                opcXmlReader *reader=opcXmlReaderOpenEx(c, OPC_SEGMENT_CONTENTTYPES, OPC_FALSE, NULL, NULL, 0);
+                static char ns[]="http://schemas.openxmlformats.org/package/2006/content-types";
+                opc_xml_start_document(reader) {
+                    opc_xml_element(reader, _X(ns), _X("Types")) {
+                        opc_xml_start_attributes(reader) {
+                        } opc_xml_end_attributes(reader);
+                        opc_xml_start_children(reader) {
+                            opc_xml_element(reader, NULL, _X("Default")) {
+                                const xmlChar *ext=NULL;
+                                const xmlChar *type=NULL;
+                                opc_xml_start_attributes(reader) {
+                                    opc_xml_attribute(reader, NULL, _X("Extension")) {
+                                        ext=opc_xml_const_value(reader);
+                                    } else opc_xml_attribute(reader, NULL, _X("ContentType")) {
+                                        type=opc_xml_const_value(reader);
+                                    }
+                                } opc_xml_end_attributes(reader);
+                                opc_xml_error_guard_start(reader) {
+                                    opc_xml_error(reader, NULL==ext || ext[0]==0, OPC_ERROR_XML, "Missing @Extension attribute!");
+                                    opc_xml_error(reader, NULL==type || type[0]==0, OPC_ERROR_XML, "Missing @ContentType attribute!");
+                                    opcContainerType *ct=insertType(c, type, OPC_TRUE);
+                                    opc_xml_error(reader, NULL==ct, OPC_ERROR_MEMORY, NULL);
+                                    opcContainerExtension *ce=opcContainerInsertExtension(c, ext, OPC_TRUE);
+                                    opc_xml_error(reader, NULL==ce, OPC_ERROR_MEMORY, NULL);
+                                    opc_xml_error(reader, NULL!=ce->type && 0!=xmlStrcmp(ce->type, type), OPC_ERROR_XML, "Extension \"%s\" is mapped to type \"%s\" as well as \"%s\"", ext, type, ce->type);
+                                    ce->type=ct->type;
+                                } opc_xml_error_guard_end(reader);
+                                opc_xml_start_children(reader) {
+                                } opc_xml_end_children(reader);
+                            } else opc_xml_element(reader, NULL, _X("Override")) {
+                                const xmlChar *name=NULL;
+                                const xmlChar *type=NULL;
+                                opc_xml_start_attributes(reader) {
+                                    opc_xml_attribute(reader, NULL, _X("PartName")) {
+                                        name=opc_xml_const_value(reader);
+                                    } else opc_xml_attribute(reader, NULL, _X("ContentType")) {
+                                        type=opc_xml_const_value(reader);
+                                    }
+                                } opc_xml_end_attributes(reader);
+                                opc_xml_error_guard_start(reader) {
+                                    opc_xml_error(reader, NULL==name, OPC_ERROR_XML, "Attribute @PartName not given!", NULL);
+                                    opc_xml_error(reader, NULL==type, OPC_ERROR_XML, "Attribute @ContentType not given!", NULL);
+                                    opcContainerType*ct=insertType(c, type, OPC_TRUE);
+                                    opc_xml_error(reader, NULL==ct, OPC_ERROR_MEMORY, NULL);
+                                    opc_xml_error_strict(reader, '/'!=name[0], OPC_ERROR_XML, "Part %s MUST start with a '/'", name);
+                                    opcContainerPart *part=opcContainerInsertPart(c, (name[0]=='/'?name+1:name), OPC_FALSE);
+                                    opc_xml_error_strict(reader, NULL==part, OPC_ERROR_XML, "Part %s does not exist.", name);
+                                    if (NULL!=part) {
+                                        part->type=ct->type;
+                                    }
+                                } opc_xml_error_guard_end(reader);
+                                opc_xml_start_children(reader) {
+                                } opc_xml_end_children(reader);
+                            }
+                        } opc_xml_end_children(reader);
+                    } 
+                } opc_xml_end_document(reader);
+                OPC_ENSURE(OPC_ERROR_NONE==opcXmlReaderClose(reader));
+            }
+            if (NULL!=c && -1!=c->rels_segment_id) {
+                opcConstainerParseRels(c, OPC_SEGMENT_ROOTRELS, &c->relation_array, &c->relation_items);
+            }
+            for(opc_uint32_t i=0;NULL!=c && i<c->part_items;i++) {
+                opcContainerPart *part=&c->part_array[i];
+                if (-1!=part->rel_segment_id) {
+                    opcConstainerParseRels(c, part->name, &part->relation_array, &part->relation_items);
+                }
+            }
+        } else {
+            opcFileCleanupIO(&c->io); // error loading
+            opcZipClose(c->storage);
+            xmlFree(c); c=NULL;
+        }
+    } else {
+        opcFileCleanupIO(&c->io); // error creating zip
+        xmlFree(c); c=NULL;
+    }
+    return c;
+}
+
+opcContainer* opcContainerOpen(const xmlChar *fileName, 
+                               opcContainerOpenMode mode, 
+                               void *userContext, 
+                               const xmlChar *destName) {
+    opcContainer*c=(opcContainer*)xmlMalloc(sizeof(opcContainer));
+    if (NULL!=c) {
+        OPC_ENSURE(OPC_ERROR_NONE==opcContainerInit(c, mode, userContext));
+        opc_uint32_t flags=(OPC_OPEN_READ_ONLY!=mode?OPC_FILE_WRITE | OPC_FILE_READ:OPC_FILE_READ);
+        if (OPC_ERROR_NONE==opcFileInitIOFile(&c->io, fileName, flags)) {
+            c=opcContainerLoadFromZip(c);
+        } else {
+            xmlFree(c); c=NULL; // error init io
+        }
+    }
+    return c;
+}
+
+opcContainer* opcContainerOpenMem(const opc_uint8_t *data, opc_uint32_t data_len,
+                                  opcContainerOpenMode mode, 
+                                  void *userContext) {
+    opcContainer*c=(opcContainer*)xmlMalloc(sizeof(opcContainer));
+    if (NULL!=c) {
+        OPC_ENSURE(OPC_ERROR_NONE==opcContainerInit(c, mode, userContext));
+        opc_uint32_t flags=(OPC_OPEN_READ_ONLY!=mode?OPC_FILE_WRITE | OPC_FILE_READ:OPC_FILE_READ);
+        if (OPC_ERROR_NONE==opcFileInitIOMemory(&c->io, data, data_len, flags)) {
+            c=opcContainerLoadFromZip(c);
+        } else {
+            xmlFree(c); c=NULL; // error init io
+        }
+    }
+    return c;
+}
+
+opcContainer* opcContainerOpenIO(opcFileReadCallback *ioread,
+                                 opcFileWriteCallback *iowrite,
+                                 opcFileCloseCallback *ioclose,
+                                 opcFileSeekCallback *ioseek,
+                                 opcFileTrimCallback *iotrim,
+                                 opcFileFlushCallback *ioflush,
+                                 void *iocontext,
+                                 pofs_t file_size,
+                                 opcContainerOpenMode mode, 
+                                 void *userContext) {
+    opcContainer*c=(opcContainer*)xmlMalloc(sizeof(opcContainer));
+    if (NULL!=c) {
+        OPC_ENSURE(OPC_ERROR_NONE==opcContainerInit(c, mode, userContext));
+        opc_uint32_t flags=(OPC_OPEN_READ_ONLY!=mode?OPC_FILE_WRITE | OPC_FILE_READ:OPC_FILE_READ);
+        if (OPC_ERROR_NONE==opcFileInitIO(&c->io, ioread, iowrite, ioclose, ioseek, iotrim, ioflush, iocontext, file_size, flags)) {
+            c=opcContainerLoadFromZip(c);
+        } else {
+            xmlFree(c); c=NULL; // error init io
+        }
+    }
+    return c;
+}
 
 
+static void opcContainerWriteUtf8Raw(opcContainerOutputStream *out, const xmlChar *str) {
+    opc_uint32_t str_len=xmlStrlen(str);
+    OPC_ENSURE(str_len==opcContainerWriteOutputStream(out, str, str_len));
+}
 
+static void opcContainerWriteUtf8(opcContainerOutputStream *out, const xmlChar *str) {
+    for(;0!=*str; str++) {
+        switch(*str) {
+        case '"':
+            OPC_ENSURE(1==opcContainerWriteOutputStream(out, _X("&quot;"), 6));
+            break;
+        case '\'':
+            OPC_ENSURE(1==opcContainerWriteOutputStream(out, _X("&apos;"), 6));
+            break;
+        case '&':
+            OPC_ENSURE(1==opcContainerWriteOutputStream(out, _X("&amp;"), 5));
+            break;
+        case '<':
+            OPC_ENSURE(1==opcContainerWriteOutputStream(out, _X("&lt;"), 4));
+            break;
+        case '>':
+            OPC_ENSURE(1==opcContainerWriteOutputStream(out, _X("&gt;"), 4));
+            break;
+        default:
+            OPC_ENSURE(1==opcContainerWriteOutputStream(out, str, 1));
+            break;
+        }
+    }
+}
+
+
+static void opcContainerWriteContentTypes(opcContainer *c) {
+    opcContainerOutputStream *out=opcContainerCreateOutputStreamEx(c, OPC_SEGMENT_CONTENTTYPES, OPC_FALSE);
+    if (NULL!=out) {
+        opcContainerWriteUtf8Raw(out, _X("<Types xmlns=\"http://schemas.openxmlformats.org/package/2006/content-types\">"));
+        for(opc_uint32_t i=0;i<c->extension_items;i++) {
+            opcContainerWriteUtf8Raw(out, _X("<Default Extension=\""));
+            opcContainerWriteUtf8(out, c->extension_array[i].extension);
+            opcContainerWriteUtf8Raw(out, _X("\" ContentType=\""));
+            opcContainerWriteUtf8(out, c->extension_array[i].type);
+            opcContainerWriteUtf8Raw(out, _X("\"/>"));
+        }
+        for(opc_uint32_t i=0;i<c->part_items;i++) {
+            if (NULL!=c->part_array[i].type) {
+                opcContainerWriteUtf8Raw(out, _X("<Override PartName=\"/"));
+                opcContainerWriteUtf8(out, c->part_array[i].name);
+                opcContainerWriteUtf8Raw(out, _X("\" ContentType=\""));
+                opcContainerWriteUtf8(out, c->part_array[i].type);
+                opcContainerWriteUtf8Raw(out, _X("\"/>"));
+            }
+        }
+        opcContainerWriteUtf8Raw(out, _X("</Types>"));
+        opcContainerCloseOutputStream(out);
+    }
+}
+
+static void opcContainerWriteRels(opcContainer *c, const xmlChar *part_name, opcContainerRelation *relation_array, opc_uint32_t relation_items) {
+    opcContainerOutputStream *out=opcContainerCreateOutputStreamEx(c, part_name, OPC_TRUE);
+    if (NULL!=out) {
+        opcContainerWriteUtf8Raw(out, _X("<Relationships xmlns=\"http://schemas.openxmlformats.org/package/2006/relationships\">"));
+        for(opc_uint32_t i=0;i<relation_items;i++) {
+            opcContainerWriteUtf8Raw(out, _X("<Relationship Id=\""));
+            opcContainerWriteUtf8(out, c->relprefix_array[OPC_CONTAINER_RELID_PREFIX(relation_array[i].relation_id)].prefix);
+            if (-1!=OPC_CONTAINER_RELID_COUNTER(relation_array[i].relation_id)) {
+                char buf[20];
+                snprintf(buf, sizeof(buf), "%i", OPC_CONTAINER_RELID_COUNTER(relation_array[i].relation_id));
+                opcContainerWriteUtf8Raw(out, _X(buf));
+            }
+            opcContainerWriteUtf8Raw(out, _X("\" Type=\""));
+            opcContainerWriteUtf8(out, relation_array[i].relation_type);
+            if (0==relation_array[i].target_mode) {
+                opcContainerWriteUtf8Raw(out, _X("\" Target=\"/"));
+                opcContainerWriteUtf8(out, relation_array[i].target_ptr);
+            } else {
+                OPC_ASSERT(1==relation_array[i].target_mode);
+                opcContainerWriteUtf8Raw(out, _X("\" TargetMode=\"External\" Target=\""));
+                opcContainerWriteUtf8(out, relation_array[i].target_ptr);
+            }
+            opcContainerWriteUtf8Raw(out, _X("\"/>"));
+        }
+        opcContainerWriteUtf8Raw(out, _X("</Relationships>"));
+        opcContainerCloseOutputStream(out);
+    }
+}
+
+
+static void opcContainerWriteAllRels(opcContainer *c) {
+    if (c->relation_items>0) {
+        opcContainerWriteRels(c, OPC_SEGMENT_ROOTRELS, c->relation_array, c->relation_items);
+    }
+    for(opc_uint32_t i=0;i<c->part_items;i++) {
+        if (c->part_array[i].relation_items>0) {
+            opcContainerWriteRels(c, c->part_array[i].name, c->part_array[i].relation_array, c->part_array[i].relation_items);
+        }
+    }
+}
+
+opc_error_t opcContainerCommit(opcContainer *c, opc_bool_t trim) {
+    opc_error_t ret=OPC_ERROR_NONE;
+    if (OPC_OPEN_READ_ONLY!=c->mode) {
+        opcContainerWriteContentTypes(c);
+        opcContainerWriteAllRels(c);
+        ret=opcZipCommit(c->storage, trim);
+    }
+    return ret;
+}
+
+opc_error_t opcContainerClose(opcContainer *c, opcContainerCloseMode mode) {
+    opc_bool_t trim=(mode!=OPC_CLOSE_NOW);
+    opc_error_t ret=opcContainerCommit(c, trim);
+    opcZipClose(c->storage); c->storage=NULL;
+    opcContainerFree(c);
+    return ret;
+}
+
+opc_bool_t opcContainerDeletePartEx(opcContainer *container, const xmlChar *partName, opc_bool_t rels_segment) {
+    opc_bool_t ret=OPC_FALSE;
+    if (OPC_SEGMENT_CONTENTTYPES==partName) {
+        OPC_ASSERT(!rels_segment);
+        ret=opcZipSegmentDelete(container->storage, &container->content_types_segment_id, NULL);
+    } else if (OPC_SEGMENT_ROOTRELS==partName) {
+        OPC_ASSERT(rels_segment);
+        ret=opcZipSegmentDelete(container->storage, &container->rels_segment_id, NULL);
+    } else {
+        opcContainerPart *part=opcContainerInsertPart(container, partName, OPC_FALSE);
+        if (NULL!=part) {
+            if (rels_segment) {
+                ret=opcZipSegmentDelete(container->storage, &part->rel_segment_id, NULL);
+            } else {
+                ret=opcZipSegmentDelete(container->storage, &part->first_segment_id, &part->last_segment_id);
+            }
+        }
+    }
+    return ret;
+}

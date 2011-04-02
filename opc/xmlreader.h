@@ -45,7 +45,7 @@ extern "C" {
 
     typedef struct OPC_CONTAINER_INPUTSTREAM_STRUCT opcXmlReader;
 
-    opcXmlReader *opcXmlReaderOpen(opcContainer *c, opcPart part);
+    opcXmlReader* opcXmlReaderOpen(opcContainer *container, const xmlChar *partName, const char * URL, const char * encoding, int options);
     opc_error_t opcXmlReaderClose(opcXmlReader *reader);
 
     const xmlChar *opcXmlReaderLocalName(opcXmlReader *reader);
