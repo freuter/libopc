@@ -45,6 +45,8 @@
       <file path="opc/xmlreader.h" install="yes"/>
       <file path="opc/xmlwriter.h" install="yes"/>
       <file path="opc/zip.h" install="yes"/>
+      <file path="opc/helper.h" install="yes"/>
+      <file path="opc/file.h" install="yes"/>
     </header>
     <header root="opc">
       <file path="internal.h"/>
@@ -60,6 +62,8 @@
       <file path="xmlreader.c"/>
       <file path="xmlwriter.c"/>
       <file path="zip.c"/>
+      <file path="helper.c"/>
+      <file path="file.c"/>
     </source>
   </library>
 <!--

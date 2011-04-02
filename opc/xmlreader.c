@@ -187,9 +187,3 @@ opc_bool_t opcXmlReaderEndChildren(opcXmlReader *reader) {
     }
 }
 
-
-
-opcXmlReader *opcXmlReaderOpen(opcContainer *c, opcPart part) {
-    return opcXmlReaderOpenEx(c, part, OPC_FALSE, NULL, NULL, 0);
-}
-
