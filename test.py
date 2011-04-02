@@ -1,6 +1,7 @@
 #!/usr/bin/python
 
 import regression as test
+import os
 
 def opc_zipread_test(path):
 	test.call(test.build("opc_zipread"), [], ["--verify", test.docs(path)], test.tmp(path+".opc_zipread"), [])
@@ -31,7 +32,9 @@ def opc_relation_test(path):
 	test.call(test.build("opc_relation"), [], [test.docs(path), "word/document.xml", "rId1"], test.tmp(path+".opc_relation.word-document.rId1"), [])
 	test.regr(test.docs(path+".opc_relation.word-document.rId1"), test.tmp(path+".opc_relation.word-document.rId1"), True)
 	
-
+def opc_image_test(path):
+	test.call(test.build("opc_image"), [], [test.docs(path), test.tmp("")], test.tmp(path+".opc_image"), [])
+	test.regr(test.docs(path+".opc_image"), test.tmp(path+".opc_image"), True)
 
 if __name__ == "__main__":
 #	opc_zipread_test("simple.zip")
@@ -51,6 +54,9 @@ if __name__ == "__main__":
 
 	opc_relation_test("OOXMLI1.docx")
 	opc_relation_test("OOXMLI4.docx")
+
+	opc_image_test("OOXMLI1.docx")
+	opc_image_test("OOXMLI4.docx")
 
 	test.rm(test.tmp("out.zip"))
 #	text.exist("zip_write.zip")

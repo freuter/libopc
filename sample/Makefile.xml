@@ -71,4 +71,9 @@
       <file path="opc_type.c"/>
     </source>
   </tool>
+  <tool name="opc_image" dep="opc" mode="c99">
+    <source root=".">
+      <file path="opc_image.c"/>
+    </source>
+  </tool>
 </project>
