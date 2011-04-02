@@ -66,4 +66,9 @@
       <file path="opc_relation.c"/>
     </source>
   </tool>
+  <tool name="opc_type" dep="opc" mode="c99">
+    <source root=".">
+      <file path="opc_type.c"/>
+    </source>
+  </tool>
 </project>

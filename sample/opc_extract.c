@@ -37,7 +37,6 @@ int main( int argc, const char* argv[] )
 	if (OPC_ERROR_NONE==opcInitLibrary() && 3==argc) {
 		opcContainer *c=NULL;
 		if (NULL!=(c=opcContainerOpen(_X(argv[1]), OPC_OPEN_READ_ONLY, NULL, NULL))) {
-			opcContainerDump(c, stdout);
 			opcPart part=OPC_PART_INVALID;
 			if ((part=opcPartOpen(c, _X(argv[2]), NULL, 0))!=OPC_PART_INVALID) {
                 opcContainerInputStream *stream=NULL;
@@ -45,28 +44,26 @@ int main( int argc, const char* argv[] )
                     opc_uint8_t buf[100];
                     opc_uint32_t len=0;
                     while((len=opcContainerReadInputStream(stream, buf, sizeof(buf)))>0) {
-						printf("%.*s", len, buf);
+                        fwrite(buf, sizeof(opc_uint8_t), len, stdout);
 					}
-					printf("\n");
                     opcContainerCloseInputStream(stream);
 				} else {
-					printf("ERROR: part \"%s\" could not be opened for reading.\n", argv[2]);
+					fprintf(stderr, "ERROR: part \"%s\" could not be opened for reading.\n", argv[2]);
 				}
 				opcPartRelease(c, part);
 			} else {
-				printf("ERROR: part \"%s\" could not be opened in \"%s\".\n", argv[2], argv[1]);
+				fprintf(stderr, "ERROR: part \"%s\" could not be opened in \"%s\".\n", argv[2], argv[1]);
 			}
 			opcContainerClose(c, OPC_CLOSE_NOW);
 		} else {
-			printf("ERROR: file \"%s\" could not be opened.\n", argv[1]);
+			fprintf(stderr, "ERROR: file \"%s\" could not be opened.\n", argv[1]);
 		}
 		opcFreeLibrary();
 	} else if (2==argc) {
-		printf("ERROR: initialization of libopc failed.\n");	
+		fprintf(stderr, "ERROR: initialization of libopc failed.\n");	
 	} else {
-		printf("opc_extract FILENAME.\n\n");
-		printf("Sample: opc_extract test.docx word/document.xml\n");
+		fprintf(stderr, "opc_extract FILENAME PART\n\n");
+		fprintf(stderr, "Sample: opc_extract test.docx word/document.xml\n");
 	}
 	return 0;
 }
-

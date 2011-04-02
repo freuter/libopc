@@ -67,7 +67,7 @@ def call(path, pre, args, outfile, post):
 		msg("executing "+path)
 		_args = [ path ]
 		_args.extend(args)
-		err = open(tmp("stderr,txt"), "w")
+		err = open(tmp("stderr.txt"), "w")
 		out = open(outfile, "w")
 		ret=subprocess.call(_args, stdout=out, stderr=err)
 		out.close()
@@ -95,9 +95,10 @@ def normlinebreak(path):
 		failure(None)
 	
 
-def regr(regrpath, path):
-	normlinebreak(regrpath)
-	normlinebreak(path)	
+def regr(regrpath, path, normalize):
+	if normalize:
+		normlinebreak(regrpath)
+		normlinebreak(path)	
 	msg("regression testing "+path+" against "+regrpath)
 	eq=filecmp.cmp(regrpath, path)
 	if (eq):

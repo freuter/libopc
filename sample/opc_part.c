@@ -152,7 +152,7 @@ static void extract(opcContainer *c, opcPart p) {
 int main( int argc, const char* argv[] )
 {
     opcInitLibrary();
-    opcContainer *c=opcContainerOpen(_X("OOXMLI4.docx"), OPC_OPEN_READ_ONLY, NULL, NULL);
+    opcContainer *c=opcContainerOpen(_X(argv[1]), OPC_OPEN_READ_ONLY, NULL, NULL);
     if (NULL!=c) {
         {
         for(opcPart part=opcPartGetFirst(c);OPC_PART_INVALID!=part;part=opcPartGetNext(c, part)) {
