@@ -64,7 +64,7 @@ int main( int argc, const char* argv[] )
     time_t start_time=time(NULL);
     opc_error_t err=OPC_ERROR_NONE;
     if (OPC_ERROR_NONE==(err=opcInitLibrary())) {
-        if (3==argc) {
+        if (argc>2) {
             opcIO_t io;
             if (OPC_ERROR_NONE==opcFileInitIOFile(&io, _X(argv[1]), OPC_FILE_READ)) {
                 opcZip *zip=opcZipCreate(&io);
@@ -117,6 +117,6 @@ int main( int argc, const char* argv[] )
         if (OPC_ERROR_NONE==err) err=opcFreeLibrary();
     }
     time_t end_time=time(NULL);
-    printf("time %.2lfsec\n", difftime(end_time, start_time));
+    fprintf(stderr, "time %.2lfsec\n", difftime(end_time, start_time));
     return (OPC_ERROR_NONE==err?0:3);	
 }
