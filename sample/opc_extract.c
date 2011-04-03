@@ -31,9 +31,12 @@
  */
 #include <opc/opc.h>
 #include <stdio.h>
+#include <io.h>
+#include <fcntl.h>
 
 int main( int argc, const char* argv[] )
 {
+    _setmode( _fileno( stdout ), _O_BINARY );
 	if (OPC_ERROR_NONE==opcInitLibrary() && 3==argc) {
 		opcContainer *c=NULL;
 		if (NULL!=(c=opcContainerOpen(_X(argv[1]), OPC_OPEN_READ_ONLY, NULL, NULL))) {
