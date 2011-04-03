@@ -42,9 +42,9 @@
 extern "C" {
 #endif    
     typedef struct OPC_CONTAINER_OUTPUTSTREAM_STRUCT opcContainerOutputStream;
-        
+
+    opcContainerOutputStream* opcContainerCreateOutputStream(opcContainer *container, const xmlChar *name);
     opc_uint32_t opcContainerWriteOutputStream(opcContainerOutputStream* stream, const opc_uint8_t *buffer, opc_uint32_t buffer_len);
-    opc_error_t opcContainerCloseOutputStream(opcContainerOutputStream* stream);
     opc_error_t opcContainerCloseOutputStream(opcContainerOutputStream* stream);
         
 #ifdef __cplusplus

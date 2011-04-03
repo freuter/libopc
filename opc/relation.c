@@ -82,6 +82,15 @@ opcPart opcRelationGetInternalTarget(opcContainer *container, opcPart part, opcR
     }
 }
 
+const xmlChar *opcRelationGetExternalTarget(opcContainer *container, opcPart part, opcRelation relation) {
+    opcContainerRelation *rel=_opcRelationFind(container, part, relation);
+    if (rel!=NULL && 1==rel->target_mode) {
+        return rel->target_ptr;
+    } else {
+        return NULL;
+    }
+}
+
 opc_error_t opcRelationRelease(opcContainer *container, opcPart part, opcRelation relation) {
     return OPC_ERROR_NONE;
 }

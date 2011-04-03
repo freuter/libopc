@@ -53,10 +53,15 @@ extern "C" {
     
     opcPart opcPartOpen(opcContainer *container, 
                         const xmlChar *absolutePath, 
-                        opcType *type,
+                        const xmlChar *type,
                         int flags);
+    opcPart opcPartCreate(opcContainer *container, 
+                          const xmlChar *absolutePath, 
+                          const xmlChar *type,
+                          int flags);
     
     const xmlChar *opcPartGetType(opcContainer *c, opcPart part);
+    const xmlChar *opcPartGetTypeEx(opcContainer *c, opcPart part, opc_bool_t override_only);
 
     int opcPartRelease(opcContainer *c, opcPart part);
     

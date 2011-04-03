@@ -33,27 +33,49 @@
 #include "internal.h"
 
 
-opcPart opcPartOpen(opcContainer *container, 
+static opcPart opcPartOpenEx(opcContainer *container, 
                     const xmlChar *absolutePath, 
-                    opcType *type,                         
-                    int flags) {
-    opcContainerPart *part=opcContainerInsertPart(container, (absolutePath[0]=='/'?absolutePath+1:absolutePath), OPC_FALSE);
+                    const xmlChar *type,                         
+                    int flags,
+                    opc_bool_t create_part) {
+    opcContainerPart *part=opcContainerInsertPart(container, (absolutePath[0]=='/'?absolutePath+1:absolutePath), create_part);
     if (NULL!=part) {
+        if (create_part && NULL==part->type) {
+            part->type=type;
+        }
         return part->name;
     } else {
         return OPC_PART_INVALID;
     }
 }
 
+opcPart opcPartOpen(opcContainer *container, 
+                    const xmlChar *absolutePath, 
+                    const xmlChar *type,
+                    int flags) {
+    return opcPartOpenEx(container, absolutePath, type, flags, OPC_FALSE);
+}
+
+opcPart opcPartCreate(opcContainer *container, 
+                    const xmlChar *absolutePath, 
+                    const xmlChar *type,
+                    int flags) {
+    return opcPartOpenEx(container, absolutePath, type, flags, OPC_TRUE);
+}
+
 const xmlChar *opcPartGetType(opcContainer *c,  opcPart part) {
-    OPC_ASSERT(OPC_PART_INVALID!=part);
+    return opcPartGetTypeEx(c, part, OPC_FALSE);
+}
+
+const xmlChar *opcPartGetTypeEx(opcContainer *c, opcPart part, opc_bool_t override_only) {
+   OPC_ASSERT(OPC_PART_INVALID!=part);
     opcContainerPart *cp=(OPC_PART_INVALID!=part?opcContainerInsertPart(c, part, OPC_FALSE):NULL);
     const xmlChar *type=(NULL!=cp?cp->type:NULL);
-    if (NULL==type && NULL!=cp) {
+    if (NULL==type && NULL!=cp && !override_only) {
         xmlChar *name=cp->name;
         int l=(NULL!=name?xmlStrlen(name):0);
         while(l>0 && name[l]!='.') l--;
-        if (l>0) { //@TODO has ".rels" the extension "rels", if YES then l>=0
+        if (l>0) { 
             l++;
             opcContainerExtension *ct=opcContainerInsertExtension(c, name+l, OPC_FALSE);
             type=(NULL!=ct?ct->type:NULL);
