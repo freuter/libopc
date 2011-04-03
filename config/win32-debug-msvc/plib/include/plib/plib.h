@@ -104,6 +104,8 @@ typedef int pbool_t;
 
 #define snprintf _snprintf
 
+#define P_WIN32
+
 #ifdef __cplusplus
 } /* extern "C" */
 #endif
