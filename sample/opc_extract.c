@@ -31,12 +31,16 @@
  */
 #include <opc/opc.h>
 #include <stdio.h>
+#ifdef P_WIN32
 #include <io.h>
 #include <fcntl.h>
+#endif
 
 int main( int argc, const char* argv[] )
 {
-    _setmode( _fileno( stdout ), _O_BINARY );
+#ifdef P_WIN32
+    _setmode( _fileno( stdout ), _O_BINARY ); // make sure LF are not translated to CR LF on windows...
+#endif
 	if (OPC_ERROR_NONE==opcInitLibrary() && 3==argc) {
 		opcContainer *c=NULL;
 		if (NULL!=(c=opcContainerOpen(_X(argv[1]), OPC_OPEN_READ_ONLY, NULL, NULL))) {
