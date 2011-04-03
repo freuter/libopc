@@ -33,7 +33,7 @@
 #include <stdio.h>
 #include <time.h>
 
-static void dumpXml(opcXmlReader *reader) {
+static void dumpXml(opcXmlReader *reader, int level) {
     if (opcXmlReaderStartElement(reader, NULL, NULL)) {
         xmlChar *ln=xmlStrdup(opcXmlReaderLocalName(reader));
         xmlChar *prefix=(NULL!=opcXmlReaderConstPrefix(reader)?xmlStrdup(opcXmlReaderConstPrefix(reader)):NULL);
@@ -59,7 +59,7 @@ static void dumpXml(opcXmlReader *reader) {
         printf(">");
         if (opcXmlReaderStartChildren(reader)) {
             do {
-                dumpXml(reader);
+                dumpXml(reader, level+1);
             } while (!opcXmlReaderEndChildren(reader));
         }
         if (NULL==prefix) {
@@ -70,110 +70,60 @@ static void dumpXml(opcXmlReader *reader) {
         }
         xmlFree(ln);
     } else if (opcXmlReaderStartText(reader)) {
-        printf("%s", opcXmlReaderConstValue(reader));
+        const xmlChar *txt=opcXmlReaderConstValue(reader);
+        for(const xmlChar *txt=opcXmlReaderConstValue(reader);0!=*txt;txt++) {
+            switch(*txt) {
+                case '<': 
+                    printf("&lt;");
+                    break;
+                case '>': 
+                    printf("&gt;");
+                    break;
+                case '&': 
+                    printf("&amp;");
+                    break;
+                default:
+                    putc(*txt, stdout);
+                    break;
+            }
+        }
+        
     }
 }
 
-static void dumpText(opcXmlReader *reader) {
-    if (opcXmlReaderStartElement(reader, _X("http://schemas.openxmlformats.org/wordprocessingml/2006/main"), _X("t"))) {
-        if (opcXmlReaderStartAttributes(reader)) {
-            do {
-            } while (!opcXmlReaderEndAttributes(reader));
-        }
-        if (opcXmlReaderStartChildren(reader)) {
-            do {
-                if (opcXmlReaderStartText(reader)) {
-                    for(const xmlChar *txt=opcXmlReaderConstValue(reader);0!=*txt;txt++) {
-                        switch(*txt) {
-                        case '<': 
-                            printf("&lt;");
-                            break;
-                        case '>': 
-                            printf("&gt;");
-                            break;
-                        case '&': 
-                            printf("&amp;");
-                            break;
-                        default:
-                            putc(*txt, stdout);
-                            break;
-                        }
-                    }
-                }
-            } while (!opcXmlReaderEndChildren(reader));
-        }
-    } else if (opcXmlReaderStartElement(reader, _X("http://schemas.openxmlformats.org/wordprocessingml/2006/main"), _X("p"))) {
-        if (opcXmlReaderStartAttributes(reader)) {
-            do {
-            } while (!opcXmlReaderEndAttributes(reader));
-        }
-        printf("<p>");
-        if (opcXmlReaderStartChildren(reader)) {
-            do {
-                dumpText(reader);
-            } while (!opcXmlReaderEndChildren(reader));
-        }
-        printf("</p>");
-    } else if (opcXmlReaderStartElement(reader, NULL, NULL)) {
-        if (opcXmlReaderStartAttributes(reader)) {
-            do {
-            } while (!opcXmlReaderEndAttributes(reader));
-        }
-        if (opcXmlReaderStartChildren(reader)) {
-            do {
-                dumpText(reader);
-            } while (!opcXmlReaderEndChildren(reader));
-        }
-    } else if (opcXmlReaderStartText(reader)) {
-    }
-}
 
 int main( int argc, const char* argv[] )
 {
     opcInitLibrary();
     opcContainer *c=opcContainerOpen(_X(argv[1]), OPC_OPEN_READ_ONLY, NULL, NULL);
     if (NULL!=c) {
-        opcPart part=opcPartOpen(c, _X("/word/document.xml"), NULL, 0);
+        opcPart part=opcPartOpen(c, _X(argv[2]), NULL, 0);
         if (OPC_PART_INVALID!=part) {
-            opcContainerInputStream *stream=opcContainerOpenInputStream(c, part);
-            if (NULL!=stream) {
-                opc_uint32_t ret=0;
-                opc_uint8_t buf[100];
-                while((ret=opcContainerReadInputStream(stream, buf, sizeof(buf)))>0) {
-                    printf("%.*s", ret, buf);
-                }
-                opcContainerCloseInputStream(stream);
-                printf("\n");
-            }
-            {
+            const xmlChar *type=opcPartGetType(c, part);
+            opc_uint32_t type_len=xmlStrlen(type);
+            opc_bool_t is_xml=NULL!=type && type_len>=3 && 'x'==type[type_len-3] && 'm'==type[type_len-2] && 'l'==type[type_len-1];
+            fprintf(stderr, "type=%s is_xml=%i\n", type, is_xml);
+            if (is_xml) {
                 opcXmlReader *reader=opcXmlReaderOpen(c, part, NULL, 0, 0);
                 if (NULL!=reader) {
                     opcXmlReaderStartDocument(reader);
-                    dumpXml(reader);
+                    dumpXml(reader, 0);
                     opcXmlReaderEndDocument(reader);
                     opcXmlReaderClose(reader);
                 }
-            }
-            {
-                opcXmlReader *reader=opcXmlReaderOpen(c, part, NULL, 0, 0);
-                if (NULL!=reader) {
-                    opcXmlReaderStartDocument(reader);
-                    printf("<html>\n");
-                    printf("<head>\n");
-                    printf("<meta http-equiv=\"Content-Type\" content=\"text/html; charset=utf-8\">\n");
-                    printf("</head>\n");
-                    printf("<body>\n");
-                    dumpText(reader);
-                    printf("<body>\n");
-                    printf("</html>\n");
-                    opcXmlReaderEndDocument(reader);
-                    opcXmlReaderClose(reader);
+            } else  {
+                opcContainerInputStream *stream=opcContainerOpenInputStream(c, part);
+                if (NULL!=stream) {
+                    opc_uint32_t ret=0;
+                    opc_uint8_t buf[100];
+                    while((ret=opcContainerReadInputStream(stream, buf, sizeof(buf)))>0) {
+                        fwrite(buf, sizeof(opc_uint8_t), ret, stdout);
+                    }
+                    opcContainerCloseInputStream(stream);
                 }
             }
-            opcPartRelease(c, part);
         }
         opcContainerClose(c, OPC_CLOSE_NOW);
-
     }
     opcFreeLibrary();
     return 0;
