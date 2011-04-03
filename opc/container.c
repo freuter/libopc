@@ -463,7 +463,7 @@ static opc_error_t opcContainerFree(opcContainer *c) {
         xmlFree(c->segment_array);
 #endif
         xmlFree(c->part_array);  //@TODO make sure all other arrays are free'd
-        opcZipClose(c->storage);
+        opcZipClose(c->storage, NULL);
         xmlFree(c);
     }
     return OPC_ERROR_NONE;
@@ -975,7 +975,7 @@ static opcContainer *opcContainerLoadFromZip(opcContainer *c) {
             }
         } else {
             opcFileCleanupIO(&c->io); // error loading
-            opcZipClose(c->storage);
+            opcZipClose(c->storage, NULL);
             xmlFree(c); c=NULL;
         }
     } else {
@@ -1152,7 +1152,7 @@ opc_error_t opcContainerCommit(opcContainer *c, opc_bool_t trim) {
 opc_error_t opcContainerClose(opcContainer *c, opcContainerCloseMode mode) {
     opc_bool_t trim=(mode!=OPC_CLOSE_NOW);
     opc_error_t ret=opcContainerCommit(c, trim);
-    opcZipClose(c->storage); c->storage=NULL;
+    opcZipClose(c->storage, NULL); c->storage=NULL;
     opcContainerFree(c);
     return ret;
 }
@@ -1161,17 +1161,17 @@ opc_bool_t opcContainerDeletePartEx(opcContainer *container, const xmlChar *part
     opc_bool_t ret=OPC_FALSE;
     if (OPC_SEGMENT_CONTENTTYPES==partName) {
         OPC_ASSERT(!rels_segment);
-        ret=opcZipSegmentDelete(container->storage, &container->content_types_segment_id, NULL);
+        ret=opcZipSegmentDelete(container->storage, &container->content_types_segment_id, NULL, NULL);
     } else if (OPC_SEGMENT_ROOTRELS==partName) {
         OPC_ASSERT(rels_segment);
-        ret=opcZipSegmentDelete(container->storage, &container->rels_segment_id, NULL);
+        ret=opcZipSegmentDelete(container->storage, &container->rels_segment_id, NULL, NULL);
     } else {
         opcContainerPart *part=opcContainerInsertPart(container, partName, OPC_FALSE);
         if (NULL!=part) {
             if (rels_segment) {
-                ret=opcZipSegmentDelete(container->storage, &part->rel_segment_id, NULL);
+                ret=opcZipSegmentDelete(container->storage, &part->rel_segment_id, NULL, NULL);
             } else {
-                ret=opcZipSegmentDelete(container->storage, &part->first_segment_id, &part->last_segment_id);
+                ret=opcZipSegmentDelete(container->storage, &part->first_segment_id, &part->last_segment_id, NULL);
             }
         }
     }

@@ -36,13 +36,13 @@
 #include <time.h>
 #include <zlib.h> // for crc32 function
 
-opc_error_t loadSegment(void *iocontext, 
-                        void *userctx, 
-                        opcZipSegmentInfo_t *info,
-                        opcFileOpenCallback *open, 
-                        opcFileReadCallback *read, 
-                        opcFileCloseCallback *close, 
-                        opcFileSkipCallback *skip) {
+static opc_error_t loadSegment(void *iocontext, 
+                               void *userctx, 
+                               opcZipSegmentInfo_t *info,
+                               opcFileOpenCallback *open, 
+                               opcFileReadCallback *read, 
+                               opcFileCloseCallback *close, 
+                               opcFileSkipCallback *skip) {
     opcZip *zip=(opcZip*)userctx;
 //    OPC_ENSURE(0==skip(iocontext));
     OPC_ENSURE(0==open(iocontext));
@@ -56,6 +56,14 @@ opc_error_t loadSegment(void *iocontext,
     OPC_ASSERT(ret>=0);
     OPC_ENSURE(0==close(iocontext));
     opcZipLoadSegment(zip, xmlStrdup(info->name), info->rels_segment, info);
+    return OPC_ERROR_NONE;
+}
+
+static opc_error_t releaseSegment(opcZip *zip, opc_uint32_t segment_id) {
+    const xmlChar *name=NULL;
+    OPC_ENSURE(OPC_ERROR_NONE==opcZipGetSegmentInfo(zip, segment_id, &name, NULL, NULL));
+    OPC_ASSERT(NULL!=name);
+    xmlFree((void*)name);
     return OPC_ERROR_NONE;
 }
 
@@ -100,16 +108,7 @@ int main( int argc, const char* argv[] )
                         }
 
                     }
-                    // free names
-                    for(opc_uint32_t segment_id=opcZipGetFirstSegmentId(zip);
-                        -1!=segment_id;
-                        segment_id=opcZipGetNextSegmentId(zip, segment_id)) {
-                        const xmlChar *name=NULL;
-                        OPC_ENSURE(OPC_ERROR_NONE==opcZipGetSegmentInfo(zip, segment_id, &name, NULL, NULL));
-                        OPC_ASSERT(NULL!=name);
-                        xmlFree((void*)name);
-                    }
-                    opcZipClose(zip);
+                    opcZipClose(zip, releaseSegment);
                 }
                 OPC_ENSURE(OPC_ERROR_NONE==opcFileCleanupIO(&io));
             }
