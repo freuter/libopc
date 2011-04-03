@@ -6,6 +6,7 @@ import sys
 import shlex
 import subprocess
 import json
+import shutil
 
 def msg(msg):
 	print msg+"...",
@@ -61,7 +62,15 @@ def rm(filename):
 		result("OK")
 	except:
 		failure(None)
-		
+
+def cp(src, dst):
+	try:
+		msg("copy "+src+" to "+dst)
+		shutil.copyfile(src, dst)
+		result("OK")
+	except:
+		failure(None)
+
 def call(path, pre, args, outfile, post):
 	try:
 		msg("executing "+path)

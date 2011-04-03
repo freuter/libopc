@@ -79,6 +79,21 @@ def opc_zipwrite_test(path):
 	test.call(test.build("opc_zipread"), [], ["--verify", test.tmp(path)], test.tmp(path+"_5.opc_zipread"), [])
 	test.regr(test.docs(path+"_5.opc_zipread"), test.tmp(path+"_5.opc_zipread"), True)
 
+def opc_trim_test(path):
+	test.rm(test.tmp(path))
+	test.cp(test.docs(path), test.tmp(path))
+	test.call(test.build("opc_dump"), [], [test.docs(path)], test.tmp(path+"_1.opc_trim.opc_dump"), [])
+	test.regr(test.docs(path+".opc_dump"), test.tmp(path+"_1.opc_trim.opc_dump"), True)
+	test.call(test.build("opc_trim"), [], [test.tmp(path)], test.tmp("stdout.txt"), [])
+	test.call(test.build("opc_dump"), [], [test.docs(path)], test.tmp(path+"_2.opc_trim.opc_dump"), [])
+	test.regr(test.tmp(path+"_1.opc_trim.opc_dump"), test.tmp(path+"_2.opc_trim.opc_dump"), True)
+	test.call(test.build("opc_trim"), [], [test.tmp(path)], test.tmp("stdout.txt"), [])
+	test.call(test.build("opc_dump"), [], [test.docs(path)], test.tmp(path+"_3.opc_trim.opc_dump"), [])
+	test.regr(test.tmp(path+"_2.opc_trim.opc_dump"), test.tmp(path+"_3.opc_trim.opc_dump"), True)
+	test.call(test.build("opc_trim"), [], [test.tmp(path)], test.tmp("stdout.txt"), [])
+	test.call(test.build("opc_dump"), [], [test.docs(path)], test.tmp(path+"_4.opc_trim.opc_dump"), [])
+	test.regr(test.tmp(path+"_3.opc_trim.opc_dump"), test.tmp(path+"_4.opc_trim.opc_dump"), True)
+
 if __name__ == "__main__":
 
 #	opc_zipread_test("simple.zip") // fails --- streaming mode is not yet implemented.
@@ -116,3 +131,6 @@ if __name__ == "__main__":
 
 	opc_xml2_test("OOXMLI1.docx")
 	opc_xml2_test("OOXMLI4.docx")
+
+	opc_trim_test("OOXMLI1.docx")
+	opc_trim_test("OOXMLI4.docx")
