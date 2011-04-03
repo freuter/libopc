@@ -52,11 +52,18 @@ def opc_xml2_test(path):
 	test.call(test.build("opc_xml2"), [], [test.docs(path)], test.tmp(path+".opc_xml2"), [])
 	test.regr(test.docs(path+".opc_xml2"), test.tmp(path+".opc_xml2"), True)
 
+def opc_zipextract_test(path):
+	test.call(test.build("opc_zipextract"), [], [test.docs(path), "word/document.xml"], test.tmp(path+".opc_zipextract"), [])
+	test.regr(test.docs(path+".opc_zipextract"), test.tmp(path+".opc_zipextract"), True)
+
 
 if __name__ == "__main__":
 #	opc_zipread_test("simple.zip")
 	opc_zipread_test("OOXMLI1.docx")
 	opc_zipread_test("OOXMLI4.docx")
+
+	opc_zipextract_test("OOXMLI1.docx")
+	opc_zipextract_test("OOXMLI4.docx")
 
 	opc_dump_test("OOXMLI1.docx")
 	opc_dump_test("OOXMLI4.docx")
