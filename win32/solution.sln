@@ -40,6 +40,10 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "opc_image", "opc_image\opc_
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "opc_text", "opc_text\opc_text.vcxproj", "{3BB38C57-E82B-5AAF-AB0B-E9C17224DBF6}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "opc_generate", "opc_generate\opc_generate.vcxproj", "{04220059-8C51-5D40-9E97-45C929F9AA70}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "opc_album", "opc_album\opc_album.vcxproj", "{2E5AE325-A3FD-592F-B7F0-7408ABD7C4CA}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
@@ -126,6 +130,14 @@ Global
 		{3BB38C57-E82B-5AAF-AB0B-E9C17224DBF6}.Debug|Win32.Build.0 = Debug|Win32
 		{3BB38C57-E82B-5AAF-AB0B-E9C17224DBF6}.Release|Win32.ActiveCfg = Release|Win32
 		{3BB38C57-E82B-5AAF-AB0B-E9C17224DBF6}.Release|Win32.Build.0 = Release|Win32
+		{04220059-8C51-5D40-9E97-45C929F9AA70}.Debug|Win32.ActiveCfg = Debug|Win32
+		{04220059-8C51-5D40-9E97-45C929F9AA70}.Debug|Win32.Build.0 = Debug|Win32
+		{04220059-8C51-5D40-9E97-45C929F9AA70}.Release|Win32.ActiveCfg = Release|Win32
+		{04220059-8C51-5D40-9E97-45C929F9AA70}.Release|Win32.Build.0 = Release|Win32
+		{2E5AE325-A3FD-592F-B7F0-7408ABD7C4CA}.Debug|Win32.ActiveCfg = Debug|Win32
+		{2E5AE325-A3FD-592F-B7F0-7408ABD7C4CA}.Debug|Win32.Build.0 = Debug|Win32
+		{2E5AE325-A3FD-592F-B7F0-7408ABD7C4CA}.Release|Win32.ActiveCfg = Release|Win32
+		{2E5AE325-A3FD-592F-B7F0-7408ABD7C4CA}.Release|Win32.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

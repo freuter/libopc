@@ -42,6 +42,9 @@ static void *opcFileOpen(const xmlChar *filename, int flags) {
     mode[mode_ofs++]='\0';
     FILE *file=fopen((const char*)filename, mode); // try to open in READ mode...
     if (flags & OPC_FILE_WRITE) {
+        if (NULL!=file && flags & OPC_FILE_TRUNC) {
+            fclose(file); file=NULL; // force creating of new file..
+        }
         if (NULL==file) {
             // try to create one
             mode_ofs=0;

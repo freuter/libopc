@@ -142,7 +142,7 @@ extern "C" {
 
     typedef struct OPC_CONTAINER_PART_STRUCT {
         xmlChar *name;
-        xmlChar *type; // owned by type_array
+        const xmlChar *type; // owned by type_array
         opc_uint32_t first_segment_id;
         opc_uint32_t last_segment_id;
         opc_uint32_t segment_count;

@@ -86,4 +86,9 @@
       <file path="opc_generate.c"/>
     </source>
   </tool>
+  <tool name="opc_album" dep="opc" mode="c99">
+    <source root=".">
+      <file path="opc_album.c"/>
+    </source>
+  </tool>
 </project>

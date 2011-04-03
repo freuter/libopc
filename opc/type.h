@@ -42,8 +42,7 @@
 extern "C" {
 #endif    
 
-    typedef opc_uint32_t opcType;
-
+#if 0
     opcType opcTypeCreate(opcContainer *container, 
                           const xmlChar *mimeType, 
                           const xmlChar *extension,
@@ -52,7 +51,7 @@ extern "C" {
     int opcTypeRelease(opcType type);
     
     int opcTypeDelete(opcContainer *container, const xmlChar *mimeType);
-    
+#endif
 #ifdef __cplusplus
 } /* extern "C" */
 #endif    
