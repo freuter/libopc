@@ -80,15 +80,15 @@ def opc_zipwrite_test(path):
 	test.regr(test.docs(path+"_5.opc_zipread"), test.tmp(path+"_5.opc_zipread"), True)
 
 if __name__ == "__main__":
-	opc_zipwrite_test("out.zipwrite")
-	sys.exit()
 
-#	opc_zipread_test("simple.zip")
+#	opc_zipread_test("simple.zip") // fails --- streaming mode is not yet implemented.
 	opc_zipread_test("OOXMLI1.docx")
 	opc_zipread_test("OOXMLI4.docx")
 
 	opc_zipextract_test("OOXMLI1.docx")
 	opc_zipextract_test("OOXMLI4.docx")
+
+	opc_zipwrite_test("out.zipwrite")
 
 	opc_dump_test("OOXMLI1.docx")
 	opc_dump_test("OOXMLI4.docx")
@@ -116,6 +116,3 @@ if __name__ == "__main__":
 
 	opc_xml2_test("OOXMLI1.docx")
 	opc_xml2_test("OOXMLI4.docx")
-
-#	text.exist("zip_write.zip")
-#	text.exec("zip_dump", ["zip_write.zip", "zip_write.zip_dump"])
