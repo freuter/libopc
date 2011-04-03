@@ -2,6 +2,7 @@
 
 import regression as test
 import os
+import sys
 
 def opc_zipread_test(path):
 	test.call(test.build("opc_zipread"), [], ["--verify", test.docs(path)], test.tmp(path+".opc_zipread"), [])
@@ -56,8 +57,32 @@ def opc_zipextract_test(path):
 	test.call(test.build("opc_zipextract"), [], [test.docs(path), "word/document.xml"], test.tmp(path+".opc_zipextract"), [])
 	test.regr(test.docs(path+".opc_zipextract"), test.tmp(path+".opc_zipextract"), True)
 
+def opc_zipwrite_test(path):
+	test.rm(test.tmp(path))
+	test.call(test.build("opc_zipwrite"), [], [test.tmp(path), "--import", "--delete", "--add", "--commit"], test.tmp("stdout.txt"), [])
+	test.call(test.build("opc_zipread"), [], ["--verify", test.tmp(path)], test.tmp(path+"_1.opc_zipread"), [])
+	test.regr(test.docs(path+"_1.opc_zipread"), test.tmp(path+"_1.opc_zipread"), True)
+
+	test.call(test.build("opc_zipwrite"), [], [test.tmp(path), "--import", "--commit"], test.tmp("stdout.txt"), [])
+	test.call(test.build("opc_zipread"), [], ["--verify", test.tmp(path)], test.tmp(path+"_2.opc_zipread"), [])
+	test.regr(test.tmp(path+"_1.opc_zipread"), test.tmp(path+"_2.opc_zipread"), True)
+
+	test.call(test.build("opc_zipwrite"), [], [test.tmp(path), "--import", "--trim"], test.tmp("stdout.txt"), [])
+	test.call(test.build("opc_zipread"), [], ["--verify", test.tmp(path)], test.tmp(path+"_3.opc_zipread"), [])
+	test.regr(test.docs(path+"_3.opc_zipread"), test.tmp(path+"_3.opc_zipread"), True)
+
+	test.call(test.build("opc_zipwrite"), [], [test.tmp(path), "--delete", "--commit"], test.tmp("stdout.txt"), [])
+	test.call(test.build("opc_zipread"), [], ["--verify", test.tmp(path)], test.tmp(path+"_4.opc_zipread"), [])
+	test.regr(test.docs(path+"_4.opc_zipread"), test.tmp(path+"_4.opc_zipread"), True)
+
+	test.call(test.build("opc_zipwrite"), [], [test.tmp(path), "--delete", "--trim"], test.tmp("stdout.txt"), [])
+	test.call(test.build("opc_zipread"), [], ["--verify", test.tmp(path)], test.tmp(path+"_5.opc_zipread"), [])
+	test.regr(test.docs(path+"_5.opc_zipread"), test.tmp(path+"_5.opc_zipread"), True)
 
 if __name__ == "__main__":
+	opc_zipwrite_test("out.zipwrite")
+	sys.exit()
+
 #	opc_zipread_test("simple.zip")
 	opc_zipread_test("OOXMLI1.docx")
 	opc_zipread_test("OOXMLI4.docx")
@@ -92,6 +117,5 @@ if __name__ == "__main__":
 	opc_xml2_test("OOXMLI1.docx")
 	opc_xml2_test("OOXMLI4.docx")
 
-	test.rm(test.tmp("out.zip"))
 #	text.exist("zip_write.zip")
 #	text.exec("zip_dump", ["zip_write.zip", "zip_write.zip_dump"])

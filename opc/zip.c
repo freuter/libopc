@@ -166,8 +166,15 @@ opcZip *opcZipCreate(opcIO_t *io) {
 }
 
 
-void opcZipClose(opcZip *zip) {
+void opcZipClose(opcZip *zip, opcZipSegmentReleaseCallback* releaseCallback) {
     if (NULL!=zip) {
+        if (NULL!=releaseCallback) {
+            for(opc_uint32_t i=0;i<zip->segment_items;i++) {
+                if (!zip->segment_array[i].deleted_segment) {
+                    releaseCallback(zip, i);
+                }
+            }
+        }
         xmlFree(zip);
     }
 }
@@ -1252,7 +1259,7 @@ static void opcZipOutputStreamFlushAndGrow(opcZip *zip, opcZipOutputStream *stre
                                     segment->compressed_size);
                 new_segment->compressed_size=segment->compressed_size;
                 segment->deleted_segment=1;
-                segment->partName=NULL;
+                segment->partName=NULL; // ownership transfered to new_segment
                 segment=new_segment;
                 stream->segment_id=new_segment_id;
                 opc_uint32_t buf_size=(free_size>OPC_DEFLATE_BUFFER_SIZE?OPC_DEFLATE_BUFFER_SIZE:free_size);
@@ -1343,7 +1350,8 @@ opc_error_t opcZipGetSegmentInfo(opcZip *zip, opc_uint32_t segment_id, const xml
     return OPC_ERROR_NONE;
 }
 
-opc_bool_t opcZipSegmentDelete(opcZip *zip, opc_uint32_t *first_segment, opc_uint32_t *last_segment) {
+
+opc_bool_t opcZipSegmentDelete(opcZip *zip, opc_uint32_t *first_segment, opc_uint32_t *last_segment, opcZipSegmentReleaseCallback* releaseCallback) {
     OPC_ASSERT(NULL==last_segment || *first_segment==*last_segment); // not not implemented... needed for fragmented containers
     OPC_ASSERT(*first_segment>=0 && *first_segment<zip->segment_items);
     opc_bool_t ret=OPC_FALSE;
@@ -1351,6 +1359,7 @@ opc_bool_t opcZipSegmentDelete(opcZip *zip, opc_uint32_t *first_segment, opc_uin
         opcZipSegment *segment=&zip->segment_array[*first_segment];
         OPC_ASSERT(!segment->deleted_segment);
         if (!segment->deleted_segment) {
+            if (NULL!=releaseCallback) releaseCallback(zip, *first_segment);
             segment->deleted_segment=1;
             segment->partName=NULL;
             ret=OPC_TRUE;

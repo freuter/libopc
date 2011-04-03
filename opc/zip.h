@@ -68,8 +68,10 @@ extern "C" {
     typedef opc_error_t (opcZipLoaderSegmentCallback_t)(void *iocontext, void *userctx, opcZipSegmentInfo_t *info, opcFileOpenCallback *open, opcFileReadCallback *read, opcFileCloseCallback *close, opcFileSkipCallback *skip);
     opc_error_t opcZipLoader(opcIO_t *io, void *userctx, opcZipLoaderSegmentCallback_t *segmentCallback);
 
+    typedef opc_error_t (opcZipSegmentReleaseCallback)(opcZip *zip, opc_uint32_t segment_id);
+
     opcZip *opcZipCreate(opcIO_t *io);
-    void opcZipClose(opcZip *zip);
+    void opcZipClose(opcZip *zip, opcZipSegmentReleaseCallback* releaseCallback);
     opc_error_t opcZipCommit(opcZip *zip, opc_bool_t trim);
     opc_error_t opcZipGC(opcZip *zip);
 
@@ -102,7 +104,7 @@ extern "C" {
     opc_uint32_t opcZipGetNextSegmentId(opcZip *zip, opc_uint32_t segment_id);
     opc_error_t opcZipGetSegmentInfo(opcZip *zip, opc_uint32_t segment_id, const xmlChar **name, opc_bool_t *rels_segment, opc_uint32_t *crc);
 
-    opc_bool_t opcZipSegmentDelete(opcZip *zip, opc_uint32_t *first_segment, opc_uint32_t *last_segment);
+    opc_bool_t opcZipSegmentDelete(opcZip *zip, opc_uint32_t *first_segment, opc_uint32_t *last_segment, opcZipSegmentReleaseCallback* releaseCallback);
 
 #ifdef __cplusplus
 } /* extern "C" */
