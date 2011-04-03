@@ -44,6 +44,14 @@ def opc_part_test(path):
 	test.call(test.build("opc_part"), [], [test.docs(path), "word/document.xml"], test.tmp(path+".opc_part"), [])
 	test.regr(test.docs(path+".opc_part"), test.tmp(path+".opc_part"), False)
 
+def opc_xml_test(path):
+	test.call(test.build("opc_xml"), [], [test.docs(path), "word/document.xml"], test.tmp(path+".opc_xml"), [])
+	test.regr(test.docs(path+".opc_xml"), test.tmp(path+".opc_xml"), True)
+
+def opc_xml2_test(path):
+	test.call(test.build("opc_xml2"), [], [test.docs(path)], test.tmp(path+".opc_xml2"), [])
+	test.regr(test.docs(path+".opc_xml2"), test.tmp(path+".opc_xml2"), True)
+
 
 if __name__ == "__main__":
 #	opc_zipread_test("simple.zip")
@@ -71,6 +79,11 @@ if __name__ == "__main__":
 	opc_text_test("OOXMLI4.docx")
 
 	opc_part_test("OOXMLI1.docx")
+
+	opc_xml_test("OOXMLI1.docx")
+
+	opc_xml2_test("OOXMLI1.docx")
+	opc_xml2_test("OOXMLI4.docx")
 
 	test.rm(test.tmp("out.zip"))
 #	text.exist("zip_write.zip")

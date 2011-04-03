@@ -47,7 +47,6 @@ int main( int argc, const char* argv[] )
     if (OPC_ERROR_NONE==opcInitLibrary() && 2==argc) {
         opcContainer *c=NULL;
         if (NULL!=(c=opcContainerOpen(_X(argv[1]), OPC_OPEN_READ_ONLY, NULL, NULL))) {
-            opcContainerDump(c, stdout);
             opcPart part=OPC_PART_INVALID;
             AppDocProps props;
             memset(&props, 0, sizeof(props));
