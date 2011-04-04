@@ -29,6 +29,16 @@
  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED 
  OF THE POSSIBILITY OF SUCH DAMAGE.
  */
+/*
+    Dump all information about an OPC container.
+
+    Ussage:
+    opc_dump FILENAME
+
+    Sample:
+    opc_dump OOXMLI1.docx
+*/
+
 #include <opc/opc.h>
 #include <stdio.h>
 #include <time.h>

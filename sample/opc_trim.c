@@ -29,6 +29,16 @@
  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED 
  OF THE POSSIBILITY OF SUCH DAMAGE.
  */
+/*
+    Trim an OPC container, i.e. remove all unneeded bytes and make the container as small as possible.
+    [Content Types].xml and all _rels will be rewritten.
+
+    Ussage:
+    opc_trim FILENAME
+
+    Sample:
+    opc_trim OOXMLI1.docx
+*/
 #include <opc/opc.h>
 #include <stdio.h>
 #include <time.h>

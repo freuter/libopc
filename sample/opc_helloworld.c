@@ -29,6 +29,15 @@
  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED 
  OF THE POSSIBILITY OF SUCH DAMAGE.
  */
+/*
+    Simple demonstration program of how to initialize the library.
+
+    Ussage:
+    opc_helloworld
+
+    Sample:
+    opc_helloworld
+*/
 
 #include <opc/opc.h>
 #include <stdio.h>

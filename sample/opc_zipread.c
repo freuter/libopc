@@ -40,6 +40,16 @@
 /*
     This module demonstrates the low-level opcZipLoader functionality. You can use this method to get very information about a
     ZIP file. This can also be used to implement streaming-based access to ZIP files.
+
+    Ussage:
+    opc_zipread [--verify] [--skip] FILENAME
+
+    * --verify will verify the checksums.
+    * --skip will quickly skip the streams.
+
+    Sample:
+    opc_zipread --verify OOXMLI1.docx
+    opc_zipread --skip OOXMLI1.docx
 */
 
 static opc_bool_t verify_crc = OPC_FALSE;

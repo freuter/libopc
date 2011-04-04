@@ -29,7 +29,15 @@
  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED 
  OF THE POSSIBILITY OF SUCH DAMAGE.
  */
+/*
+    Tests the low-level ZIP functionality. Will extract all streams and verify the CRC checksum.
 
+    Ussage:
+    opc_zipextract FILENAME
+
+    Sample:
+    opc_zipextract OOXMLI1.docx
+*/
 #include <opc/opc.h>
 #include <stdio.h>
 #include <libxml/xmlstring.h>

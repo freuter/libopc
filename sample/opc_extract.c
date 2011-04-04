@@ -29,6 +29,17 @@
  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED 
  OF THE POSSIBILITY OF SUCH DAMAGE.
  */
+/*
+    Extract a part from an OPC containers.
+
+    Ussage:
+    opc_extract FILENAME PARTNAME
+
+    Sample:
+    opc_extract OOXMLI1.docx "word/document.xml"
+*/
+
+
 #include <opc/opc.h>
 #include <stdio.h>
 #ifdef P_WIN32

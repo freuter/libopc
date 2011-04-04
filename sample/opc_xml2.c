@@ -29,6 +29,16 @@
  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED 
  OF THE POSSIBILITY OF SUCH DAMAGE.
  */
+/*
+    Dump some meta information from an Office document using the opc/xmlreader.h APIs.
+
+    Ussage:
+    opc_xml2 FILENAME
+
+    Sample:
+    opc_xml2 OOXMLI1.docx
+*/
+
 #include <opc/opc.h>
 #include <stdio.h>
 #include <string.h>
