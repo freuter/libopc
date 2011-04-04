@@ -87,6 +87,9 @@ extern "C" {
 #define opc_xml_error(reader, guard, err, msg, ...) if (guard) { reader->error=(err); fprintf(stderr, msg, __VA_ARGS__ );  continue; }
 #endif
 #define opc_xml_error_strict opc_xml_error
+
+    xmlDocPtr opcXmlReaderReadDoc(opcContainer *container, const xmlChar *partName, const char * URL, const char * encoding, int options);
+
 #ifdef __cplusplus
 } /* extern "C" */
 #endif    

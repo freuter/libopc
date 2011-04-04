@@ -32,6 +32,7 @@
 #include <opc/opc.h>
 #include <stdio.h>
 #include <time.h>
+#include <libxml/xmlsave.h>
 
 static void normalize_name(char *dest, const xmlChar *src, opc_uint32_t len) {
     strncpy(dest, (const char *)src, len);
@@ -88,6 +89,43 @@ static void generate_binary_data(opcContainer *c, FILE *out, opcContainerInputSt
     fprintf(out, "              };\n");
 }
 
+static int  xmlOutputWrite(void * context, const char * buffer, int len) {
+    FILE *out=(FILE*)context;
+    for(int i=0;i<len;i++) {
+        switch(buffer[i]) {
+        case '\n':
+            fprintf(out, "\\n\");\n              writes(out, \"");
+        case '\r':
+            break;
+        case '"':
+            fprintf(out, "\\\"");
+            break;
+        default:
+            putc(buffer[i], out);
+        }
+    }
+    return len;
+}
+
+static int xmlOutputClose(void * context) {
+    return 0;
+}
+
+static void generate_xml_data(opcContainer *c, FILE *out, opcPart part) {
+    fprintf(out, "              writes(out, \"");
+    xmlDocPtr doc=opcXmlReaderReadDoc(c, part, NULL, NULL, 0);
+    if (NULL!=doc) {
+        xmlSaveCtxtPtr save=xmlSaveToIO(xmlOutputWrite, xmlOutputClose, out, NULL, XML_SAVE_FORMAT | XML_SAVE_NO_DECL);
+        if (NULL!=save) {
+            xmlSaveDoc(save, doc);
+            xmlSaveClose(save);
+        }
+        xmlFreeDoc(doc);
+    }
+    fprintf(out, "\");\n");
+}
+
+
 static void generate_parts(opcContainer *c, FILE *out) {
     for(opcPart part=opcPartGetFirst(c);OPC_PART_INVALID!=part;part=opcPartGetNext(c, part)) {
             char norm_part[OPC_MAX_PATH]="";
@@ -113,12 +151,18 @@ static void generate_parts(opcContainer *c, FILE *out) {
             fprintf(out, "         //adding content\n");
             fprintf(out, "          opcContainerOutputStream *out=opcContainerCreateOutputStream(c, ret);\n");
             fprintf(out, "          if (NULL!=out) {\n");
-            opcContainerInputStream *in=opcContainerOpenInputStream(c, part);
-            if (NULL!=in) {
-                generate_binary_data(c, out, in);
+            const xmlChar *type=opcPartGetType(c, part);
+            opc_uint32_t type_len=(NULL!=type?xmlStrlen(type):0);
+            if (type_len>0 && type[type_len-3]=='x' && type[type_len-2]=='m' && type[type_len-1]=='l') {
+                generate_xml_data(c, out, part);
+            } else {
+                opcContainerInputStream *in=opcContainerOpenInputStream(c, part);
+                if (NULL!=in) {
+                    generate_binary_data(c, out, in);
+                    fprintf(out, "              opcContainerWriteOutputStream(out, (const opc_uint8_t*)data, sizeof(data));\n");
+                }
                 opcContainerCloseInputStream(in);
             }
-            fprintf(out, "              opcContainerWriteOutputStream(out, (const opc_uint8_t*)data, sizeof(data));\n");
             fprintf(out, "              opcContainerCloseOutputStream(out);\n");
             fprintf(out, "          }\n");
 
@@ -133,6 +177,16 @@ static void generate_parts(opcContainer *c, FILE *out) {
 
 static void generate(opcContainer *c, FILE *out) {
     fprintf(out, "#include <opc/opc.h>\n");
+    fprintf(out, "#include <stdarg.h>\n");
+    fprintf(out, "\n");
+    fprintf(out, "static void writes(opcContainerOutputStream* stream, const char *s, ...) {\n");
+    fprintf(out, "    va_list ap;\n");
+    fprintf(out, "    va_start(ap, s);\n");
+    fprintf(out, "    char buf[1024];\n");
+    fprintf(out, "    int len=vsnprintf(buf, sizeof(buf), s, ap);\n");
+    fprintf(out, "    opcContainerWriteOutputStream(stream, (const opc_uint8_t *)buf, len);\n");
+    fprintf(out, "    va_end(ap);\n");
+    fprintf(out, "}\n");
     fprintf(out, "\n");
     generate_parts(c, out);
     fprintf(out, "void generate(opcContainer *c, FILE *out) {\n");
