@@ -1182,7 +1182,6 @@ static opc_uint32_t opcZipOutputStreamFill(opcZip *zip, opcZipOutputStream *stre
             if (Z_OK==(stream->inflate_state=deflate(&stream->stream, Z_NO_FLUSH))) {
                 opc_uint32_t const bytes_in=data_len-stream->stream.avail_in;
                 opc_uint32_t const bytes_out=free-stream->stream.avail_out;
-                printf("opcZipOutputStreamFill: bytes_in=%i bytes_out=%i\n", bytes_in, bytes_out);
                 stream->crc32=crc32(stream->crc32, data, bytes_in);
                 ret=bytes_in;
                 stream->buf_len+=bytes_out;
@@ -1215,7 +1214,6 @@ static opc_bool_t opcZipOutputStreamFinishCompression(opcZip *zip, opcZipOutputS
                 opc_uint32_t const bytes_out=free-stream->stream.avail_out;
                 stream->buf_len+=bytes_out;
                 ret=(Z_STREAM_END==stream->inflate_state);
-                printf("opcZipOutputStreamFinishCompression: bytes_out=%i finish=%i\n", bytes_out, ret);
             } else {
                 zip->io->state.err=OPC_ERROR_DEFLATE;
             }

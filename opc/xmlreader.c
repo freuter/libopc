@@ -187,3 +187,18 @@ opc_bool_t opcXmlReaderEndChildren(opcXmlReader *reader) {
     }
 }
 
+
+
+xmlDocPtr opcXmlReaderReadDoc(opcContainer *container, const xmlChar *partName, const char * URL, const char * encoding, int options) {
+    opcContainerInputStream* stream=opcContainerOpenInputStreamEx(container, partName, OPC_FALSE);
+    if (NULL!=stream) {
+        OPC_ASSERT(NULL==stream->reader);
+        xmlDocPtr doc=xmlReadIO((xmlInputReadCallback)opcContainerReadInputStream, 
+                                (xmlInputCloseCallback)opcContainerCloseInputStream, 
+                                stream, URL, encoding, options);
+        return doc;
+    } else {
+        return NULL;
+    }
+}
+
