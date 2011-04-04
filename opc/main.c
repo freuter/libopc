@@ -34,27 +34,12 @@
 
 /** @mainpage libopc
 
- \section mission Mission Statement
+ This is the API documentation of the libopc project. 
 
- This is the preliminary API documentation of the libopc project. 
- Its main purpose it to visualize the API design and to help in milestone and time planing.
+ API headers can be found in the "Files" section.
  
- Preliminary API headers can be found in the "Files" section.
+ Samples can be found in the "Examples" section.
  
- Samples referenced in milestone planing can be found in the "Examples" section.
- 
- 
- \todo{Add mission statement.}
-
- 
- \section build_linux Building on Linux
-
- \todo{Add Linux building instructions.}
- 
- \section build_windows Building on Windows 
-
- \todo{Add Windows building instructions.}
-
  */
 
 /** \example opc_helloworld.c
@@ -73,48 +58,13 @@
  Demonstrates low level ZIP write functionality as needed by the high level opcContainer API.
  */
 
-/** \example opc_zipwrite2.c
- Demonstrates low level ZIP write functionality as needed by the high level opcContainer API.
- */
-
-/** \example opc_zipwrite3.c
- Demonstrates low level ZIP write functionality for streaming mode as needed by the high level opcContainer API.
- */
-
-/** \example opc_zipwrite4.c
- Demonstrates low level ZIP write functionality for growth_hint parameter as needed by the high level opcContainer API.
- */
-
-/** \example opc_zipwrite5.c
- Demonstrates low level ZIP write functionality for interleaved write operations as needed by the high level opcContainer API.
- */
-
-/** \example opc_zipwrite6.c
- Demonstrates low level ZIP write functionality for interleaved write operations in streaming mode as needed by the high level opcContainer API.
- */
 
 /** \example opc_zipread.c
  Demonstrates low level ZIP read functionality as needed by the high level opcContainer API.
  */
 
-/** \example opc_zipread2.c
- Demonstrates low level ZIP read functionality in streaming mode as needed by the high level opcContainer API.
- */
-
 /** \example opc_zipextract.c
  Demonstrates low level ZIP read functionality as needed by the high level opcContainer API.
- */
-
-/** \example opc_zipextract2.c
- Demonstrates low level ZIP read functionality in streaming mode as needed by the high level opcContainer API.
- */
-
-/** \example opc_zipdefrag.c
- Demonstrates low level ZIP read/write functionality needed for interleave stream defragmentation as needed by the high level opcContainer API.
- */
-
-/** \example opc_zipcopy.c
- Demonstrates low level ZIP read/write functionality needed for template/transition modes as needed by the high level opcContainer API.
  */
 
 /** \example opc_xml.c
@@ -127,10 +77,46 @@
 
 /** \example mce_read.c
  Demonstrates basic MCE proprocessing.
+ \todo MCE functionality is not implemented in this release, so this example is not yet running.
  */
 
 /** \example mce_write.c
  Demonstrates basic MCE proprocessing.
+ \todo MCE functionality is not implemented in this release, so this example is not yet running.
+*/
+
+/** \example opc_image.c
+ Sample program which will extract all images from an OPC container.
+ E.g. opc_dump hello.pptx will extract all pictures from "hello.pptx" in the current directory.
+ The call opc_dump hello.pptx C:\Users\flr\Pictures will extract all pictures from "hello.pptx" in the directory "C:\Users\flr\Pictures".
+ */
+
+/** \example opc_mem.c
+ Demonstrates the the use of \ref opcContainerOpenMem, i.e. how to use "in-memory" containers.
+ */
+
+/** \example opc_part.c
+ Demonstrates how to dump a part from an OPC container. Ussage opc_dump [container] [part-name]. E.g. opc_dump sample.docx "word/document.xml".
+ */
+
+/** \example opc_relation.c
+ Demonstrates how to traverse all relations in an OPC container using the API.
+ */
+
+/** \example opc_text.c
+ Sample program which will extract all text form an Word document and dump it as HTML.
+ */
+
+/** \example opc_trim.c
+ Opens an OPC containers and saves it back in "trimming" mode, which will reduce the size as much as possible.
+ */
+
+/** \example opc_type.c
+ Demonstrate how to corretly get the type of an Office document.
+ */
+
+/** \example opc_generate.c
+ Sample program which will read an OPC container and generate a "C" file which uses the API to generate the passed container.
  */
 
 

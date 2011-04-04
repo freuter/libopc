@@ -30,6 +30,10 @@
  OF THE POSSIBILITY OF SUCH DAMAGE.
  
 */
+/** @file opc/internal.h
+ Contains all internally shared datastructures.
+*/
+
 #ifndef OPC_INTERNAL_H
 #define OPC_INTERNAL_H
 
