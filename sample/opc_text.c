@@ -29,6 +29,17 @@
  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED 
  OF THE POSSIBILITY OF SUCH DAMAGE.
  */
+/*
+    Extract all text of an Word document as HTML.
+
+    Ussage:
+    opc_text FILENAME
+
+    Sample:
+    opc_text OOXMLI1.docx
+*/
+
+
 #include <opc/opc.h>
 #include <stdio.h>
 #include <time.h>

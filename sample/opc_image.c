@@ -29,6 +29,17 @@
  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED 
  OF THE POSSIBILITY OF SUCH DAMAGE.
  */
+/*
+    Extract all images from an OPC container.
+
+    Ussage:
+    opc_image FILENAME [OUTPATH]
+
+    The OUTPATH must exist.
+
+    Sample:
+    opc_image OOXMLI1.docx C:\Users\flr\Pictures
+*/
 
 #include <opc/opc.h>
 #include <stdio.h>

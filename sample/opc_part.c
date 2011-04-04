@@ -29,6 +29,16 @@
  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED 
  OF THE POSSIBILITY OF SUCH DAMAGE.
  */
+/*
+    Dump content of a part using either the binary or the XML interfaces.
+
+    Ussage:
+    opc_part FILENAME PARTNAME
+
+    Sample:
+    opc_part OOXMLI1.docx "word/document.xml"
+*/
+
 #include <opc/opc.h>
 #include <stdio.h>
 #include <time.h>

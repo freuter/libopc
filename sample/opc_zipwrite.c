@@ -37,6 +37,18 @@
 
 /*
     This example shows how to use the low level zip functions.
+
+    Ussage:
+    opc_zipread FILENAME [--import] [--delete] [--add] [--commit] [--trim]
+
+    * --import existing streams
+    * --delete all streams
+    * --add sample streams
+    * --commit streams
+    * --trim commit and trim streams
+
+    Sample:
+    opc_zipread out.zip --delete --import --add --commit
 */
 
 static opc_error_t addSegment(void *iocontext, 

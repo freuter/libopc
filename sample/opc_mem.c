@@ -29,6 +29,15 @@
  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED 
  OF THE POSSIBILITY OF SUCH DAMAGE.
  */
+/*
+    Dump all information about an OPC container via the memory-based OPC container interface.
+
+    Ussage:
+    opc_mem FILENAME
+
+    Sample:
+    opc_mem OOXMLI1.docx
+*/
 #include <opc/opc.h>
 #include <stdio.h>
 #include <time.h>

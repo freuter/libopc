@@ -29,6 +29,16 @@
  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED 
  OF THE POSSIBILITY OF SUCH DAMAGE.
  */
+/*
+    Dump an XML part using the non-MCE opcXmlReader.
+
+    Ussage:
+    opc_xml FILENAME PARTNAME
+
+    Sample:
+    opc_xml OOXMLI1.docx "word/document.xml"
+*/
+
 #include <opc/opc.h>
 #include <stdio.h>
 #include <time.h>

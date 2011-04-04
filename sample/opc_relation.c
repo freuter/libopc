@@ -29,6 +29,23 @@
  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED 
  OF THE POSSIBILITY OF SUCH DAMAGE.
  */
+/*
+    Traverse all relations of an OPC container or get the type of an relation.
+
+    Ussage:
+    * Traverse all relations:
+      opc_relation FILENAME
+    * Get type of root relation
+      opc_relation FILENAME RELATIONID
+    * Get type of part relation
+      opc_relation FILENAME PARTNAME RELATIONID
+
+    Sample:
+    opc_relation OOXMLI1.docx
+    opc_relation OOXMLI1.docx "rId1"
+    opc_relation OOXMLI1.docx "word/document.xml" "rId1"
+*/
+
 #include <opc/opc.h>
 
 static void traverse(opcContainer *c, opcPart source) {

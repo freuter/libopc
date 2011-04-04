@@ -29,6 +29,15 @@
  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED 
  OF THE POSSIBILITY OF SUCH DAMAGE.
  */
+/*
+    Corretly get the type and an Office document.
+
+    Ussage:
+    opc_type FILENAME
+
+    Sample:
+    opc_type OOXMLI1.docx
+*/
 #include <opc/opc.h>
 
 int main( int argc, const char* argv[] )
