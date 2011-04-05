@@ -327,10 +327,9 @@ opcContainerRelation *opcContainerFindRelationById(opcContainer *container, opcC
 }
 
 
-static void opc_container_normalize_part_to_helper_buffer(opcContainer *c,
-                                                   xmlChar *buf, int buf_len,
-                                                   const xmlChar *base,
-                                                   const xmlChar *name) {
+static void opc_container_normalize_part_to_helper_buffer(xmlChar *buf, int buf_len,
+                                                          const xmlChar *base,
+                                                          const xmlChar *name) {
   int j=xmlStrlen(base);
   int i=0;
   OPC_ASSERT(j<=buf_len);
@@ -404,7 +403,7 @@ static void opcConstainerParseRels(opcContainer *c, const xmlChar *partName, opc
                         opc_uint32_t rel_id=createRelId(c, id, counter);
                         if (NULL==mode || 0==xmlStrcasecmp(mode, _X("Internal"))) {
                             xmlChar target_part_name[OPC_MAX_PATH];
-                            opc_container_normalize_part_to_helper_buffer(c, target_part_name, sizeof(target_part_name), partName, target);
+                            opc_container_normalize_part_to_helper_buffer(target_part_name, sizeof(target_part_name), partName, target);
     //                        printf("%s (%s;%s)\n", target_part_name, base, target);
                             opcContainerPart *target_part=opcContainerInsertPart(c, target_part_name, OPC_FALSE);
                             opc_xml_error(reader, NULL==target_part, OPC_ERROR_XML, "Referenced part %s (%s;%s) does not exists!", target_part_name, partName, target);
@@ -496,23 +495,6 @@ static void opcContainerDumpLine(FILE *out, const xmlChar line_char, opc_uint32_
     }
 }
 
-#if 0
-static void opcContainerDumpRel(opcContainer *c, FILE *out, opcContainerRelation *rel, opc_uint32_t max_part_name_len) {
-    fputs("[", out);
-    OPC_ASSERT(OPC_CONTAINER_RELID_PREFIX(rel->relation_id)>=0 && OPC_CONTAINER_RELID_PREFIX(rel->relation_id)<c->relation_items);
-    opc_uint32_t l=xmlStrlen(c->relprefix_array[OPC_CONTAINER_RELID_PREFIX(rel->relation_id)].prefix);
-    fputs((const char *)c->relprefix_array[OPC_CONTAINER_RELID_PREFIX(rel->relation_id)].prefix, out);
-    if (-1!=OPC_CONTAINER_RELID_COUNTER(rel->relation_id)) {
-        l+=fprintf(out, "%i", OPC_CONTAINER_RELID_COUNTER(rel->relation_id));
-    }
-    fputs("]", out); 
-    l+=2;
-    opcContainerDumpString(out, rel->target_ptr, max_part_name_len);
-    opc_uint32_t type_len=(l+max_part_name_len<79?79-(l+max_part_name_len):10);
-    opcContainerDumpString(out, rel->relation_type, type_len);
-    fputs("\n", out);
-}
-#endif
 
 static void opcContainerRelCalcMax(opcContainer *c, 
                                    const xmlChar *part_name,
@@ -709,34 +691,6 @@ opc_error_t opcContainerDump(opcContainer *c, FILE *out) {
     opcContainerDumpLine(out, '-', max_rel_dest, OPC_FALSE); fputc('|', out);
     opcContainerDumpLine(out, '-', max_rel_type, OPC_TRUE);
 
-#if 0
-    fprintf(out, "Parts:               Type:\n");
-    fprintf(out, "-------------------------------------------------------------------------------\n");
-    opc_uint32_t max_part=0;
-    for(opc_uint32_t i=0;i<c->part_items;i++) {
-        opc_uint32_t len=xmlStrlen(c->part_array[i].name);
-        if (len>max_part) max_part=len;
-    }
-    if (max_part>60) max_part=60;
-    for(opc_uint32_t j=0;j<c->relation_items;j++) {
-        opcContainerRelation *rel=&c->relation_array[j];
-        opcContainerDumpRel(c, out, rel, max_part);
-    }
-    for(opc_uint32_t i=0;i<c->part_items;i++) {
-        opcContainerDumpString(out, c->part_array[i].name, max_part);
-        fputc(' ', out);
-        const xmlChar *type=opcPartGetType(c, c->part_array[i].name);
-        opcContainerDumpString(out, (NULL==type?_X("n/a"):type), 79-max_part-1);
-        /*
-        fprintf(out, "%s [%s]\n", c->part_array[i].name, type);
-        */
-        fputs("\n", out);
-        for(opc_uint32_t j=0;j<c->part_array[i].relation_items;j++) {
-            opcContainerRelation *rel=&c->part_array[i].relation_array[j];
-            opcContainerDumpRel(c, out, rel, max_part);
-        }
-    }
-#endif
     return OPC_ERROR_NONE;
 }
 
@@ -1105,6 +1059,37 @@ static void opcContainerWriteContentTypes(opcContainer *c) {
     }
 }
 
+static void opcHelperCalcRelPath(xmlChar *rel_path, opc_uint32_t rel_path_max, const xmlChar *base, const xmlChar *path) {
+    opc_uint32_t base_pos=0;
+    opc_uint32_t path_pos=0;
+    opc_uint32_t rel_pos=0;
+
+    while(0!=base[base_pos]) {
+        opc_uint32_t base_next=base_pos; while(0!=base[base_next] && '/'!=base[base_next]) base_next++;
+        opc_uint32_t path_next=path_pos;  while(0!=base[path_next] && '/'!=base[path_next]) path_next++;
+        if ('/'==base[base_next]) {
+            if (base_next==path_next && 0==xmlStrncmp(base+base_pos, path+path_pos, base_next-base_pos)) {
+                base_pos=base_next+1;
+                path_pos=path_next+1;
+            } else {
+                base_pos=base_next+1;
+                strncpy((char *)(rel_path+rel_pos), "../", rel_path_max-rel_pos);
+                rel_pos+=3;
+            }
+        } else {
+            OPC_ASSERT(0==base[base_next]);
+            base_pos=base_next;
+            OPC_ASSERT(0==base[base_pos]);
+        }
+    }
+    strncpy((char *)(rel_path+rel_pos), (const char *)(path+path_pos), rel_path_max-rel_pos);
+#if 0 // for debugging only...
+    xmlChar helper[OPC_MAX_PATH];
+    opc_container_normalize_part_to_helper_buffer(helper, sizeof(helper), base, rel_path);
+    OPC_ASSERT(0==xmlStrcmp(path, helper));
+#endif
+}
+
 static void opcContainerWriteRels(opcContainer *c, const xmlChar *part_name, opcContainerRelation *relation_array, opc_uint32_t relation_items) {
     opcContainerOutputStream *out=opcContainerCreateOutputStreamEx(c, part_name, OPC_TRUE);
     if (NULL!=out) {
@@ -1120,8 +1105,10 @@ static void opcContainerWriteRels(opcContainer *c, const xmlChar *part_name, opc
             opcContainerWriteUtf8Raw(out, _X("\" Type=\""));
             opcContainerWriteUtf8(out, relation_array[i].relation_type);
             if (0==relation_array[i].target_mode) {
-                opcContainerWriteUtf8Raw(out, _X("\" Target=\"/"));
-                opcContainerWriteUtf8(out, relation_array[i].target_ptr);
+                opcContainerWriteUtf8Raw(out, _X("\" Target=\""));
+                xmlChar rel_path[OPC_MAX_PATH];
+                opcHelperCalcRelPath(rel_path, sizeof(rel_path), part_name, relation_array[i].target_ptr);
+                opcContainerWriteUtf8(out, rel_path);
             } else {
                 OPC_ASSERT(1==relation_array[i].target_mode);
                 opcContainerWriteUtf8Raw(out, _X("\" TargetMode=\"External\" Target=\""));
