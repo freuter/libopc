@@ -50,9 +50,28 @@ static void normalize_name(char *dest, const xmlChar *src, opc_uint32_t len) {
     strncpy(dest, (const char *)src, len);
     dest[len-1]=0;
     for(opc_uint32_t i=0;0!=dest[i];i++) {
-        if (dest[i]=='/' || dest[i]=='.') {
+        if (dest[i]=='/' || dest[i]=='.' || dest[i]=='-') {
             dest[i]='_';
         }
+    }
+}
+
+static xmlChar *xmlStrEscape(const xmlChar *str) {
+    opc_uint32_t i=0;
+    opc_uint32_t a=0;
+    for(;str[i]!=0;i++) {
+        if ('\\'==str[i]) {
+            a++;
+        }
+    }
+    if (0==a) {
+        return xmlStrdup(str);
+    } else {
+        xmlChar *ret = (xmlChar *) xmlMalloc((i + a + 1) * sizeof(xmlChar));
+        for(opc_uint32_t j=0, k=0;j<=i;j++) {
+            if ('\\'==str[j]) { ret[k++]='\\'; ret[k++]='\\';} else ret[k++]=str[j];
+        }
+        return ret;
     }
 }
 
@@ -77,10 +96,16 @@ static void generate_relations(opcContainer *c, FILE *out, opcPart root) {
                     (OPC_PART_INVALID==root?"OPC_PART_INVALID":"ret"), 
                     prefix, buf, part, type);
             } else {
-                const xmlChar *external_target=opcRelationGetExternalTarget(c, root, rel);
+                xmlChar *external_target=xmlStrEscape(opcRelationGetExternalTarget(c, root, rel));
                 if (NULL!=external_target) {
-                    //@TODO!
+                    fprintf(out, "     %sopcRelationAddExternal(c, %s, _X(\"%s%s\"), _X(\"%s\"), _X(\"%s\"));\n", 
+                        (OPC_PART_INVALID==root?"":"     "), 
+                        (OPC_PART_INVALID==root?"OPC_PART_INVALID":"ret"), 
+                        prefix, buf,
+                        external_target,
+                        type);
                 }
+                xmlFree(external_target);
             }
     }
 }
@@ -111,6 +136,9 @@ static int  xmlOutputWrite(void * context, const char * buffer, int len) {
             break;
         case '"':
             fprintf(out, "\\\"");
+            break;
+        case '\\':
+            fprintf(out, "\\\\");
             break;
         default:
             putc(buffer[i], out);
@@ -192,13 +220,18 @@ static void generate(opcContainer *c, FILE *out, const char *template_name, cons
     fprintf(out, "\n");
     fprintf(out, "#include <opc/opc.h>\n");
     fprintf(out, "\n");
-    fprintf(out, "static void writes(opcContainerOutputStream* stream, const char *s, ...) {\n");
+    fprintf(out, "void writef(opcContainerOutputStream* stream, const char *s, ...) {\n");
     fprintf(out, "    va_list ap;\n");
     fprintf(out, "    va_start(ap, s);\n");
     fprintf(out, "    char buf[1024];\n");
     fprintf(out, "    int len=vsnprintf(buf, sizeof(buf), s, ap);\n");
     fprintf(out, "    opcContainerWriteOutputStream(stream, (const opc_uint8_t *)buf, len);\n");
     fprintf(out, "    va_end(ap);\n");
+    fprintf(out, "}\n");
+    fprintf(out, "\n");
+    fprintf(out, "void writes(opcContainerOutputStream* stream, const char *s) {\n");
+    fprintf(out, "    int const len=strlen(s);\n");
+    fprintf(out, "    opcContainerWriteOutputStream(stream, (const opc_uint8_t *)s, len);\n");
     fprintf(out, "}\n");
     fprintf(out, "\n");
     generate_parts(c, out);
@@ -219,6 +252,9 @@ static void generate(opcContainer *c, FILE *out, const char *template_name, cons
     fprintf(out, "              generate(c, stdout);\n");
     fprintf(out, "              opcContainerClose(c, OPC_CLOSE_NOW);\n");
     fprintf(out, "         }\n");
+    fprintf(out, "    } else if (argc!=2) {\n");
+    int ofs=strlen(template_name); while(ofs>0 && template_name[ofs-1]!='/' && template_name[ofs-1]!='\\') ofs--;
+    fprintf(out, "         printf(\"target file needed!\\n E.g. %%s \\\"%s\\\"\", argv[0]);\n", template_name+ofs);
     fprintf(out, "    }\n");
     fprintf(out, "}\n");
 }
@@ -248,8 +284,8 @@ int main( int argc, const char* argv[] )
         printf("ERROR: initialization of libopc failed.\n");    
         err=OPC_ERROR_STREAM;
     } else {
-        printf("opc_dump FILENAME.\n\n");
-        printf("Sample: opc_dump test.docx\n");
+        printf("opc_generate CONTAINERNAME CFILENAME\n\n");
+        printf("Sample: opc_generate test.docx test.c\n");
     }
     time_t end_time=time(NULL);
     fprintf(stderr, "time %.2lfsec\n", difftime(end_time, start_time));

@@ -61,6 +61,7 @@ extern "C" {
     void opcRelationGetInformation(opcContainer *container, opcPart part, opcRelation relation, const xmlChar **prefix, opc_uint32_t *counter, const xmlChar **type);
 
     opc_uint32_t opcRelationAdd(opcContainer *container, opcPart src, const xmlChar *rid, opcPart dest, const xmlChar *type);
+    opc_uint32_t opcRelationAddExternal(opcContainer *container, opcPart src, const xmlChar *rid, const xmlChar *target, const xmlChar *type);
 
 #ifdef __cplusplus
 } /* extern "C" */

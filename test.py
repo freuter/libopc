@@ -3,6 +3,7 @@
 import regression as test
 import os
 import sys
+import getopt
 
 def opc_zipread_test(path):
 	test.call(test.build("opc_zipread"), [], ["--verify", test.docs(path)], test.tmp(path+".opc_zipread"), [])
@@ -94,43 +95,132 @@ def opc_trim_test(path):
 	test.call(test.build("opc_dump"), [], [test.docs(path)], test.tmp(path+"_4.opc_trim.opc_dump"), [])
 	test.regr(test.tmp(path+"_3.opc_trim.opc_dump"), test.tmp(path+"_4.opc_trim.opc_dump"), True)
 
+def opc_generate_test(basepath, path):
+	dest=os.path.join(os.path.split(path)[0], os.path.splitext(os.path.split(path)[1])[0]+".c")
+	test.ensureDir(test.tmp(os.path.dirname(dest)))
+	test.call(test.build("opc_dump"), [], [os.path.join(basepath, path)], test.tmp(path+"_1.opc_generate.opc_dump"), [])
+	test.call(test.build("opc_generate"), [], [os.path.join(basepath, path), test.tmp(dest)], test.tmp("stdout.txt"), [])
+	exe=test.compile(test.tmp(dest))
+	test.call(exe, [], [test.tmp(path)], test.tmp("stdout.txt"), [])
+	test.call(test.build("opc_dump"), [], [test.tmp(path)], test.tmp(path+"_2.opc_generate.opc_dump"), [])
+	test.regr(test.tmp(path+"_1.opc_generate.opc_dump"), test.tmp(path+"_2.opc_generate.opc_dump"), False)
+
+def usage():
+	print("usage:")
+	print(" test [--target-mode \"debug|release\"]")
+	print("      [--generate \"test_docs/\"]")
+
 if __name__ == "__main__":
+	target_mode=None
+	generate_path=None
+	generate_skip=False
+	try:
+		opts, args = getopt.getopt(sys.argv[1:], "h", ["help", "target=", "generate=", "skip"])
+	except getopt.GetoptError, err:
+		# print help information and exit:
+		print str(err) # will print something like "option -a not recognized"
+		usage()
+		sys.exit(2)
+	for o, a in opts:
+		if o in ("-h", "--help"):
+			usage()
+			sys.exit(0)
+		elif o in ("--target"):
+			target_mode=a
+		elif o in ("--generate"):
+			generate_path=a
+		elif o in ("--skip"):
+			generate_skip=True
+	if None==target_mode and "nt"==os.name:
+		print "please specify target mode, e.g. --target=debug"
+		sys.exit(2)
+	else:
+		test.init(target_mode)
+#	sys.exit(0)
 
-#	opc_zipread_test("simple.zip") // fails --- streaming mode is not yet implemented.
-	opc_zipread_test("OOXMLI1.docx")
-	opc_zipread_test("OOXMLI4.docx")
+	if None==generate_path:
+#		opc_zipread_test("simple.zip") // fails --- streaming mode is not yet implemented.
+		opc_zipread_test("OOXMLI1.docx")
+		opc_zipread_test("OOXMLI4.docx")
 
-	opc_zipextract_test("OOXMLI1.docx")
-	opc_zipextract_test("OOXMLI4.docx")
+		opc_zipextract_test("OOXMLI1.docx")
+		opc_zipextract_test("OOXMLI4.docx")
 
-	opc_zipwrite_test("out.zipwrite")
+		opc_zipwrite_test("out.zipwrite")
 
-	opc_dump_test("OOXMLI1.docx")
-	opc_dump_test("OOXMLI4.docx")
+		opc_dump_test("OOXMLI1.docx")
+		opc_dump_test("OOXMLI4.docx")
 
-	opc_extract_test("OOXMLI1.docx", "word/document.xml")
+		opc_extract_test("OOXMLI1.docx", "word/document.xml")
 
-	opc_mem_test("OOXMLI1.docx")
-	opc_mem_test("OOXMLI4.docx")
+		opc_mem_test("OOXMLI1.docx")
+		opc_mem_test("OOXMLI4.docx")
 
-	opc_type_test("OOXMLI1.docx")
-	opc_type_test("OOXMLI4.docx")
+		opc_type_test("OOXMLI1.docx")
+		opc_type_test("OOXMLI4.docx")
 
-	opc_relation_test("OOXMLI1.docx")
-	opc_relation_test("OOXMLI4.docx")
+		opc_relation_test("OOXMLI1.docx")
+		opc_relation_test("OOXMLI4.docx")
 
-	opc_image_test("OOXMLI1.docx")
-	opc_image_test("OOXMLI4.docx")
+		opc_image_test("OOXMLI1.docx")
+		opc_image_test("OOXMLI4.docx")
 
-	opc_text_test("OOXMLI1.docx")
-	opc_text_test("OOXMLI4.docx")
+		opc_text_test("OOXMLI1.docx")
+		opc_text_test("OOXMLI4.docx")
 
-	opc_part_test("OOXMLI1.docx")
+		opc_part_test("OOXMLI1.docx")
 
-	opc_xml_test("OOXMLI1.docx")
+		opc_xml_test("OOXMLI1.docx")
 
-	opc_xml2_test("OOXMLI1.docx")
-	opc_xml2_test("OOXMLI4.docx")
+		opc_xml2_test("OOXMLI1.docx")
+		opc_xml2_test("OOXMLI4.docx")
 
-	opc_trim_test("OOXMLI1.docx")
-	opc_trim_test("OOXMLI4.docx")
+		opc_trim_test("OOXMLI1.docx")
+		opc_trim_test("OOXMLI4.docx")
+
+	else:
+		ignore_list = {  }
+		skip_list = {  }
+		ignore_file = os.path.join(generate_path, "opc_generate.ignore")
+		skip_file = os.path.join(generate_path, "opc_generate.skip")
+		if os.path.exists(ignore_file):
+			f=open(ignore_file, "r")
+			ignore_list=eval(f.read())
+			f.close()
+#		print "ignore_list="+str(ignore_list)
+		if os.path.exists(skip_file):
+			f=open(skip_file, "r")
+			for line in f.readlines():
+				line=line.strip()
+				if ""!=line:
+					skip_list[line]=True
+			f.close()
+#		print "skip_list="+str(skip_list)
+		skip_f=open(skip_file, "w")
+		for item in skip_list:
+			skip_f.write(item+"\n")
+		skip_f.flush()
+			
+		suitename=os.path.split(generate_path)[1]
+		basedir=os.path.split(generate_path)[0]
+		for root, dirs, files in os.walk(generate_path):
+			for name in files:
+				src=os.path.relpath(os.path.join(root, name), basedir)
+				f=os.path.relpath(src, suitename).replace(os.sep, "/")
+				dst=os.path.join(suitename, f)
+				ext=os.path.splitext(src)[1]
+				ignore=f in ignore_list and ignore_list[f]
+				if generate_skip:
+					skip=f in skip_list and skip_list[f]
+				else:
+					skip=False
+#				print f+" "+str(ignore)
+				if not(ignore) and not(skip) and (".docx"==ext or ".xlsx"==ext or ".pptx"==ext):
+					print "opc_generate_test("+basedir+", "+src+")"
+					opc_generate_test(basedir, src)
+					skip_f.write(f+"\n")
+					skip_f.flush()
+		skip_f.close()
+#		opc_generate_test(test.docs(""), "helloworld.pptx")
+#		opc_generate_test(test.docs(""), "OOXMLI1.docx")
+	#	opc_generate_test(test.docs(""), "OOXMLI4.docx") ## this is toooo much for the compiler: "fatal error C1060: compiler is out of heap space"
