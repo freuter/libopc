@@ -776,7 +776,7 @@ static int opcZipLoaderClose(void *iocontext) {
 
 static int opcZipLoaderSkip(void *iocontext) {
     struct OPC_ZIPLOADER_IO_HELPER_STRUCT *helper=(struct OPC_ZIPLOADER_IO_HELPER_STRUCT *)iocontext;
-    OPC_ASSERT(helper->info.compressed_size>0); // does not work for ZIP files written in stream mode
+    OPC_ASSERT(helper->info.compressed_size>0 || 0==helper->info.uncompressed_size); // does not work for ZIP files written in stream mode
     opc_error_t err=opcZipRawSkipFileData(helper->io, &helper->rawBuffer, helper->info.compressed_size);
     return (OPC_ERROR_NONE==err?0:-1);
 }

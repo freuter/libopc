@@ -469,9 +469,9 @@ static opc_error_t opcContainerFree(opcContainer *c) {
 }
 
 static void opcContainerDumpString(FILE *out, const xmlChar *str, opc_uint32_t max_len, opc_bool_t new_line) {
-    opc_uint32_t len=xmlStrlen(str);
+    opc_uint32_t len=(NULL!=str?xmlStrlen(str):0);
     if (len<=max_len) {
-        fputs((const char *)str, out);
+        if (NULL!=str) fputs((const char *)str, out);
         for(opc_uint32_t i=len;i<max_len;i++) fputc(' ', out);
     } else {
         static const char prefix[]="...";
@@ -1012,19 +1012,19 @@ static void opcContainerWriteUtf8(opcContainerOutputStream *out, const xmlChar *
     for(;0!=*str; str++) {
         switch(*str) {
         case '"':
-            OPC_ENSURE(1==opcContainerWriteOutputStream(out, _X("&quot;"), 6));
+            OPC_ENSURE(6==opcContainerWriteOutputStream(out, _X("&quot;"), 6));
             break;
         case '\'':
-            OPC_ENSURE(1==opcContainerWriteOutputStream(out, _X("&apos;"), 6));
+            OPC_ENSURE(6==opcContainerWriteOutputStream(out, _X("&apos;"), 6));
             break;
         case '&':
-            OPC_ENSURE(1==opcContainerWriteOutputStream(out, _X("&amp;"), 5));
+            OPC_ENSURE(5==opcContainerWriteOutputStream(out, _X("&amp;"), 5));
             break;
         case '<':
-            OPC_ENSURE(1==opcContainerWriteOutputStream(out, _X("&lt;"), 4));
+            OPC_ENSURE(4==opcContainerWriteOutputStream(out, _X("&lt;"), 4));
             break;
         case '>':
-            OPC_ENSURE(1==opcContainerWriteOutputStream(out, _X("&gt;"), 4));
+            OPC_ENSURE(4==opcContainerWriteOutputStream(out, _X("&gt;"), 4));
             break;
         default:
             OPC_ENSURE(1==opcContainerWriteOutputStream(out, str, 1));
@@ -1256,6 +1256,41 @@ opc_uint32_t opcRelationAdd(opcContainer *container, opcPart src, const xmlChar 
         opcContainerRelation *rel=opcContainerInsertRelation(relation_array, relation_items, rel_id, (NULL!=rel_type?rel_type->type:NULL), 0, dest_part->name);
         if (NULL!=rel) {
             OPC_ASSERT(rel>=*relation_array && rel<*relation_array+*relation_items);
+            OPC_ASSERT(0==rel->target_mode);
+            ret=rel_id;
+        }
+    }
+    return ret;
+}
+
+opc_uint32_t opcRelationAddExternal(opcContainer *container, opcPart src, const xmlChar *rid, const xmlChar *target, const xmlChar *type) {
+    opc_uint32_t ret=-1;
+    opcContainerRelation **relation_array=NULL;
+    opc_uint32_t *relation_items=NULL;
+    if (OPC_PART_INVALID==src) {
+        relation_array=&container->relation_array;
+        relation_items=&container->relation_items;
+    } else {
+        opcContainerPart *src_part=opcContainerInsertPart(container, src, OPC_FALSE);
+        if (NULL!=src_part) {
+            relation_array=&src_part->relation_array;
+            relation_items=&src_part->relation_items;
+        }
+    }
+    opcContainerExternalRelation *_target=insertExternalRelation(container, target, OPC_TRUE);
+    char buf[OPC_MAX_PATH];
+    strncpy(buf, (const char *)rid, OPC_MAX_PATH);
+    opc_uint32_t counter=-1;
+    opc_uint32_t id_len=splitRelPrefix(container, _X(buf), &counter);
+    buf[id_len]=0;
+    opc_uint32_t rel_id=createRelId(container, _X(buf), counter);
+
+    if (NULL!=relation_array && NULL!=_target) {
+        opcContainerRelationType *rel_type=(NULL!=type?opcContainerInsertRelationType(container, type, OPC_TRUE):NULL);
+        opcContainerRelation *rel=opcContainerInsertRelation(relation_array, relation_items, rel_id, (NULL!=rel_type?rel_type->type:NULL), 0, _target->target);
+        if (NULL!=rel) {
+            OPC_ASSERT(rel>=*relation_array && rel<*relation_array+*relation_items);
+            rel->target_mode=1;
             ret=rel_id;
         }
     }
