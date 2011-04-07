@@ -82,8 +82,8 @@ opc_error_t loadSegment(void *iocontext,
             while((ret=read(iocontext, buf, sizeof(buf)))>0) {
                 crc=crc32(crc, (const Bytef*)buf, ret);
             }
-            ok=(info->data_crc==crc);
             OPC_ENSURE(0==close(iocontext));
+            ok=(info->data_crc==crc);
         }
         if (ok) {
             printf("ok\n");
