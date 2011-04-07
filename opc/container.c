@@ -812,10 +812,17 @@ opc_error_t opcContainerCloseInputStream(opcContainerInputStream* stream) {
     return ret;
 }
 
+opcCompressionOption_t opcContainerGetInputStreamCompressionOption(opcContainerInputStream* stream) {
+    opcCompressionOption_t ret=OPC_COMPRESSIONOPTION_NONE;
+    if (8==stream->stream->inflateState.compression_method) {
+        // for now its just enough to know that we have a compression...
+        ret=OPC_COMPRESSIONOPTION_NORMAL; //@TODO look at stream to figure out real compression i.e. NORMAL, FAST, etc...
+    }
+    return ret;
+}
 
 
-//@TODO add compression method etc..
-opcContainerOutputStream* opcContainerCreateOutputStreamEx(opcContainer *container, const xmlChar *name, opc_bool_t rels_segment) {
+opcContainerOutputStream* opcContainerCreateOutputStreamEx(opcContainer *container, const xmlChar *name, opc_bool_t rels_segment, opcCompressionOption_t compression_option) {
     opcContainerOutputStream* ret=NULL;
     opc_uint32_t *first_segment=NULL;
     opc_uint32_t *last_segment=NULL;
@@ -826,6 +833,26 @@ opcContainerOutputStream* opcContainerCreateOutputStreamEx(opcContainer *contain
         if (NULL!=ret) {
             opc_bzero_mem(ret, sizeof(*ret));
             ret->container=container;
+            opc_uint16_t compression_method=0; // no compression by default
+            opc_uint16_t bit_flag=0;
+            switch(compression_option) {
+            case OPC_COMPRESSIONOPTION_NORMAL:
+                compression_method=8;
+                bit_flag|=0<<1;
+                break;
+            case OPC_COMPRESSIONOPTION_MAXIMUM:
+                compression_method=8;
+                bit_flag|=1<<1;
+                break;
+            case OPC_COMPRESSIONOPTION_FAST:
+                compression_method=8;
+                bit_flag|=2<<1;
+                break;
+            case OPC_COMPRESSIONOPTION_SUPERFAST:
+                compression_method=8;
+                bit_flag|=3<<1;
+                break;
+            }
             ret->stream=opcZipCreateOutputStream(container->storage, first_segment, name, rels_segment, 0, 0, 8, 6);
             ret->partName=name;
             ret->rels_segment=rels_segment;
@@ -837,8 +864,8 @@ opcContainerOutputStream* opcContainerCreateOutputStreamEx(opcContainer *contain
     return ret;
 }
 
-opcContainerOutputStream* opcContainerCreateOutputStream(opcContainer *container, const xmlChar *name) {
-    return opcContainerCreateOutputStreamEx(container, name, OPC_FALSE);
+opcContainerOutputStream* opcContainerCreateOutputStream(opcContainer *container, const xmlChar *name, opcCompressionOption_t compression_option) {
+    return opcContainerCreateOutputStreamEx(container, name, OPC_FALSE, compression_option);
 }
 
 opc_uint32_t opcContainerWriteOutputStream(opcContainerOutputStream* stream, const opc_uint8_t *buffer, opc_uint32_t buffer_len) {
@@ -1047,7 +1074,7 @@ static void opcContainerWriteUtf8(opcContainerOutputStream *out, const xmlChar *
 
 
 static void opcContainerWriteContentTypes(opcContainer *c) {
-    opcContainerOutputStream *out=opcContainerCreateOutputStreamEx(c, OPC_SEGMENT_CONTENTTYPES, OPC_FALSE);
+    opcContainerOutputStream *out=opcContainerCreateOutputStreamEx(c, OPC_SEGMENT_CONTENTTYPES, OPC_FALSE, OPC_COMPRESSIONOPTION_NORMAL);
     if (NULL!=out) {
         opcContainerWriteUtf8Raw(out, _X("<Types xmlns=\"http://schemas.openxmlformats.org/package/2006/content-types\">"));
         for(opc_uint32_t i=0;i<c->extension_items;i++) {
@@ -1103,7 +1130,7 @@ static void opcHelperCalcRelPath(xmlChar *rel_path, opc_uint32_t rel_path_max, c
 }
 
 static void opcContainerWriteRels(opcContainer *c, const xmlChar *part_name, opcContainerRelation *relation_array, opc_uint32_t relation_items) {
-    opcContainerOutputStream *out=opcContainerCreateOutputStreamEx(c, part_name, OPC_TRUE);
+    opcContainerOutputStream *out=opcContainerCreateOutputStreamEx(c, part_name, OPC_TRUE, OPC_COMPRESSIONOPTION_NORMAL);
     if (NULL!=out) {
         opcContainerWriteUtf8Raw(out, _X("<Relationships xmlns=\"http://schemas.openxmlformats.org/package/2006/relationships\">"));
         for(opc_uint32_t i=0;i<relation_items;i++) {

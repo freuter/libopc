@@ -201,7 +201,7 @@ extern "C" {
 
     opcXmlReader* opcXmlReaderOpenEx(opcContainer *container, const xmlChar *partName, opc_bool_t rels_segment, const char * URL, const char * encoding, int options);
     opcContainerInputStream* opcContainerOpenInputStreamEx(opcContainer *container, const xmlChar *name, opc_bool_t rels_segment);
-    opcContainerOutputStream* opcContainerCreateOutputStreamEx(opcContainer *container, const xmlChar *name, opc_bool_t rels_segment);
+    opcContainerOutputStream* opcContainerCreateOutputStreamEx(opcContainer *container, const xmlChar *name, opc_bool_t rels_segment, opcCompressionOption_t compression_option);
 
 
     opcContainerExtension *opcContainerInsertExtension(opcContainer *container, const xmlChar *extension, opc_bool_t insert);

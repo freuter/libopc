@@ -46,6 +46,7 @@ extern "C" {
     opcContainerInputStream* opcContainerOpenInputStream(opcContainer *container, const xmlChar *name);
     opc_uint32_t opcContainerReadInputStream(opcContainerInputStream* stream, opc_uint8_t *buffer, opc_uint32_t buffer_len);
     opc_error_t opcContainerCloseInputStream(opcContainerInputStream* stream);
+    opcCompressionOption_t opcContainerGetInputStreamCompressionOption(opcContainerInputStream* stream);
 
 #ifdef __cplusplus
 } /* extern "C" */
