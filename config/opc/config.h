@@ -53,7 +53,11 @@ extern "C" {
 #endif
 
 #define OPC_ASSERT(e) assert(e)
+#ifdef NDEBUG
+#define OPC_ENSURE(e) (void)(e)
+#else
 #define OPC_ENSURE(e) assert(e)
+#endif
 #define OPC_TRUE (0==0)
 #define OPC_FALSE (0==1)
 
