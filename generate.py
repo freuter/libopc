@@ -321,7 +321,7 @@ def generateVCXPROJ(conf, ctx, lib, type):
         out.write("    <CharacterSet>Unicode</CharacterSet>\n");
         out.write("  </PropertyGroup>\n");
         out.write("  <PropertyGroup Condition=\"'$(Configuration)|$(Platform)'=='Release|Win32'\" Label=\"Configuration\">\n");
-        out.write("    <ConfigurationType>StaticLibrary</ConfigurationType>\n");
+        out.write("    <ConfigurationType>"+type+"</ConfigurationType>\n");
         out.write("    <UseDebugLibraries>false</UseDebugLibraries>\n");
         out.write("    <WholeProgramOptimization>true</WholeProgramOptimization>\n");
         out.write("    <CharacterSet>Unicode</CharacterSet>\n");
