@@ -677,8 +677,29 @@ static opc_error_t opcZipRawSkipFileData(opcIO_t *io, opcFileRawBuffer *raw, opc
     return raw->state.err;
 }
 
-static opc_error_t opcZipRawReadDataDescriptor(opcIO_t *io, opcFileRawBuffer *raw, opc_uint16_t bit_flag, opc_uint32_t *compressed_size, opc_uint32_t *uncompressed_size, opc_uint32_t *crc32) {
-    return OPC_ERROR_NONE;
+static opc_error_t opcZipRawReadDataDescriptor(opcIO_t *io, opcFileRawBuffer *raw, opc_uint16_t bit_flag, opc_uint32_t *compressed_size, opc_uint32_t *uncompressed_size, opc_uint32_t *crc32, opc_uint32_t *trailing_bytes) {
+    OPC_ASSERT(0==*trailing_bytes);
+    if (0x8==(bit_flag & 0x8) && OPC_ERROR_NONE==raw->state.err) {
+        // streaming mode
+        OPC_ASSERT(0==*compressed_size);
+        opc_uint32_t sig=opcZipRawPeekHeaderSignature(io, raw);
+        if (0x08074b50==sig) {
+            opc_uint32_t header_signature;
+            OPC_ENSURE(4==opcZipRawReadU32(io, raw, &header_signature) && header_signature==sig);
+            *trailing_bytes+=4;
+        }
+        if (OPC_ERROR_NONE==raw->state.err) {
+            if ((4==opcZipRawReadU32(io, raw, crc32))
+            && (4==opcZipRawReadU32(io, raw, compressed_size))
+            && (4==opcZipRawReadU32(io, raw, uncompressed_size))) {
+                OPC_ASSERT(OPC_ERROR_NONE==raw->state.err);
+                *trailing_bytes+=3*4;
+            } else if (OPC_ERROR_NONE==raw->state.err) {
+                raw->state.err=OPC_ERROR_STREAM;
+            }
+        }
+    }
+    return raw->state.err;
 }
 
 static opc_error_t opcZipInitInflateState(opcFileRawState *rawState,
@@ -767,7 +788,7 @@ static int opcZipLoaderRead(void *iocontext, char *buffer, int len) {
 
 static int opcZipLoaderClose(void *iocontext) {
     struct OPC_ZIPLOADER_IO_HELPER_STRUCT *helper=(struct OPC_ZIPLOADER_IO_HELPER_STRUCT *)iocontext;
-    opc_error_t err=opcZipRawReadDataDescriptor(helper->io, &helper->rawBuffer, helper->info.bit_flag, &helper->info.compressed_size, &helper->info.uncompressed_size, &helper->info.data_crc);
+    opc_error_t err=opcZipRawReadDataDescriptor(helper->io, &helper->rawBuffer, helper->info.bit_flag, &helper->info.compressed_size, &helper->info.uncompressed_size, &helper->info.data_crc, &helper->info.trailing_bytes);
     if (OPC_ERROR_NONE==err) {
         err=opcZipCleanupInflateState(&helper->rawBuffer.state, helper->info.compressed_size, helper->info.uncompressed_size, &helper->inflateState);
     }
@@ -776,8 +797,30 @@ static int opcZipLoaderClose(void *iocontext) {
 
 static int opcZipLoaderSkip(void *iocontext) {
     struct OPC_ZIPLOADER_IO_HELPER_STRUCT *helper=(struct OPC_ZIPLOADER_IO_HELPER_STRUCT *)iocontext;
-    OPC_ASSERT(helper->info.compressed_size>0 || 0==helper->info.uncompressed_size); // does not work for ZIP files written in stream mode
-    opc_error_t err=opcZipRawSkipFileData(helper->io, &helper->rawBuffer, helper->info.compressed_size);
+    opc_error_t err=OPC_ERROR_NONE;
+    if (0x8==(helper->info.bit_flag & 0x8)) {
+        // streaming mode
+        if (8==helper->info.compression_method) {
+            if (0==opcZipLoaderOpen(iocontext)) {
+                char buf[OPC_DEFLATE_BUFFER_SIZE];
+                int ret=0;
+                while ((ret=opcZipLoaderRead(iocontext, buf, sizeof(buf)))>0);
+                if (OPC_ERROR_NONE==err && ret!=0) {
+                    err=OPC_ERROR_STREAM;
+                }
+                if (opcZipLoaderClose(iocontext)!=0 && OPC_ERROR_NONE==err) {
+                    err=OPC_ERROR_STREAM;
+                }
+            } else {
+                err=OPC_ERROR_STREAM;
+            }
+        } else {
+            OPC_ASSERT(0==helper->info.compression_method);
+            err=OPC_ERROR_UNSUPPORTED_COMPRESSION; // store not supported!
+        }
+    } else {
+        err=opcZipRawSkipFileData(helper->io, &helper->rawBuffer, helper->info.compressed_size);
+    }
     return (OPC_ERROR_NONE==err?0:-1);
 }
 
@@ -791,6 +834,7 @@ opc_error_t opcZipLoader(opcIO_t *io, void *userctx, opcZipLoaderSegmentCallback
         opcZipRawReadLocalFileEx(io, &helper.rawBuffer, helper.info.name, sizeof(helper.info.name), &helper.info.name_len,
         &helper.info.header_size, &helper.info.min_header_size, &helper.info.compressed_size, &helper.info.uncompressed_size, &helper.info.bit_flag, &helper.info.data_crc, &helper.info.compression_method, &helper.info.stream_ofs, &helper.info.growth_hint)) {
         OPC_ASSERT(helper.info.min_header_size<=helper.info.header_size);
+        helper.info.trailing_bytes=0;
         opc_uint32_t const padding=helper.info.header_size-helper.info.min_header_size;
         OPC_ASSERT(NULL!=segmentCallback);
         OPC_ENSURE(OPC_ERROR_NONE==opcHelperSplitFilename(helper.info.name, helper.info.name_len, &helper.info.segment_number, &helper.info.last_segment, &helper.info.rels_segment));
@@ -913,7 +957,7 @@ static opc_uint32_t opcZipAppendSegmentEx(opcZip *zip,
 opc_uint32_t opcZipLoadSegment(opcZip *zip, const xmlChar *partName, opc_bool_t rels_segment, opcZipSegmentInfo_t *info) {
     opc_uint32_t ret=opcZipAppendSegmentEx(zip, 
                                            info->stream_ofs,
-                                           info->header_size+info->compressed_size,
+                                           info->header_size+info->compressed_size+info->trailing_bytes,
                                            info->header_size-info->min_header_size,
                                            info->min_header_size, 
                                            info->bit_flag,

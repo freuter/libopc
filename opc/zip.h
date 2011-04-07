@@ -57,6 +57,7 @@ extern "C" {
         opc_bool_t   rels_segment;
         opc_uint32_t header_size;
         opc_uint32_t min_header_size;
+        opc_uint32_t trailing_bytes;
         opc_uint32_t compressed_size;
         opc_uint32_t uncompressed_size;
         opc_uint16_t bit_flag;

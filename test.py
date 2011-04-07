@@ -139,7 +139,7 @@ if __name__ == "__main__":
 #	sys.exit(0)
 
 	if None==generate_path:
-#		opc_zipread_test("simple.zip") // fails --- streaming mode is not yet implemented.
+		opc_zipread_test("stream.zip") # fails --- streaming mode is not yet implemented.
 		opc_zipread_test("OOXMLI1.docx")
 		opc_zipread_test("OOXMLI4.docx")
 
