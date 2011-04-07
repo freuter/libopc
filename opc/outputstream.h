@@ -41,9 +41,10 @@
 #ifdef __cplusplus
 extern "C" {
 #endif    
+
     typedef struct OPC_CONTAINER_OUTPUTSTREAM_STRUCT opcContainerOutputStream;
 
-    opcContainerOutputStream* opcContainerCreateOutputStream(opcContainer *container, const xmlChar *name);
+    opcContainerOutputStream* opcContainerCreateOutputStream(opcContainer *container, const xmlChar *name, opcCompressionOption_t compression_option);
     opc_uint32_t opcContainerWriteOutputStream(opcContainerOutputStream* stream, const opc_uint8_t *buffer, opc_uint32_t buffer_len);
     opc_error_t opcContainerCloseOutputStream(opcContainerOutputStream* stream);
         

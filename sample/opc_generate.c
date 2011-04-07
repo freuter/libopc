@@ -189,7 +189,7 @@ static void generate_parts(opcContainer *c, FILE *out) {
                 fprintf(out, "     if (OPC_PART_INVALID==ret && OPC_PART_INVALID!=(ret=opcPartCreate(c, _X(\"%s\"), NULL, 0))) {\n", part);
             }
             fprintf(out, "         //adding content\n");
-            fprintf(out, "          opcContainerOutputStream *out=opcContainerCreateOutputStream(c, ret);\n");
+            fprintf(out, "          opcContainerOutputStream *out=opcContainerCreateOutputStream(c, ret, OPC_COMPRESSIONOPTION_NORMAL);\n");
             fprintf(out, "          if (NULL!=out) {\n");
             const xmlChar *type=opcPartGetType(c, part);
             opc_uint32_t type_len=(NULL!=type?xmlStrlen(type):0);

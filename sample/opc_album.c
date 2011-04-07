@@ -42,7 +42,7 @@ static opcPart create_docProps_app_xml(opcContainer *c) {
      opcPart ret=opcPartOpen(c, _X("docProps/app.xml"), _X("application/vnd.openxmlformats-officedocument.extended-properties+xml"), 0);
      if (OPC_PART_INVALID==ret && OPC_PART_INVALID!=(ret=opcPartCreate(c, _X("docProps/app.xml"), _X("application/vnd.openxmlformats-officedocument.extended-properties+xml"), 0))) {
          //adding content
-          opcContainerOutputStream *out=opcContainerCreateOutputStream(c, ret);
+          opcContainerOutputStream *out=opcContainerCreateOutputStream(c, ret, OPC_COMPRESSIONOPTION_NORMAL);
           if (NULL!=out) {
               writes(out, "<Properties xmlns=\"http://schemas.openxmlformats.org/officeDocument/2006/extended-properties\" xmlns:vt=\"http://schemas.openxmlformats.org/officeDocument/2006/docPropsVTypes\">\n");
               writes(out, "  <TotalTime>0</TotalTime>\n");
@@ -94,7 +94,7 @@ static opcPart create_docProps_core_xml(opcContainer *c) {
      opcPart ret=opcPartOpen(c, _X("docProps/core.xml"), _X("application/vnd.openxmlformats-package.core-properties+xml"), 0);
      if (OPC_PART_INVALID==ret && OPC_PART_INVALID!=(ret=opcPartCreate(c, _X("docProps/core.xml"), _X("application/vnd.openxmlformats-package.core-properties+xml"), 0))) {
          //adding content
-          opcContainerOutputStream *out=opcContainerCreateOutputStream(c, ret);
+          opcContainerOutputStream *out=opcContainerCreateOutputStream(c, ret, OPC_COMPRESSIONOPTION_NORMAL);
           if (NULL!=out) {
               writes(out, "<cp:coreProperties xmlns:cp=\"http://schemas.openxmlformats.org/package/2006/metadata/core-properties\" xmlns:dc=\"http://purl.org/dc/elements/1.1/\" xmlns:dcterms=\"http://purl.org/dc/terms/\" xmlns:dcmitype=\"http://purl.org/dc/dcmitype/\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\">\n");
               writes(out, "  <dc:title>libOPC</dc:title>\n");
@@ -116,7 +116,7 @@ static opcPart create_docProps_thumbnail_jpeg(opcContainer *c) {
      opcPart ret=opcPartOpen(c, _X("docProps/thumbnail.jpeg"), NULL, 0);
      if (OPC_PART_INVALID==ret && OPC_PART_INVALID!=(ret=opcPartCreate(c, _X("docProps/thumbnail.jpeg"), NULL, 0))) {
          //adding content
-          opcContainerOutputStream *out=opcContainerCreateOutputStream(c, ret);
+          opcContainerOutputStream *out=opcContainerCreateOutputStream(c, ret, OPC_COMPRESSIONOPTION_NORMAL);
           if (NULL!=out) {
               static opc_uint8_t data[]={
                 0xFF, 0xD8, 0xFF, 0xE0, 0x00, 0x10, 0x4A, 0x46, 0x49, 0x46, 0x00, 0x01, 0x01, 0x01, 0x00, 0x60, 0x00, 0x60, 0x00, 0x00, 0xFF, 0xDB, 0x00, 0x43, 0x00, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0xFF, 0xDB, 0x00, 0x43, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01
@@ -184,7 +184,7 @@ static opcPart create_ppt_presProps_xml(opcContainer *c) {
      opcPart ret=opcPartOpen(c, _X("ppt/presProps.xml"), _X("application/vnd.openxmlformats-officedocument.presentationml.presProps+xml"), 0);
      if (OPC_PART_INVALID==ret && OPC_PART_INVALID!=(ret=opcPartCreate(c, _X("ppt/presProps.xml"), _X("application/vnd.openxmlformats-officedocument.presentationml.presProps+xml"), 0))) {
          //adding content
-          opcContainerOutputStream *out=opcContainerCreateOutputStream(c, ret);
+          opcContainerOutputStream *out=opcContainerCreateOutputStream(c, ret, OPC_COMPRESSIONOPTION_NORMAL);
           if (NULL!=out) {
               writes(out, "<p:presentationPr xmlns:a=\"http://schemas.openxmlformats.org/drawingml/2006/main\" xmlns:r=\"http://schemas.openxmlformats.org/officeDocument/2006/relationships\" xmlns:p=\"http://schemas.openxmlformats.org/presentationml/2006/main\"/>\n");
               writes(out, "");
@@ -199,7 +199,7 @@ static opcPart create_ppt_presentation_xml(opcContainer *c) {
      opcPart ret=opcPartOpen(c, _X("ppt/presentation.xml"), _X("application/vnd.openxmlformats-officedocument.presentationml.presentation.main+xml"), 0);
      if (OPC_PART_INVALID==ret && OPC_PART_INVALID!=(ret=opcPartCreate(c, _X("ppt/presentation.xml"), _X("application/vnd.openxmlformats-officedocument.presentationml.presentation.main+xml"), 0))) {
          //adding content
-          opcContainerOutputStream *out=opcContainerCreateOutputStream(c, ret);
+          opcContainerOutputStream *out=opcContainerCreateOutputStream(c, ret, OPC_COMPRESSIONOPTION_NORMAL);
           if (NULL!=out) {
               writes(out, "<p:presentation xmlns:a=\"http://schemas.openxmlformats.org/drawingml/2006/main\" xmlns:r=\"http://schemas.openxmlformats.org/officeDocument/2006/relationships\" xmlns:p=\"http://schemas.openxmlformats.org/presentationml/2006/main\" saveSubsetFonts=\"1\">\n");
               writes(out, "  <p:sldMasterIdLst>\n");
@@ -324,7 +324,7 @@ static opcPart create_ppt_slideLayouts_slideLayout1_xml(opcContainer *c) {
      opcPart ret=opcPartOpen(c, _X("ppt/slideLayouts/slideLayout1.xml"), _X("application/vnd.openxmlformats-officedocument.presentationml.slideLayout+xml"), 0);
      if (OPC_PART_INVALID==ret && OPC_PART_INVALID!=(ret=opcPartCreate(c, _X("ppt/slideLayouts/slideLayout1.xml"), _X("application/vnd.openxmlformats-officedocument.presentationml.slideLayout+xml"), 0))) {
          //adding content
-          opcContainerOutputStream *out=opcContainerCreateOutputStream(c, ret);
+          opcContainerOutputStream *out=opcContainerCreateOutputStream(c, ret, OPC_COMPRESSIONOPTION_NORMAL);
           if (NULL!=out) {
               writes(out, "<p:sldLayout xmlns:a=\"http://schemas.openxmlformats.org/drawingml/2006/main\" xmlns:r=\"http://schemas.openxmlformats.org/officeDocument/2006/relationships\" xmlns:p=\"http://schemas.openxmlformats.org/presentationml/2006/main\" type=\"title\" preserve=\"1\">\n");
               writes(out, "  <p:cSld name=\"Title Slide\">\n");
@@ -573,7 +573,7 @@ static opcPart create_ppt_slideLayouts_slideLayout10_xml(opcContainer *c) {
      opcPart ret=opcPartOpen(c, _X("ppt/slideLayouts/slideLayout10.xml"), _X("application/vnd.openxmlformats-officedocument.presentationml.slideLayout+xml"), 0);
      if (OPC_PART_INVALID==ret && OPC_PART_INVALID!=(ret=opcPartCreate(c, _X("ppt/slideLayouts/slideLayout10.xml"), _X("application/vnd.openxmlformats-officedocument.presentationml.slideLayout+xml"), 0))) {
          //adding content
-          opcContainerOutputStream *out=opcContainerCreateOutputStream(c, ret);
+          opcContainerOutputStream *out=opcContainerCreateOutputStream(c, ret, OPC_COMPRESSIONOPTION_NORMAL);
           if (NULL!=out) {
               writes(out, "<p:sldLayout xmlns:a=\"http://schemas.openxmlformats.org/drawingml/2006/main\" xmlns:r=\"http://schemas.openxmlformats.org/officeDocument/2006/relationships\" xmlns:p=\"http://schemas.openxmlformats.org/presentationml/2006/main\" type=\"vertTx\" preserve=\"1\">\n");
               writes(out, "  <p:cSld name=\"Title and Vertical Text\">\n");
@@ -750,7 +750,7 @@ static opcPart create_ppt_slideLayouts_slideLayout11_xml(opcContainer *c) {
      opcPart ret=opcPartOpen(c, _X("ppt/slideLayouts/slideLayout11.xml"), _X("application/vnd.openxmlformats-officedocument.presentationml.slideLayout+xml"), 0);
      if (OPC_PART_INVALID==ret && OPC_PART_INVALID!=(ret=opcPartCreate(c, _X("ppt/slideLayouts/slideLayout11.xml"), _X("application/vnd.openxmlformats-officedocument.presentationml.slideLayout+xml"), 0))) {
          //adding content
-          opcContainerOutputStream *out=opcContainerCreateOutputStream(c, ret);
+          opcContainerOutputStream *out=opcContainerCreateOutputStream(c, ret, OPC_COMPRESSIONOPTION_NORMAL);
           if (NULL!=out) {
               writes(out, "<p:sldLayout xmlns:a=\"http://schemas.openxmlformats.org/drawingml/2006/main\" xmlns:r=\"http://schemas.openxmlformats.org/officeDocument/2006/relationships\" xmlns:p=\"http://schemas.openxmlformats.org/presentationml/2006/main\" type=\"vertTitleAndTx\" preserve=\"1\">\n");
               writes(out, "  <p:cSld name=\"Vertical Title and Text\">\n");
@@ -937,7 +937,7 @@ static opcPart create_ppt_slideLayouts_slideLayout2_xml(opcContainer *c) {
      opcPart ret=opcPartOpen(c, _X("ppt/slideLayouts/slideLayout2.xml"), _X("application/vnd.openxmlformats-officedocument.presentationml.slideLayout+xml"), 0);
      if (OPC_PART_INVALID==ret && OPC_PART_INVALID!=(ret=opcPartCreate(c, _X("ppt/slideLayouts/slideLayout2.xml"), _X("application/vnd.openxmlformats-officedocument.presentationml.slideLayout+xml"), 0))) {
          //adding content
-          opcContainerOutputStream *out=opcContainerCreateOutputStream(c, ret);
+          opcContainerOutputStream *out=opcContainerCreateOutputStream(c, ret, OPC_COMPRESSIONOPTION_NORMAL);
           if (NULL!=out) {
               writes(out, "<p:sldLayout xmlns:a=\"http://schemas.openxmlformats.org/drawingml/2006/main\" xmlns:r=\"http://schemas.openxmlformats.org/officeDocument/2006/relationships\" xmlns:p=\"http://schemas.openxmlformats.org/presentationml/2006/main\" type=\"obj\" preserve=\"1\">\n");
               writes(out, "  <p:cSld name=\"Title and Content\">\n");
@@ -1114,7 +1114,7 @@ static opcPart create_ppt_slideLayouts_slideLayout3_xml(opcContainer *c) {
      opcPart ret=opcPartOpen(c, _X("ppt/slideLayouts/slideLayout3.xml"), _X("application/vnd.openxmlformats-officedocument.presentationml.slideLayout+xml"), 0);
      if (OPC_PART_INVALID==ret && OPC_PART_INVALID!=(ret=opcPartCreate(c, _X("ppt/slideLayouts/slideLayout3.xml"), _X("application/vnd.openxmlformats-officedocument.presentationml.slideLayout+xml"), 0))) {
          //adding content
-          opcContainerOutputStream *out=opcContainerCreateOutputStream(c, ret);
+          opcContainerOutputStream *out=opcContainerCreateOutputStream(c, ret, OPC_COMPRESSIONOPTION_NORMAL);
           if (NULL!=out) {
               writes(out, "<p:sldLayout xmlns:a=\"http://schemas.openxmlformats.org/drawingml/2006/main\" xmlns:r=\"http://schemas.openxmlformats.org/officeDocument/2006/relationships\" xmlns:p=\"http://schemas.openxmlformats.org/presentationml/2006/main\" type=\"secHead\" preserve=\"1\">\n");
               writes(out, "  <p:cSld name=\"Section Header\">\n");
@@ -1367,7 +1367,7 @@ static opcPart create_ppt_slideLayouts_slideLayout4_xml(opcContainer *c) {
      opcPart ret=opcPartOpen(c, _X("ppt/slideLayouts/slideLayout4.xml"), _X("application/vnd.openxmlformats-officedocument.presentationml.slideLayout+xml"), 0);
      if (OPC_PART_INVALID==ret && OPC_PART_INVALID!=(ret=opcPartCreate(c, _X("ppt/slideLayouts/slideLayout4.xml"), _X("application/vnd.openxmlformats-officedocument.presentationml.slideLayout+xml"), 0))) {
          //adding content
-          opcContainerOutputStream *out=opcContainerCreateOutputStream(c, ret);
+          opcContainerOutputStream *out=opcContainerCreateOutputStream(c, ret, OPC_COMPRESSIONOPTION_NORMAL);
           if (NULL!=out) {
               writes(out, "<p:sldLayout xmlns:a=\"http://schemas.openxmlformats.org/drawingml/2006/main\" xmlns:r=\"http://schemas.openxmlformats.org/officeDocument/2006/relationships\" xmlns:p=\"http://schemas.openxmlformats.org/presentationml/2006/main\" type=\"twoObj\" preserve=\"1\">\n");
               writes(out, "  <p:cSld name=\"Two Content\">\n");
@@ -1662,7 +1662,7 @@ static opcPart create_ppt_slideLayouts_slideLayout5_xml(opcContainer *c) {
      opcPart ret=opcPartOpen(c, _X("ppt/slideLayouts/slideLayout5.xml"), _X("application/vnd.openxmlformats-officedocument.presentationml.slideLayout+xml"), 0);
      if (OPC_PART_INVALID==ret && OPC_PART_INVALID!=(ret=opcPartCreate(c, _X("ppt/slideLayouts/slideLayout5.xml"), _X("application/vnd.openxmlformats-officedocument.presentationml.slideLayout+xml"), 0))) {
          //adding content
-          opcContainerOutputStream *out=opcContainerCreateOutputStream(c, ret);
+          opcContainerOutputStream *out=opcContainerCreateOutputStream(c, ret, OPC_COMPRESSIONOPTION_NORMAL);
           if (NULL!=out) {
               writes(out, "<p:sldLayout xmlns:a=\"http://schemas.openxmlformats.org/drawingml/2006/main\" xmlns:r=\"http://schemas.openxmlformats.org/officeDocument/2006/relationships\" xmlns:p=\"http://schemas.openxmlformats.org/presentationml/2006/main\" type=\"twoTxTwoObj\" preserve=\"1\">\n");
               writes(out, "  <p:cSld name=\"Comparison\">\n");
@@ -2091,7 +2091,7 @@ static opcPart create_ppt_slideLayouts_slideLayout6_xml(opcContainer *c) {
      opcPart ret=opcPartOpen(c, _X("ppt/slideLayouts/slideLayout6.xml"), _X("application/vnd.openxmlformats-officedocument.presentationml.slideLayout+xml"), 0);
      if (OPC_PART_INVALID==ret && OPC_PART_INVALID!=(ret=opcPartCreate(c, _X("ppt/slideLayouts/slideLayout6.xml"), _X("application/vnd.openxmlformats-officedocument.presentationml.slideLayout+xml"), 0))) {
          //adding content
-          opcContainerOutputStream *out=opcContainerCreateOutputStream(c, ret);
+          opcContainerOutputStream *out=opcContainerCreateOutputStream(c, ret, OPC_COMPRESSIONOPTION_NORMAL);
           if (NULL!=out) {
               writes(out, "<p:sldLayout xmlns:a=\"http://schemas.openxmlformats.org/drawingml/2006/main\" xmlns:r=\"http://schemas.openxmlformats.org/officeDocument/2006/relationships\" xmlns:p=\"http://schemas.openxmlformats.org/presentationml/2006/main\" type=\"titleOnly\" preserve=\"1\">\n");
               writes(out, "  <p:cSld name=\"Title Only\">\n");
@@ -2216,7 +2216,7 @@ static opcPart create_ppt_slideLayouts_slideLayout7_xml(opcContainer *c) {
      opcPart ret=opcPartOpen(c, _X("ppt/slideLayouts/slideLayout7.xml"), _X("application/vnd.openxmlformats-officedocument.presentationml.slideLayout+xml"), 0);
      if (OPC_PART_INVALID==ret && OPC_PART_INVALID!=(ret=opcPartCreate(c, _X("ppt/slideLayouts/slideLayout7.xml"), _X("application/vnd.openxmlformats-officedocument.presentationml.slideLayout+xml"), 0))) {
          //adding content
-          opcContainerOutputStream *out=opcContainerCreateOutputStream(c, ret);
+          opcContainerOutputStream *out=opcContainerCreateOutputStream(c, ret, OPC_COMPRESSIONOPTION_NORMAL);
           if (NULL!=out) {
               writes(out, "<p:sldLayout xmlns:a=\"http://schemas.openxmlformats.org/drawingml/2006/main\" xmlns:r=\"http://schemas.openxmlformats.org/officeDocument/2006/relationships\" xmlns:p=\"http://schemas.openxmlformats.org/presentationml/2006/main\" type=\"blank\" preserve=\"1\">\n");
               writes(out, "  <p:cSld name=\"Blank\">\n");
@@ -2318,7 +2318,7 @@ static opcPart create_ppt_slideLayouts_slideLayout8_xml(opcContainer *c) {
      opcPart ret=opcPartOpen(c, _X("ppt/slideLayouts/slideLayout8.xml"), _X("application/vnd.openxmlformats-officedocument.presentationml.slideLayout+xml"), 0);
      if (OPC_PART_INVALID==ret && OPC_PART_INVALID!=(ret=opcPartCreate(c, _X("ppt/slideLayouts/slideLayout8.xml"), _X("application/vnd.openxmlformats-officedocument.presentationml.slideLayout+xml"), 0))) {
          //adding content
-          opcContainerOutputStream *out=opcContainerCreateOutputStream(c, ret);
+          opcContainerOutputStream *out=opcContainerCreateOutputStream(c, ret, OPC_COMPRESSIONOPTION_NORMAL);
           if (NULL!=out) {
               writes(out, "<p:sldLayout xmlns:a=\"http://schemas.openxmlformats.org/drawingml/2006/main\" xmlns:r=\"http://schemas.openxmlformats.org/officeDocument/2006/relationships\" xmlns:p=\"http://schemas.openxmlformats.org/presentationml/2006/main\" type=\"objTx\" preserve=\"1\">\n");
               writes(out, "  <p:cSld name=\"Content with Caption\">\n");
@@ -2602,7 +2602,7 @@ static opcPart create_ppt_slideLayouts_slideLayout9_xml(opcContainer *c) {
      opcPart ret=opcPartOpen(c, _X("ppt/slideLayouts/slideLayout9.xml"), _X("application/vnd.openxmlformats-officedocument.presentationml.slideLayout+xml"), 0);
      if (OPC_PART_INVALID==ret && OPC_PART_INVALID!=(ret=opcPartCreate(c, _X("ppt/slideLayouts/slideLayout9.xml"), _X("application/vnd.openxmlformats-officedocument.presentationml.slideLayout+xml"), 0))) {
          //adding content
-          opcContainerOutputStream *out=opcContainerCreateOutputStream(c, ret);
+          opcContainerOutputStream *out=opcContainerCreateOutputStream(c, ret, OPC_COMPRESSIONOPTION_NORMAL);
           if (NULL!=out) {
               writes(out, "<p:sldLayout xmlns:a=\"http://schemas.openxmlformats.org/drawingml/2006/main\" xmlns:r=\"http://schemas.openxmlformats.org/officeDocument/2006/relationships\" xmlns:p=\"http://schemas.openxmlformats.org/presentationml/2006/main\" type=\"picTx\" preserve=\"1\">\n");
               writes(out, "  <p:cSld name=\"Picture with Caption\">\n");
@@ -2862,7 +2862,7 @@ static opcPart create_ppt_slideMasters_slideMaster1_xml(opcContainer *c) {
      opcPart ret=opcPartOpen(c, _X("ppt/slideMasters/slideMaster1.xml"), _X("application/vnd.openxmlformats-officedocument.presentationml.slideMaster+xml"), 0);
      if (OPC_PART_INVALID==ret && OPC_PART_INVALID!=(ret=opcPartCreate(c, _X("ppt/slideMasters/slideMaster1.xml"), _X("application/vnd.openxmlformats-officedocument.presentationml.slideMaster+xml"), 0))) {
          //adding content
-          opcContainerOutputStream *out=opcContainerCreateOutputStream(c, ret);
+          opcContainerOutputStream *out=opcContainerCreateOutputStream(c, ret, OPC_COMPRESSIONOPTION_NORMAL);
           if (NULL!=out) {
               writes(out, "<p:sldMaster xmlns:a=\"http://schemas.openxmlformats.org/drawingml/2006/main\" xmlns:r=\"http://schemas.openxmlformats.org/officeDocument/2006/relationships\" xmlns:p=\"http://schemas.openxmlformats.org/presentationml/2006/main\">\n");
               writes(out, "  <p:cSld>\n");
@@ -3390,7 +3390,7 @@ static opcPart create_ppt_slides_slide1_xml(opcContainer *c) {
      opcPart ret=opcPartOpen(c, _X("ppt/slides/slide1.xml"), _X("application/vnd.openxmlformats-officedocument.presentationml.slide+xml"), 0);
      if (OPC_PART_INVALID==ret && OPC_PART_INVALID!=(ret=opcPartCreate(c, _X("ppt/slides/slide1.xml"), _X("application/vnd.openxmlformats-officedocument.presentationml.slide+xml"), 0))) {
          //adding content
-          opcContainerOutputStream *out=opcContainerCreateOutputStream(c, ret);
+          opcContainerOutputStream *out=opcContainerCreateOutputStream(c, ret, OPC_COMPRESSIONOPTION_NORMAL);
           if (NULL!=out) {
               writes(out, "<p:sld xmlns:a=\"http://schemas.openxmlformats.org/drawingml/2006/main\" xmlns:r=\"http://schemas.openxmlformats.org/officeDocument/2006/relationships\" xmlns:p=\"http://schemas.openxmlformats.org/presentationml/2006/main\">\n");
               writes(out, "  <p:cSld>\n");
@@ -3473,7 +3473,7 @@ static opcPart create_ppt_tableStyles_xml(opcContainer *c) {
      opcPart ret=opcPartOpen(c, _X("ppt/tableStyles.xml"), _X("application/vnd.openxmlformats-officedocument.presentationml.tableStyles+xml"), 0);
      if (OPC_PART_INVALID==ret && OPC_PART_INVALID!=(ret=opcPartCreate(c, _X("ppt/tableStyles.xml"), _X("application/vnd.openxmlformats-officedocument.presentationml.tableStyles+xml"), 0))) {
          //adding content
-          opcContainerOutputStream *out=opcContainerCreateOutputStream(c, ret);
+          opcContainerOutputStream *out=opcContainerCreateOutputStream(c, ret, OPC_COMPRESSIONOPTION_NORMAL);
           if (NULL!=out) {
               writes(out, "<a:tblStyleLst xmlns:a=\"http://schemas.openxmlformats.org/drawingml/2006/main\" def=\"{5C22544A-7EE6-4342-B048-85BDC9FD1C3A}\"/>\n");
               writes(out, "");
@@ -3488,7 +3488,7 @@ static opcPart create_ppt_theme_theme1_xml(opcContainer *c) {
      opcPart ret=opcPartOpen(c, _X("ppt/theme/theme1.xml"), _X("application/vnd.openxmlformats-officedocument.theme+xml"), 0);
      if (OPC_PART_INVALID==ret && OPC_PART_INVALID!=(ret=opcPartCreate(c, _X("ppt/theme/theme1.xml"), _X("application/vnd.openxmlformats-officedocument.theme+xml"), 0))) {
          //adding content
-          opcContainerOutputStream *out=opcContainerCreateOutputStream(c, ret);
+          opcContainerOutputStream *out=opcContainerCreateOutputStream(c, ret, OPC_COMPRESSIONOPTION_NORMAL);
           if (NULL!=out) {
               writes(out, "<a:theme xmlns:a=\"http://schemas.openxmlformats.org/drawingml/2006/main\" name=\"Office Theme\">\n");
               writes(out, "  <a:themeElements>\n");
@@ -3782,7 +3782,7 @@ static opcPart create_ppt_viewProps_xml(opcContainer *c) {
      opcPart ret=opcPartOpen(c, _X("ppt/viewProps.xml"), _X("application/vnd.openxmlformats-officedocument.presentationml.viewProps+xml"), 0);
      if (OPC_PART_INVALID==ret && OPC_PART_INVALID!=(ret=opcPartCreate(c, _X("ppt/viewProps.xml"), _X("application/vnd.openxmlformats-officedocument.presentationml.viewProps+xml"), 0))) {
          //adding content
-          opcContainerOutputStream *out=opcContainerCreateOutputStream(c, ret);
+          opcContainerOutputStream *out=opcContainerCreateOutputStream(c, ret, OPC_COMPRESSIONOPTION_NORMAL);
           if (NULL!=out) {
               writes(out, "<p:viewPr xmlns:a=\"http://schemas.openxmlformats.org/drawingml/2006/main\" xmlns:r=\"http://schemas.openxmlformats.org/officeDocument/2006/relationships\" xmlns:p=\"http://schemas.openxmlformats.org/presentationml/2006/main\">\n");
               writes(out, "  <p:normalViewPr>\n");

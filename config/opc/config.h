@@ -84,6 +84,15 @@ extern "C" {
         OPC_ERROR_USER // user triggered an abort
     } opc_error_t;
     
+    typedef enum OPC_COMPRESSIONOPTION_ENUM {
+        OPC_COMPRESSIONOPTION_NONE,
+        OPC_COMPRESSIONOPTION_NORMAL,
+        OPC_COMPRESSIONOPTION_MAXIMUM,
+        OPC_COMPRESSIONOPTION_FAST,
+        OPC_COMPRESSIONOPTION_SUPERFAST
+    } opcCompressionOption_t;
+
+
 #define opc_logf printf
 #define opc_bzero_mem(m,s) memset(m, 0, s)
 
