@@ -70,6 +70,8 @@ extern "C" {
     opcPart opcPartGetFirst(opcContainer *container);
     opcPart opcPartGetNext(opcContainer *container, opcPart part);
 
+    opc_ofs_t opcPartGetSize(opcContainer *c, opcPart part);
+
 #ifdef __cplusplus
 } /* extern "C" */
 #endif    

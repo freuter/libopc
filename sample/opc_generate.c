@@ -196,12 +196,14 @@ static void generate_parts(opcContainer *c, FILE *out) {
             if (type_len>0 && type[type_len-3]=='x' && type[type_len-2]=='m' && type[type_len-1]=='l') {
                 generate_xml_data(c, out, part);
             } else {
-                opcContainerInputStream *in=opcContainerOpenInputStream(c, part);
-                if (NULL!=in) {
-                    generate_binary_data(c, out, in);
-                    fprintf(out, "              opcContainerWriteOutputStream(out, (const opc_uint8_t*)data, sizeof(data));\n");
+                if (opcPartGetSize(c, part)>0) {
+                    opcContainerInputStream *in=opcContainerOpenInputStream(c, part);
+                    if (NULL!=in) {
+                        generate_binary_data(c, out, in);
+                        fprintf(out, "              opcContainerWriteOutputStream(out, (const opc_uint8_t*)data, sizeof(data));\n");
+                    }
+                    opcContainerCloseInputStream(in);
                 }
-                opcContainerCloseInputStream(in);
             }
             fprintf(out, "              opcContainerCloseOutputStream(out);\n");
             fprintf(out, "          }\n");

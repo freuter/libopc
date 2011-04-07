@@ -580,10 +580,12 @@ opc_error_t opcContainerDump(opcContainer *c, FILE *out) {
     opc_uint32_t max_part_name=xmlStrlen(_X("Part")); 
     opc_uint32_t max_part_type=xmlStrlen(_X("Type")); 
     for(opc_uint32_t i=0;i<c->part_items;i++) { 
-        opc_uint32_t const name_len=xmlStrlen(c->part_array[i].name); 
-        if (name_len>max_part_name) max_part_name=name_len;
-        opc_uint32_t const type_len=xmlStrlen(opcPartGetType(c, c->part_array[i].name)); 
-        if (type_len>max_part_type) max_part_type=type_len;
+        if (-1!=c->part_array[i].first_segment_id) { // deleted?
+            opc_uint32_t const name_len=xmlStrlen(c->part_array[i].name); 
+            if (name_len>max_part_name) max_part_name=name_len;
+            opc_uint32_t const type_len=xmlStrlen(opcPartGetType(c, c->part_array[i].name)); 
+            if (type_len>max_part_type) max_part_type=type_len;
+        }
     }
 
     opc_uint32_t max_rel_src=xmlStrlen(_X("Source")); 
@@ -648,8 +650,10 @@ opc_error_t opcContainerDump(opcContainer *c, FILE *out) {
     opcContainerDumpLine(out, '-', max_part_name, OPC_FALSE); fputc('|', out);
     opcContainerDumpLine(out, '-', max_part_type, OPC_TRUE);
     for(opc_uint32_t i=0;i<c->part_items;i++) {
-        opcContainerDumpString(out, c->part_array[i].name, max_part_name, OPC_FALSE); fputc('|', out);
-        opcContainerDumpString(out, opcPartGetType(c, c->part_array[i].name), max_part_type, OPC_TRUE);
+        if (-1!=c->part_array[i].first_segment_id) { // deleted?
+            opcContainerDumpString(out, c->part_array[i].name, max_part_name, OPC_FALSE); fputc('|', out);
+            opcContainerDumpString(out, opcPartGetType(c, c->part_array[i].name), max_part_type, OPC_TRUE);
+        }
     }
     opcContainerDumpLine(out, '-', max_part_name, OPC_FALSE); fputc('|', out);
     opcContainerDumpLine(out, '-', max_part_type, OPC_TRUE);
@@ -675,7 +679,7 @@ opc_error_t opcContainerDump(opcContainer *c, FILE *out) {
                             max_rel_type);
     }
     for(opc_uint32_t i=0;i<c->part_items;i++) { 
-        if (c->part_array[i].relation_items>0) {
+        if (-1!=c->part_array[i].first_segment_id && c->part_array[i].relation_items>0) {
             opcContainerRelDump(c, 
                                 out,
                                 c->part_array[i].name, 
@@ -731,6 +735,14 @@ static opc_error_t opcContainerZipLoaderLoadSegment(void *iocontext,
             OPC_ASSERT(NULL!=part->name); // no name given???
             part->first_segment_id=opcZipLoadSegment(c->storage, part->name, info->rels_segment, info);
             OPC_ASSERT(-1!=part->first_segment_id);  // not loaded???
+            part->last_segment_id=part->first_segment_id;
+
+            if (info->name_len>0 && ('/'==info->name[info->name_len-1] || '\\'==info->name[info->name_len-1])) {
+                // it is a directoy, get rid of it...
+                opcContainerDeletePartEx(c, part->name, info->rels_segment);
+                OPC_ASSERT(-1==part->first_segment_id && -1==part->last_segment_id);
+                part=NULL; // no longer valid
+            }
         } else {
             err=OPC_ERROR_MEMORY;
         }

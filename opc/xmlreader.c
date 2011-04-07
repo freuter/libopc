@@ -174,7 +174,7 @@ opc_bool_t opcXmlReaderEndChildren(opcXmlReader *reader) {
         } else {
             if (reader->reader_consume_element) {
                 if (!reader->reader_element_handled) {
-                    printf("UNHANDLED %i %s\n", xmlTextReaderNodeType(reader->reader), xmlTextReaderConstLocalName(reader->reader));
+                    fprintf(stderr, "UNHANDLED %i %s %s\n", xmlTextReaderNodeType(reader->reader), xmlTextReaderConstLocalName(reader->reader), xmlTextReaderConstValue(reader->reader));
                 }
                 OPC_ENSURE(-1!=xmlTextReaderNext(reader->reader));
             }

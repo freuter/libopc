@@ -83,7 +83,7 @@ def ensureDir(dir):
 	try:
 		if not(os.path.exists(dir)):
 			msg("creating dir "+dir)
-			os.mkdir(dir)
+			os.makedirs(dir)
 			result("OK")
 	except:
 		failure(None)
