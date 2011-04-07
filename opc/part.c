@@ -101,7 +101,18 @@ opcPart opcPartGetFirst(opcContainer *container) {
 
 opcPart opcPartGetNext(opcContainer *container, opcPart part) {
     opcContainerPart *cp=(NULL!=container?opcContainerInsertPart(container, part, OPC_FALSE):NULL);
-    return (NULL!=cp && cp+1<container->part_array+container->part_items?(cp+1)->name:NULL);
+    if (NULL!=cp) {
+        do { cp++; } while(cp<container->part_array+container->part_items && -1==cp->first_segment_id);
+    }
+    return (NULL!=cp && cp<container->part_array+container->part_items?cp->name:NULL);
 }
 
-
+opc_ofs_t opcPartGetSize(opcContainer *c, opcPart part) {
+   OPC_ASSERT(OPC_PART_INVALID!=part);
+    opcContainerPart *cp=(OPC_PART_INVALID!=part?opcContainerInsertPart(c, part, OPC_FALSE):NULL);
+    if (NULL!=cp && cp->first_segment_id>=0 && cp->first_segment_id<c->storage->segment_items) {
+        return c->storage->segment_array[cp->first_segment_id].uncompressed_size;
+    } else {
+        return 0;
+    }
+}
