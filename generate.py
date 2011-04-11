@@ -557,8 +557,11 @@ def generateToolMakefile(conf, ctx, tool, filename, build_dir, src_dir):
 	writeSourceRules(conf, ctx, out, tool, build_dir)
 	out.write(tool["name"]+"_ld=")
 	deps=depClosure(conf, tool["deps"], True)
+	_deps=[]
 	for dep in deps:
-		out.write(" $(BUILD_DIR)/lib"+ dep +".a")
+		_deps.insert(0, dep)
+	for dep in _deps:
+		out.write(" $(BUILD_DIR)/lib"+ dep +".a")	
 	out.write("\n")
 	ext_ldflags=""
 	for dep_lib in conf["libraries"]:
