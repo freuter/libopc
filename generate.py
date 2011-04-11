@@ -6,6 +6,7 @@ import copy
 import xml.etree.ElementTree as etree
 import uuid
 import getopt
+import zipfile
 
 EXT_MAPPING = { ".c": "c", ".cc": "cpp", ".cpp": "cpp", ".h": "h", ".s": "s"}
 
@@ -42,7 +43,7 @@ def parseFile(node, ctx, list):
 			ext=EXT_MAPPING[file_ext]
 			if os.path.exists(abs_path):
 				install=None
-				if "install" in node.attrib and node.attrib["install"]=="yes":				
+				if "install" in node.attrib and node.attrib["install"]=="yes":
 					install=os.path.dirname(os.path.relpath(abs_path, ctx["root"]))
 ##					sys.stderr.write install
 
@@ -68,6 +69,15 @@ def updateCtx(ctx, node):
 		root=ctx["root"]
 		ctx=copy.copy(ctx)	
 		v=node.attrib["root"].format(platform=ctx["platform"], config=ctx["config"])
+		ctx_root=os.path.join(root, v)
+		if not os.path.exists(ctx_root):
+#			print "NOT EXIST: "+str(ctx_root)
+			platform_array=ctx["platform"].split('-')
+			short_platform=platform_array[0]+"-"+platform_array[2]
+			v=node.attrib["root"].format(platform=short_platform, config=ctx["config"])
+#			print "TEST: "+str(ctx_root)
+			if os.path.exists(os.path.join(root, v)):
+				ctx_root=os.path.join(root, v)
 		ctx["root"]=os.path.join(root, v)
 	return ctx
 
@@ -688,15 +698,50 @@ def set_external_flag(ctx, lib, flag, value):
 		ctx["externals"][lib]={flag: value}
 
 
+def generateZipPackage(ctx, source):
+	zip=zipfile.ZipFile("libopc.zip", 'w')
+	base="libopc/"
+	platform=ctx["platforms"][0]
+	conf=generateConfiguration(ctx, [source], platform)
+	if platformSubseteqTest(ctx["platforms"][0], "win32-*-*"):
+		obj_dir=os.path.join("win32", ctx["platform"].split('-')[1])
+		tool_ext=".exe"
+		lib_ext=".lib"
+	else:
+		obj_dir=os.path.join("build", ctx["platform"])
+		tool_ext=""
+		lib_ext=".a"
+	print obj_dir
+	for lib in conf["libraries"]:
+		if not lib["external"] and not isExcluded(conf, ctx, lib["name"]):
+			print lib["name"]+" "+str(lib)+"\n"
+			for include in lib["header"]["files"]:
+				if None!=include["install"]:
+					target=base+"include/"
+					if len(include["install"])>0:
+						target=target+include["install"]+"/"
+					target=target+os.path.split(include["path"])[1]
+					print target+" "+str(include)+"\n"
+					zip.write(include["path"], target)
+			target=base+"lib/"+lib["name"]+lib_ext
+			zip.write(os.path.join(obj_dir, lib["name"]+lib_ext), target)
+	for tool in conf["tools"]:
+		if not isExcluded(conf, ctx, tool["name"]):
+			print tool["name"]+" "+str(tool)+"\n"
+			target=base+"bin/"+tool["name"]+tool_ext
+			zip.write(os.path.join(obj_dir, tool["name"]+tool_ext), target)
+	zip.close()
+
 def usage():
 	print("usage:")
 	print(" generate [--include \"Makefile.xml\"]")
 	print("          [--config-dir \"config/\"]")
 	print("          [--print-env \"linux-release-gcc\"]")
+	print("          [--package \"xyz.zip/\"]")
 
 if __name__ == "__main__":	
 	try:
-		opts, args = getopt.getopt(sys.argv[1:], "h", ["help", "include=", "config-dir=", "print-env=", 
+		opts, args = getopt.getopt(sys.argv[1:], "h", ["help", "include=", "config-dir=", "print-env=", "package=", 
 			"with-zlib-cppflags=", "with-zlib-ldflags=", "with-zlib=",
 			"with-libxml-cppflags=", "with-libxml-ldflags=", "with-libxml="])
 	except getopt.GetoptError, err:
@@ -708,6 +753,7 @@ if __name__ == "__main__":
 	ctx["config"]=os.path.join(ctx["base"], "config")
 	includes=[]
 	dump_env=[]
+	install_zip=None
 	for o, a in opts:
 		if o in ("-h", "--help"):
 			usage()
@@ -719,6 +765,8 @@ if __name__ == "__main__":
 		elif o in ("--print-env"):
 			args=[]
 			dump_env=[a]
+		elif o in ("--package"):
+			install_zip=a
 		elif o in ("--with-zlib"):
 			set_external_flag(ctx, "zlib", "external", "yes"==a)
 		elif o in ("--with-zlib-cppflags"):
@@ -735,7 +783,9 @@ if __name__ == "__main__":
 	for platform in args:
 		ctx["platforms"].append(platform)
 
-	if 1==len(ctx["platforms"]) and platformSubseteqTest(ctx["platforms"][0], "win32-*-*") and 1==len(includes):
+	if 1==len(ctx["platforms"]) and None!=install_zip and 1==len(includes):
+		generateZipPackage(ctx, includes[0])
+	elif 1==len(ctx["platforms"]) and platformSubseteqTest(ctx["platforms"][0], "win32-*-*") and 1==len(includes):
 		generateWin32(ctx, includes[0])
 	else:
 		if not os.path.exists("build"):
