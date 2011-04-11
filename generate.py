@@ -707,10 +707,12 @@ def generateZipPackage(ctx, source, install_zip):
 		obj_dir=os.path.join("win32", ctx["platform"].split('-')[1])
 		tool_ext=".exe"
 		lib_ext=".lib"
+		lib_prefix=""
 	else:
 		obj_dir=os.path.join("build", ctx["platform"])
 		tool_ext=""
 		lib_ext=".a"
+		lib_prefix="lib"
 	for lib in conf["libraries"]:
 		if not lib["external"] and not isExcluded(conf, ctx, lib["name"]):
 			for include in lib["header"]["files"]:
@@ -720,8 +722,8 @@ def generateZipPackage(ctx, source, install_zip):
 						target=target+include["install"]+"/"
 					target=target+os.path.split(include["path"])[1]
 					zip.write(include["path"], target)
-			target=base+"lib/"+lib["name"]+lib_ext
-			zip.write(os.path.join(obj_dir, lib["name"]+lib_ext), target)
+			target=base+"lib/"+lib_prefix+lib["name"]+lib_ext
+			zip.write(os.path.join(obj_dir, lib_prefix+lib["name"]+lib_ext), target)
 	for tool in conf["tools"]:
 		if not isExcluded(conf, ctx, tool["name"]):
 			target=base+"bin/"+tool["name"]+tool_ext

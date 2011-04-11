@@ -7,5 +7,9 @@ BUILD ON WINDOWS:
 * Optionally generate project files: c:\Python26\python.exe generate.py --include Makefile.xml win32-*-msvc
 * Open win32\solution.sln in Visual Studio.
 
-RELASE in a ZIP file:
-c:\Python26\python.exe generate.py --include Makefile.xml --package libopc-0.0.1.zip win32-release-msvc 
+RELASE in a ZIP file (win32):
+c:\Python26\python.exe generate.py --include Makefile.xml --package libopc-sdk-0.0.1.zip win32-release-msvc 
+
+
+RELASE in a ZIP file (MaxOSX):
+python generate.py --include Makefile.xml --package libopc-sdk-0.0.1.zip --config-dir=build/config  darwin-release-gcc
