@@ -702,7 +702,7 @@ def set_external_flag(ctx, lib, flag, value):
 
 
 def generateZipPackage(ctx, source, install_zip):
-	zip=zipfile.ZipFile(install_zip, 'w')
+	zip=zipfile.ZipFile(install_zip, 'w', zipfile.ZIP_DEFLATED)
 	base=os.path.splitext(install_zip)[0]+"/"
 	platform=ctx["platforms"][0]
 	conf=generateConfiguration(ctx, [source], platform)
