@@ -698,9 +698,9 @@ def set_external_flag(ctx, lib, flag, value):
 		ctx["externals"][lib]={flag: value}
 
 
-def generateZipPackage(ctx, source):
-	zip=zipfile.ZipFile("libopc.zip", 'w')
-	base="libopc/"
+def generateZipPackage(ctx, source, install_zip):
+	zip=zipfile.ZipFile(install_zip, 'w')
+	base=os.path.splitext(install_zip)[0]+"/"
 	platform=ctx["platforms"][0]
 	conf=generateConfiguration(ctx, [source], platform)
 	if platformSubseteqTest(ctx["platforms"][0], "win32-*-*"):
@@ -711,25 +711,23 @@ def generateZipPackage(ctx, source):
 		obj_dir=os.path.join("build", ctx["platform"])
 		tool_ext=""
 		lib_ext=".a"
-	print obj_dir
 	for lib in conf["libraries"]:
 		if not lib["external"] and not isExcluded(conf, ctx, lib["name"]):
-			print lib["name"]+" "+str(lib)+"\n"
 			for include in lib["header"]["files"]:
 				if None!=include["install"]:
 					target=base+"include/"
 					if len(include["install"])>0:
 						target=target+include["install"]+"/"
 					target=target+os.path.split(include["path"])[1]
-					print target+" "+str(include)+"\n"
 					zip.write(include["path"], target)
 			target=base+"lib/"+lib["name"]+lib_ext
 			zip.write(os.path.join(obj_dir, lib["name"]+lib_ext), target)
 	for tool in conf["tools"]:
 		if not isExcluded(conf, ctx, tool["name"]):
-			print tool["name"]+" "+str(tool)+"\n"
 			target=base+"bin/"+tool["name"]+tool_ext
 			zip.write(os.path.join(obj_dir, tool["name"]+tool_ext), target)
+	zip.write(os.path.join("third_party", "LICENSE"), base+"/LICENSE.THIRD_PARTY")
+	zip.write("LICENSE", base+"/LICENSE")
 	zip.close()
 
 def usage():
@@ -784,7 +782,7 @@ if __name__ == "__main__":
 		ctx["platforms"].append(platform)
 
 	if 1==len(ctx["platforms"]) and None!=install_zip and 1==len(includes):
-		generateZipPackage(ctx, includes[0])
+		generateZipPackage(ctx, includes[0], install_zip)
 	elif 1==len(ctx["platforms"]) and platformSubseteqTest(ctx["platforms"][0], "win32-*-*") and 1==len(includes):
 		generateWin32(ctx, includes[0])
 	else:

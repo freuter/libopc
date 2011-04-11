@@ -6,3 +6,6 @@ make
 BUILD ON WINDOWS:
 * Optionally generate project files: c:\Python26\python.exe generate.py --include Makefile.xml win32-debug-msvc
 * Open win32\solution.sln in Visual Studio.
+
+RELASE in a ZIP file:
+c:\Python26\python.exe generate.py --include Makefile.xml --package libopc-0.0.1.zip --config-dir=config  win32-release-msvc 
