@@ -148,7 +148,7 @@ if [[ $PLATFORM =~ ^[^-]+-[^-]+-[^-]+$ ]]; then
 		if [ x"" != x$HOST ]; then
 			CONFIG_OPT="--host=$HOST"
 		fi
-		execConfigure "." "plib" "$PLIBCONFIG" "$PLIBFILES" ""
+		execConfigure "." "plib" "$PLIBCONFIG" "$PLIBFILES" "$CONFIG_OPT"
 		if [ x"no" == x$EXTERNAL_ZLIB ]; then 
 			execConfigure "third_party" "zlib-1.2.5" "$ZLIBCONFIG" "$ZLIBFILES" ""
 		fi
