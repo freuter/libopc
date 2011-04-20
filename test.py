@@ -215,7 +215,7 @@ if __name__ == "__main__":
 				else:
 					skip=False
 #				print f+" "+str(ignore)
-				if not(ignore) and not(skip) and (".docx"==ext or ".xlsx"==ext or ".pptx"==ext):
+				if not(ignore) and not(skip) and (".docx"==ext or ".xlsx"==ext or ".pptx"==ext or ".xps"==ext):
 					print "opc_generate_test("+basedir+", "+src+")"
 					opc_generate_test(basedir, src)
 					skip_f.write(f+"\n")
