@@ -107,8 +107,8 @@ def opc_generate_test(basepath, path):
 
 def usage():
 	print("usage:")
-	print(" test [--target-mode \"debug|release\"]")
-	print("      [--generate \"test_docs/\"]")
+	print(" test [--target=mode \"debug|release\"]")
+	print("      [--generate \"test_docs/\"] [--skip]")
 
 if __name__ == "__main__":
 	target_mode=None
