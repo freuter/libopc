@@ -161,7 +161,7 @@ static opc_uint32_t createRelId(opcContainer *container, const xmlChar *relPrefi
     opc_uint32_t prefix=insertRelPrefix(container, relPrefix);
     if (-1!=prefix) {
         ret=relCounter;
-        ret|=prefix>>16;
+        ret|=prefix<<16;
     } 
     return ret;
 }
