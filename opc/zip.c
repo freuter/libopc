@@ -160,6 +160,7 @@ opcZip *opcZipCreate(opcIO_t *io) {
     opcZip *zip=(opcZip*)xmlMalloc(sizeof(opcZip));
     if (NULL!=zip) {
         memset(zip, 0, sizeof(*zip));
+        zip->first_free_segment_id=-1;
         zip->io=io; 
     }
     return zip;
@@ -1268,6 +1269,16 @@ static opc_bool_t opcZipOutputStreamFinishCompression(opcZip *zip, opcZipOutputS
     return ret;
 }
 
+static void opcZipMarkSegmentDeleted(opcZip *zip, opc_uint32_t segment_id, opcZipSegmentReleaseCallback* releaseCallback) {
+    OPC_ASSERT(segment_id>=0 && segment_id<zip->segment_items);
+    opcZipSegment *segment=&zip->segment_array[segment_id];
+    if (NULL!=releaseCallback) releaseCallback(zip, segment_id);
+    segment->deleted_segment=1;
+    segment->partName=NULL; // should have been released in "releaseCallback" above
+    segment->next_segment_id=zip->first_free_segment_id;
+    zip->first_free_segment_id=segment_id;
+}
+
 static void opcZipOutputStreamFlushAndGrow(opcZip *zip, opcZipOutputStream *stream) {
     opc_error_t err=OPC_ERROR_NONE;
     if (stream->buf_len>0 && OPC_ERROR_NONE==zip->io->state.err) {
@@ -1300,8 +1311,9 @@ static void opcZipOutputStreamFlushAndGrow(opcZip *zip, opcZipOutputStream *stre
                                     segment->stream_ofs+segment->padding+segment->header_size,  // src
                                     segment->compressed_size);
                 new_segment->compressed_size=segment->compressed_size;
-                segment->deleted_segment=1;
                 segment->partName=NULL; // ownership transfered to new_segment
+                opcZipMarkSegmentDeleted(zip, stream->segment_id, NULL /* no release needed, since partName is copied to new segment */);
+                OPC_ASSERT(1==segment->deleted_segment);
                 segment=new_segment;
                 stream->segment_id=new_segment_id;
                 opc_uint32_t buf_size=(free_size>OPC_DEFLATE_BUFFER_SIZE?OPC_DEFLATE_BUFFER_SIZE:free_size);
@@ -1397,17 +1409,16 @@ opc_bool_t opcZipSegmentDelete(opcZip *zip, opc_uint32_t *first_segment, opc_uin
     OPC_ASSERT(NULL==last_segment || *first_segment==*last_segment); // not not implemented... needed for fragmented containers
     OPC_ASSERT(*first_segment>=0 && *first_segment<zip->segment_items);
     opc_bool_t ret=OPC_FALSE;
-    if (*first_segment>=0 && *first_segment<zip->segment_items) {
-        opcZipSegment *segment=&zip->segment_array[*first_segment];
-        OPC_ASSERT(!segment->deleted_segment);
-        if (!segment->deleted_segment) {
-            if (NULL!=releaseCallback) releaseCallback(zip, *first_segment);
-            segment->deleted_segment=1;
-            segment->partName=NULL;
-            ret=OPC_TRUE;
-            *first_segment=-1;
-            if (NULL!=last_segment) *last_segment=-1;
-        }
+    opc_uint32_t segment_id=*first_segment;
+    while(segment_id>=0 && segment_id<zip->segment_items) {
+        opc_uint32_t next_segment_id=segment_id;
+        opcZipMarkSegmentDeleted(zip, segment_id, releaseCallback);
+        segment_id=next_segment_id;
     }
+    if (NULL!=last_segment) {
+        OPC_ASSERT(*last_segment=segment_id);
+        *last_segment=-1;
+    }
+    *first_segment=-1;
     return ret;
 }

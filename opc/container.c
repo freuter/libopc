@@ -54,12 +54,6 @@ static opcContainerExtension* ensureExtension(opcContainer *container) {
     return ((opcContainerExtension*)ensureItem((void**)&container->extension_array, container->extension_items, sizeof(opcContainerExtension)))+container->extension_items;
 }
 
-#if 0
-static opcContainerInputStream** ensureInputStream(opcContainer *container) {
-    return ((opcContainerInputStream**)ensureItem((void**)&container->inputstream_array, container->inputstream_items, sizeof(opcContainerInputStream*)))+container->inputstream_items;
-}
-#endif
-
 static opcContainerRelationType* ensureRelationType(opcContainer *container) {
     return ((opcContainerRelationType*)ensureItem((void**)&container->relationtype_array, container->relationtype_items, sizeof(opcContainerRelationType)))+container->relationtype_items;
 }
@@ -120,6 +114,23 @@ opcContainerPart *opcContainerInsertPart(opcContainer *container, const xmlChar 
     } else {
         return NULL;
     }
+}
+
+#define deleteItem(array_, items_, i) \
+{\
+    for(opc_uint32_t k=i+1;k<items_;k++) {\
+        array_[k-1]=array_[k];\
+    }\
+    items_--;\
+}
+
+opc_error_t opcContainerDeletePart(opcContainer *container, const xmlChar *name) {
+    opc_error_t ret=OPC_ERROR_NONE;
+    opc_uint32_t i=0;
+    if (findItem(container->part_array, container->part_items, name, 0, part_cmp_fct, &i)) {
+        deleteItem(container->part_array, container->part_items, i);
+    }
+    return ret;
 }
 
 #define OPC_MAX_UINT16 65535
@@ -286,6 +297,16 @@ opcContainerRelation *opcContainerFindRelation(opcContainer *container, opcConta
     return (ret?&relation_array[i]:NULL);
 }
 
+opc_error_t opcContainerDeleteRelation(opcContainer *container, opcContainerRelation *relation_array, opc_uint32_t relation_items, opcRelation relation) {
+    opc_error_t err=OPC_ERROR_NONE;
+    opc_uint32_t i=0;
+    opc_bool_t ret=findItem(relation_array, relation_items, NULL, relation, relation_cmp_fct, &i);
+    if (ret) {
+        deleteItem(relation_array, relation_items, i);
+    }
+    return err;
+}
+
 struct OPC_CONTAINER_FIND_RELATIONBYID_CONTEXT {
     opcContainer *c;
     opc_uint32_t counter;
@@ -374,7 +395,7 @@ static void opcConstainerParseRels(opcContainer *c, const xmlChar *partName, opc
         opc_xml_element(reader, _X(ns), _X("Relationships")) {
             opc_xml_start_attributes(reader) {
             } opc_xml_end_attributes(reader);
-            opc_xml_start_children(reader) {
+            opc_xml_start_forall_children(reader) {
                 opc_xml_element(reader, NULL, _X("Relationship")) {
                     const xmlChar *id=NULL;
                     const xmlChar *type=NULL;
@@ -419,10 +440,10 @@ static void opcConstainerParseRels(opcContainer *c, const xmlChar *partName, opc
                             opc_xml_error(reader, OPC_TRUE, OPC_ERROR_XML, "TargetMode %s unknown!\n", mode);
                         }
                     } opc_xml_error_guard_end(reader);
-                    opc_xml_start_children(reader) {
-                    } opc_xml_end_children(reader);
+                    opc_xml_start_forall_children(reader) {
+                    } opc_xml_end_forall_children(reader);
                 }
-            } opc_xml_end_children(reader);
+            } opc_xml_end_forall_children(reader);
         } 
     } opc_xml_end_document(reader);
     OPC_ENSURE(OPC_ERROR_NONE==opcXmlReaderClose(reader));
@@ -433,11 +454,6 @@ const xmlChar OPC_SEGMENT_ROOTRELS[]={0};
 
 static opc_error_t opcContainerFree(opcContainer *c) {
     if (NULL!=c) {
-#if 0
-        for(opc_uint32_t i=0;i<c->inputstream_items;i++) {
-            OPC_ASSERT(NULL==c->inputstream_array[i]); // not closed???
-        }
-#endif
         for(opc_uint32_t i=0;i<c->extension_items;i++) {
             xmlFree(c->extension_array[i].extension);
         }
@@ -450,7 +466,6 @@ static opc_error_t opcContainerFree(opcContainer *c) {
         for(opc_uint32_t i=0;i<c->externalrelation_items;i++) {
             xmlFree(c->externalrelation_array[i].target);
         }
-        xmlFree(c->relation_array);
         for(opc_uint32_t i=0;i<c->part_items;i++) {
             xmlFree(c->part_array[i].relation_array);
             xmlFree(c->part_array[i].name);
@@ -458,10 +473,13 @@ static opc_error_t opcContainerFree(opcContainer *c) {
         for(opc_uint32_t i=0;i<c->relprefix_items;i++) {
             xmlFree(c->relprefix_array[i].prefix);
         }
-#if 0
-        xmlFree(c->segment_array);
-#endif
-        xmlFree(c->part_array);  //@TODO make sure all other arrays are free'd
+        if (NULL!=c->part_array) xmlFree(c->part_array);
+        if (NULL!=c->relprefix_array) xmlFree(c->relprefix_array);
+        if (NULL!=c->type_array) xmlFree(c->type_array);
+        if (NULL!=c->extension_array) xmlFree(c->extension_array);
+        if (NULL!=c->relationtype_array) xmlFree(c->relationtype_array);
+        if (NULL!=c->externalrelation_array) xmlFree(c->externalrelation_array);
+        if (NULL!=c->relation_array) xmlFree(c->relation_array);
         opcZipClose(c->storage, NULL);
         xmlFree(c);
     }
@@ -908,7 +926,7 @@ static opcContainer *opcContainerLoadFromZip(opcContainer *c) {
                     opc_xml_element(reader, _X(ns), _X("Types")) {
                         opc_xml_start_attributes(reader) {
                         } opc_xml_end_attributes(reader);
-                        opc_xml_start_children(reader) {
+                        opc_xml_start_forall_children(reader) {
                             opc_xml_element(reader, NULL, _X("Default")) {
                                 const xmlChar *ext=NULL;
                                 const xmlChar *type=NULL;
@@ -929,8 +947,8 @@ static opcContainer *opcContainerLoadFromZip(opcContainer *c) {
                                     opc_xml_error(reader, NULL!=ce->type && 0!=xmlStrcmp(ce->type, type), OPC_ERROR_XML, "Extension \"%s\" is mapped to type \"%s\" as well as \"%s\"", ext, type, ce->type);
                                     ce->type=ct->type;
                                 } opc_xml_error_guard_end(reader);
-                                opc_xml_start_children(reader) {
-                                } opc_xml_end_children(reader);
+                                opc_xml_start_forall_children(reader) {
+                                } opc_xml_end_forall_children(reader);
                             } else opc_xml_element(reader, NULL, _X("Override")) {
                                 const xmlChar *name=NULL;
                                 const xmlChar *type=NULL;
@@ -953,10 +971,10 @@ static opcContainer *opcContainerLoadFromZip(opcContainer *c) {
                                         part->type=ct->type;
                                     }
                                 } opc_xml_error_guard_end(reader);
-                                opc_xml_start_children(reader) {
-                                } opc_xml_end_children(reader);
+                                opc_xml_start_forall_children(reader) {
+                                } opc_xml_end_forall_children(reader);
                             }
-                        } opc_xml_end_children(reader);
+                        } opc_xml_end_forall_children(reader);
                     } 
                 } opc_xml_end_document(reader);
                 OPC_ENSURE(OPC_ERROR_NONE==opcXmlReaderClose(reader));

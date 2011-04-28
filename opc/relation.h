@@ -46,7 +46,6 @@ extern "C" {
 #define OPC_RELATION_INVALID (-1)
 
     opcRelation opcRelationCreate(opcContainer *container, opcPart part, const xmlChar *relationId, const xmlChar *mimeType);
-    opc_error_t opcRelationRelease(opcContainer *container, opcPart part, opcRelation relation);
     int opcRelationDelete(opcContainer *container, opcPart part, const xmlChar *relationId);
 
     opcRelation opcRelationFirst(opcContainer *container, opcPart part);
