@@ -71,8 +71,8 @@ extern "C" {
 #define opc_xml_start_document(reader) opcXmlReaderStartDocument(reader);
 #define opc_xml_end_document(reader) opcXmlReaderEndDocument(reader)
 #define opc_xml_element(reader, ns, ln) if (opcXmlReaderStartElement(reader, ns, ln)) 
-#define opc_xml_start_children(reader) if (opcXmlReaderStartChildren(reader)) { do 
-#define opc_xml_end_children(reader) while(!opcXmlReaderEndChildren(reader)); }
+#define opc_xml_start_forall_children(reader) if (opcXmlReaderStartChildren(reader)) { do 
+#define opc_xml_end_forall_children(reader) while(!opcXmlReaderEndChildren(reader)); }
 #define opc_xml_start_attributes(reader) if (opcXmlReaderStartAttributes(reader)) { do 
 #define opc_xml_end_attributes(reader) while(!opcXmlReaderEndAttributes(reader)); }
 #define opc_xml_attribute(reader, ns, ln) if (opcXmlReaderStartAttribute(reader, ns, ln))

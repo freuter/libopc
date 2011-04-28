@@ -68,7 +68,6 @@ int main( int argc, const char* argv[] )
 				} else {
 					fprintf(stderr, "ERROR: part \"%s\" could not be opened for reading.\n", argv[2]);
 				}
-				opcPartRelease(c, part);
 			} else {
 				fprintf(stderr, "ERROR: part \"%s\" could not be opened in \"%s\".\n", argv[2], argv[1]);
 			}

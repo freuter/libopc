@@ -76,6 +76,7 @@ extern "C" {
 
     struct OPC_ZIP_STRUCT {
         opcIO_t *io;
+        opc_uint32_t first_free_segment_id;
         opcZipSegment *segment_array;
         opc_uint32_t segment_items;
     };
@@ -106,7 +107,6 @@ extern "C" {
     };
 
     struct OPC_CONTAINER_INPUTSTREAM_STRUCT {
-//        opc_uint32_t slot; //@TODO
         opcZipInputStream *stream;
         opcContainer *container; // weak reference
         xmlTextReaderPtr reader; // in case we have an xmlTextReader associated
@@ -184,10 +184,6 @@ extern "C" {
         opc_uint32_t type_items;
         opcContainerExtension *extension_array;
         opc_uint32_t extension_items;
-#if 0
-        opcContainerInputStream **inputstream_array;
-        opc_uint32_t inputstream_items;
-#endif
         opcContainerRelationType *relationtype_array;
         opc_uint32_t relationtype_items;
         opcContainerExternalRelation *externalrelation_array;
@@ -206,7 +202,9 @@ extern "C" {
 
     opcContainerExtension *opcContainerInsertExtension(opcContainer *container, const xmlChar *extension, opc_bool_t insert);
     opcContainerPart *opcContainerInsertPart(opcContainer *container, const xmlChar *name, opc_bool_t insert);
+    opc_error_t opcContainerDeletePart(opcContainer *container, const xmlChar *name);
     opcContainerRelation *opcContainerFindRelation(opcContainer *container, opcContainerRelation *relation_array, opc_uint32_t relation_items, opcRelation relation);
+    opc_error_t opcContainerDeleteRelation(opcContainer *container, opcContainerRelation *relation_array, opc_uint32_t relation_items, opcRelation relation);
     opcContainerRelation *opcContainerInsertRelation(opcContainerRelation **relation_array, opc_uint32_t *relation_items, 
                                                      opc_uint32_t relation_id,
                                                      xmlChar *relation_type,

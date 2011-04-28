@@ -63,9 +63,7 @@ extern "C" {
     const xmlChar *opcPartGetType(opcContainer *c, opcPart part);
     const xmlChar *opcPartGetTypeEx(opcContainer *c, opcPart part, opc_bool_t override_only);
 
-    int opcPartRelease(opcContainer *c, opcPart part);
-    
-    int opcPartDelete(opcContainer *container, const xmlChar *absolutePath);
+    opc_error_t opcPartDelete(opcContainer *container, const xmlChar *absolutePath);
 
     opcPart opcPartGetFirst(opcContainer *container);
     opcPart opcPartGetNext(opcContainer *container, opcPart part);

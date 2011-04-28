@@ -58,9 +58,7 @@ int main( int argc, const char* argv[] )
                 } else if (0==xmlStrcmp(type, _X("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"))) {
                     printf("EXCEL Document\n");
                 }
-                opcPartRelease(c, main);
             }
-            opcRelationRelease(c, OPC_PART_INVALID, rel);
         }
         opcContainerClose(c, OPC_CLOSE_NOW);
     }

@@ -65,45 +65,44 @@ int main( int argc, const char* argv[] )
                 if ((reader=opcXmlReaderOpen(c, part, NULL, NULL, 0))!=NULL){
                     opc_xml_start_document(reader) {
                         opc_xml_element(reader, _X(PROP_NS), _X("Properties")) {
-                            opc_xml_start_children(reader) {
+                            opc_xml_start_forall_children(reader) {
                                 opc_xml_element(reader, _X(PROP_NS), _X("Application")) {
                                     if (props.application!=NULL) {
                                         xmlFree(props.application);
                                         props.application=NULL;
                                     }
-                                    opc_xml_start_children(reader) {
+                                    opc_xml_start_forall_children(reader) {
                                         opc_xml_text(reader) {
                                             props.application=xmlStrdup(opc_xml_const_value(reader));
                                         };
-                                    } opc_xml_end_children(reader);
+                                    } opc_xml_end_forall_children(reader);
                                 } else opc_xml_element(reader, _X(PROP_NS), _X("Words")) {
                                     props.words=0;
-                                    opc_xml_start_children(reader) {
+                                    opc_xml_start_forall_children(reader) {
                                         opc_xml_text(reader) {
                                             props.words=atoi((char*)opc_xml_const_value(reader));
                                         };
-                                    } opc_xml_end_children(reader);
+                                    } opc_xml_end_forall_children(reader);
                                 } else opc_xml_element(reader, _X(PROP_NS), _X("Lines")) {
                                     props.lines=0;
-                                    opc_xml_start_children(reader) {
+                                    opc_xml_start_forall_children(reader) {
                                         opc_xml_text(reader) {
                                             props.lines=atoi((char*)opc_xml_const_value(reader));
                                         };
-                                    } opc_xml_end_children(reader);
+                                    } opc_xml_end_forall_children(reader);
                                 } else opc_xml_element(reader, _X(PROP_NS), _X("Pages")) {
                                     props.pages=0;
-                                    opc_xml_start_children(reader) {
+                                    opc_xml_start_forall_children(reader) {
                                         opc_xml_text(reader) {
                                             props.pages=atoi((char*)opc_xml_const_value(reader));
                                         };
-                                    } opc_xml_end_children(reader);
+                                    } opc_xml_end_forall_children(reader);
                                 };
-                            } opc_xml_end_children(reader);
+                            } opc_xml_end_forall_children(reader);
                         };
                     } opc_xml_end_document(reader);
                     opcXmlReaderClose(reader);
                 }
-                opcPartRelease(c, part);
             }            
             opcContainerClose(c, OPC_CLOSE_NOW);
             printf("application: %s\n", props.application);

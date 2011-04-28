@@ -86,12 +86,9 @@ const xmlChar *opcPartGetTypeEx(opcContainer *c, opcPart part, opc_bool_t overri
     return type;
 }
 
-int opcPartRelease(opcContainer *c,  opcPart part) {
-    return 0;
-}
 
-int opcPartDelete(opcContainer *container, const xmlChar *absolutePath) {
-    return 0;
+opc_error_t opcPartDelete(opcContainer *container, const xmlChar *absolutePath) {
+    return opcContainerDeletePart(container, (absolutePath[0]=='/'?absolutePath+1:absolutePath));
 }
 
 

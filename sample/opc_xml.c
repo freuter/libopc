@@ -82,7 +82,6 @@ int main( int argc, const char* argv[] )
                 } else {
                     printf("ERROR: part \"%s\" could not be opened for XML reading.\n", argv[2]);
                 }
-                opcPartRelease(c, part);
             } else {
                 printf("ERROR: part \"%s\" could not be opened in \"%s\".\n", argv[2], argv[1]);
             }

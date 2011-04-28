@@ -91,10 +91,6 @@ const xmlChar *opcRelationGetExternalTarget(opcContainer *container, opcPart par
     }
 }
 
-opc_error_t opcRelationRelease(opcContainer *container, opcPart part, opcRelation relation) {
-    return OPC_ERROR_NONE;
-}
-
 opcRelation opcRelationFirst(opcContainer *container, opcPart part) {
     if (OPC_PART_INVALID==part) {
         return (container->relation_items>0?container->relation_array[0].relation_id:OPC_RELATION_INVALID);
@@ -146,3 +142,12 @@ void opcRelationGetInformation(opcContainer *container, opcPart part, opcRelatio
     }
 }
 
+opc_error_t opcRelationDelete(opcContainer *container, opcPart part, const xmlChar *relationId, const xmlChar *mimeType) {
+    opcRelation relation=opcRelationFind(container, part, relationId, mimeType);
+    if (OPC_PART_INVALID==part) {
+        return opcContainerDeleteRelation(container, container->relation_array, container->relation_items, relation);
+    } else {
+        opcContainerPart *cp=opcContainerInsertPart(container, part, OPC_FALSE);
+        return (cp!=NULL?opcContainerDeleteRelation(container, cp->relation_array, cp->relation_items, relation):OPC_ERROR_STREAM);
+    }
+}
