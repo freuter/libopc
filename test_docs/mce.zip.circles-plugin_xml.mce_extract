@@ -1,0 +1,13 @@
+<Circles xmlns="http://schemas.openxmlformats.org/Circles/v1" xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" xmlns:v2="http://schemas.openxmlformats.org/Circles/v2">
+  <Circle Center="0,0" Radius="20" Color="Blue"/>
+  <Circle Center="25,0" Radius="20" Color="Black"/>
+  <Circle Center="50,0" Radius="20" Color="Red"/>
+  <Circle Center="13,0" Radius="20" Color="Yellow"/>
+  <Circle Center="38,0" Radius="20" Color="Green"/>
+  <AddIn Center="25,10" Radius="10" CodeBase="http://www.openxmlformats.org/code/TextFlowAddin.jar">
+    <TextFlow xmlns="http://schemas.openxmlformats.org/TextFlow/v1">
+     
+       <Paragraph>How are <Bold>you</Bold>?</Paragraph>
+    </TextFlow>
+  </AddIn>
+</Circles>

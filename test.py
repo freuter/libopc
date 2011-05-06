@@ -95,6 +95,16 @@ def opc_trim_test(path):
 	test.call(test.build("opc_dump"), [], [test.docs(path)], test.tmp(path+"_4.opc_trim.opc_dump"), [])
 	test.regr(test.tmp(path+"_3.opc_trim.opc_dump"), test.tmp(path+"_4.opc_trim.opc_dump"), True)
 
+def mce_extract_test(path, part, namespaces):
+	_part_="."+part.replace('.', '_')
+	args=[test.docs(path), part]
+	for namespace in namespaces:
+		args.append("--understands"); args.append(namespace[1])
+		_part_=_part_+"."+namespace[0]
+	test.call(test.build("mce_extract"), [], args, test.tmp(path+_part_+".mce_extract"), [])
+	test.regr(test.docs(path+_part_+".mce_extract"), test.tmp(path+_part_+".mce_extract"), True)
+
+
 def opc_generate_test(basepath, path):
 	dest=os.path.join(os.path.split(path)[0], os.path.splitext(os.path.split(path)[1])[0]+".c")
 	test.ensureDir(test.tmp(os.path.dirname(dest)))
@@ -139,6 +149,7 @@ if __name__ == "__main__":
 #	sys.exit(0)
 
 	if None==generate_path:
+
 		opc_zipread_test("stream.zip") # fails --- streaming mode is not yet implemented.
 		opc_zipread_test("OOXMLI1.docx")
 		opc_zipread_test("OOXMLI4.docx")
@@ -177,6 +188,29 @@ if __name__ == "__main__":
 
 		opc_trim_test("OOXMLI1.docx")
 		opc_trim_test("OOXMLI4.docx")
+
+		mce_extract_test("mce.zip", "circles-ignorable.xml", [])
+		mce_extract_test("mce.zip", "circles-ignorable.xml", [["v2", "http://schemas.openxmlformats.org/Circles/v2"]])
+		mce_extract_test("mce.zip", "circles-ignorable.xml", [["v2", "http://schemas.openxmlformats.org/Circles/v2"], ["v3", "http://schemas.openxmlformats.org/Circles/v3"]])
+
+		mce_extract_test("mce.zip", "circles-ignorable-ns.xml", [])
+		mce_extract_test("mce.zip", "circles-ignorable-ns.xml", [["v1", "http://schemas.openxmlformats.org/MyExtension/v1"]])
+
+		mce_extract_test("mce.zip", "circles-plugin.xml", [])
+		mce_extract_test("mce.zip", "circles-plugin.xml", [["v2", "http://schemas.openxmlformats.org/Circles/v2"]])
+
+		mce_extract_test("mce.zip", "circles-alternatecontent.xml", [])
+		mce_extract_test("mce.zip", "circles-alternatecontent.xml", [["v2", "http://schemas.openxmlformats.org/Circles/v2"]])
+		mce_extract_test("mce.zip", "circles-alternatecontent.xml", [["v2", "http://schemas.openxmlformats.org/Circles/v2"], ["v3", "http://schemas.openxmlformats.org/Circles/v3"]])
+
+		mce_extract_test("mce.zip", "circles-alternatecontent2.xml", [])
+		mce_extract_test("mce.zip", "circles-alternatecontent2.xml", [["v1", "http://schemas.openxmlformats.org/metallicfinishes/v1"]])
+
+		mce_extract_test("mce.zip", "circles-processcontent.xml", [])
+		mce_extract_test("mce.zip", "circles-processcontent.xml", [["v2", "http://schemas.openxmlformats.org/Circles/v2"]])
+
+		mce_extract_test("mce.zip", "circles-processcontent-ns.xml", [])
+		mce_extract_test("mce.zip", "circles-processcontent-ns.xml", [["ext", "http://schemas.openxmlformats.org/Circles/extension"]])
 
 	else:
 		ignore_list = {  }
