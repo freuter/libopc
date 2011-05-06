@@ -84,14 +84,14 @@ static opc_bool_t findItem(void *array_, opc_uint32_t items, const void *key1, o
     return OPC_FALSE;
 }
 
-#define ensureGap(container, array_, items_, i) \
+#define ensureGap(array_, items_, i) \
 {\
-    for (opc_uint32_t k=container->items_;k>i;k--) { \
-        container->array_[k]=container->array_[k-1];\
+    for (opc_uint32_t k=items_;k>i;k--) { \
+        (array_)[k]=(array_)[k-1];\
     }\
-    container->items_++;\
-    OPC_ASSERT(i>=0 && i<container->items_);\
-    opc_bzero_mem(&container->array_[i], sizeof(container->array_[i]));\
+    (items_)++;\
+    OPC_ASSERT(i>=0 && i<(items_));\
+    opc_bzero_mem(&(array_)[i], sizeof((array_)[i]));\
 }
 
 
@@ -105,7 +105,7 @@ opcContainerPart *opcContainerInsertPart(opcContainer *container, const xmlChar 
     if (findItem(container->part_array, container->part_items, name, 0, part_cmp_fct, &i)) {
         return &container->part_array[i];
     } else if (insert && NULL!=ensurePart(container)) {
-        ensureGap(container, part_array, part_items, i);
+        ensureGap(container->part_array, container->part_items, i);
         container->part_array[i].first_segment_id=-1;
         container->part_array[i].last_segment_id=-1;
         container->part_array[i].name=xmlStrdup(name); 
@@ -187,7 +187,7 @@ opcContainerType *insertType(opcContainer *container, const xmlChar *type, opc_b
     if (findItem(container->type_array, container->type_items, type, 0, type_cmp_fct, &i)) {
         return &container->type_array[i];
     } else if (insert && NULL!=ensureType(container)) {
-        ensureGap(container, type_array, type_items, i);
+        ensureGap(container->type_array, container->type_items, i);
         container->type_array[i].type=xmlStrdup(type);
         return &container->type_array[i];
     } else {
@@ -204,7 +204,7 @@ opcContainerExtension *opcContainerInsertExtension(opcContainer *container, cons
     if (findItem(container->extension_array, container->extension_items, extension, 0, extension_cmp_fct, &i)) {
         return &container->extension_array[i];
     } else if (insert && NULL!=ensureExtension(container)) {
-        ensureGap(container, extension_array, extension_items, i);
+        ensureGap(container->extension_array, container->extension_items, i);
         container->extension_array[i].extension=xmlStrdup(extension);
         return &container->extension_array[i];
     } else {
@@ -220,7 +220,7 @@ opcContainerRelationType *opcContainerInsertRelationType(opcContainer *container
     if (findItem(container->relationtype_array, container->relationtype_items, type, 0, relationtype_cmp_fct, &i)) {
         return &container->relationtype_array[i];
     } else if (insert && NULL!=ensureRelationType(container)) {
-        ensureGap(container, relationtype_array, relationtype_items, i);
+        ensureGap(container->relationtype_array, container->relationtype_items, i);
         container->relationtype_array[i].type=xmlStrdup(type);
         return &container->relationtype_array[i];
     } else {
@@ -237,7 +237,7 @@ opcContainerExternalRelation*insertExternalRelation(opcContainer *container, con
     if (findItem(container->externalrelation_array, container->externalrelation_items, target, 0, externalrelation_cmp_fct, &i)) {
         return &container->externalrelation_array[i];
     } else if (insert && NULL!=ensureExternalRelation(container)) {
-        ensureGap(container, externalrelation_array, externalrelation_items, i);
+        ensureGap(container->externalrelation_array, container->externalrelation_items, i);
         container->externalrelation_array[i].target=xmlStrdup(target);
         return &container->externalrelation_array[i];
     } else {
@@ -826,6 +826,11 @@ opc_uint32_t opcContainerReadInputStream(opcContainerInputStream* stream, opc_ui
 
 opc_error_t opcContainerCloseInputStream(opcContainerInputStream* stream) {
     opc_error_t ret=opcZipCloseInputStream(stream->container->storage, stream->stream);
+    if (NULL!=stream->ignored_array) xmlFree(stream->ignored_array);
+    OPC_ENSURE(OPC_ERROR_NONE==opcQNameLevelCleanup(stream->understands_array, &stream->ignored_items, 0, NULL));
+    if (NULL!=stream->understands_array) xmlFree(stream->understands_array);
+    OPC_ENSURE(OPC_ERROR_NONE==opcQNameLevelCleanup(stream->processcontent_array, &stream->processcontent_items, 0, NULL));
+    if (NULL!=stream->processcontent_array) xmlFree(stream->processcontent_array);
     xmlFree(stream);
     return ret;
 }
@@ -973,6 +978,8 @@ static opcContainer *opcContainerLoadFromZip(opcContainer *c) {
                                 } opc_xml_error_guard_end(reader);
                                 opc_xml_start_forall_children(reader) {
                                 } opc_xml_end_forall_children(reader);
+                            } else opc_xml_text(reader) {
+                                //@TODO ensure whitespaces...
                             }
                         } opc_xml_end_forall_children(reader);
                     } 
@@ -1350,6 +1357,76 @@ opc_uint32_t opcRelationAddExternal(opcContainer *container, opcPart src, const 
             rel->target_mode=1;
             ret=rel_id;
         }
+    }
+    return ret;
+}
+
+static inline int qname_level_cmp_fct(const void *key, opc_uint32_t v, const void *array_, opc_uint32_t item) {
+    opcQNameLevel_t *q1=(opcQNameLevel_t*)key;
+    opcQNameLevel_t *q2=&((opcQNameLevel_t*)array_)[item];
+    int const ns_cmp=(NULL==q1->ns?(NULL==q2->ns?0:-1):(NULL==q2->ns?+1:xmlStrcmp(q1->ns, q2->ns)));
+    return (0==ns_cmp?xmlStrcmp(q1->ln, q2->ln):ns_cmp);
+}
+
+
+opc_error_t opcQNameLevelAdd(opcQNameLevel_t **list_array, opc_uint32_t *list_items, opcQNameLevel_t *item) {
+    opc_uint32_t i=0;
+    opc_error_t ret=OPC_ERROR_NONE;
+    if (!findItem(*list_array, *list_items, item, 0, qname_level_cmp_fct, &i)) {
+        if (NULL!=ensureItem((void**)list_array, *list_items, sizeof(opcQNameLevel_t))) {
+            ensureGap(*list_array, *list_items, i);
+            (*list_array)[i]=*item;
+        } else {
+            ret=OPC_ERROR_MEMORY;
+        }
+    }
+    return ret;
+}
+
+opcQNameLevel_t* opcQNameLevelLookup(opcQNameLevel_t *list_array, opc_uint32_t list_items, const xmlChar *ns, const xmlChar *ln) {
+    opcQNameLevel_t item;
+    item.level=0;
+    item.ln=(xmlChar *)ln;
+    item.ns=ns;
+    opc_uint32_t i=0;
+    opc_bool_t ret=NULL!=list_array && list_items>0 && findItem(list_array, list_items, &item, 0, qname_level_cmp_fct, &i);
+    return (ret?list_array+i:NULL);
+}
+
+opc_error_t opcQNameLevelCleanup(opcQNameLevel_t *list_array, opc_uint32_t *list_items, opc_uint32_t level, int *max_level) {
+    opc_uint32_t i=0;
+    for(opc_uint32_t j=0;j<*list_items;j++) {
+        if (list_array[j].level>=level) {
+            OPC_ASSERT(list_array[j].level==level); // cleanup should be called for every level...
+            if (NULL!=list_array[j].ln) xmlFree(list_array[j].ln);
+            // list_array[j].ns is managed by ther parser...
+        } else {
+            if (NULL!=max_level && list_array[j].level>*max_level) *max_level=list_array[j].level;
+            list_array[i++]=list_array[j];
+        }
+    }
+    *list_items=i;
+    return OPC_ERROR_NONE;
+}
+
+opc_error_t opcQNameLevelPush(opcQNameLevel_t **list_array, opc_uint32_t *list_items, opcQNameLevel_t *item) {
+    opc_error_t ret=OPC_ERROR_NONE;
+    if (NULL!=(ensureItem((void**)list_array, *list_items, sizeof(opcQNameLevel_t)))) {
+        (*list_array)[*list_items]=*item;
+        (*list_items)++;
+    } else {
+        ret=OPC_ERROR_MEMORY;
+    }
+    return ret;
+}
+
+opc_bool_t opcQNameLevelPopIfMatch(opcQNameLevel_t *list_array, opc_uint32_t *list_items, const xmlChar *ns, const xmlChar *ln, opc_uint32_t level) {
+    opc_bool_t ret=*list_items>0 && list_array[(*list_items)-1].level==level;
+    if (ret) {
+        OPC_ASSERT(0==xmlStrcmp(list_array[(*list_items)-1].ln, ln) && 0==xmlStrcmp(list_array[(*list_items)-1].ns, ns));
+        OPC_ASSERT(*list_items>0);
+        if (NULL!=list_array[(*list_items)-1].ln) xmlFree(list_array[(*list_items)-1].ln);
+        (*list_items)--;
     }
     return ret;
 }
