@@ -67,6 +67,8 @@ extern "C" {
     opc_bool_t opcXmlReaderStartChildren(opcXmlReader *reader);
     opc_bool_t opcXmlReaderEndChildren(opcXmlReader *reader);
 
+    opc_error_t opcXmlSetMCEProcessing(opcXmlReader *reader, opc_bool_t flag);
+    opc_error_t opcXmlUnderstandsNamespace(opcXmlReader *reader, const xmlChar *ns);
 
 #define opc_xml_start_document(reader) opcXmlReaderStartDocument(reader);
 #define opc_xml_end_document(reader) opcXmlReaderEndDocument(reader)

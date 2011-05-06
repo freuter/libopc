@@ -106,6 +106,13 @@ extern "C" {
         opcFileRawBuffer rawBuffer;
     };
 
+    typedef struct OPC_QNAME_LEVEL {
+        const xmlChar *ns;
+        xmlChar *ln;
+        opc_uint32_t level;
+        opc_uint32_t alternatecontent_handled : 1;
+    } opcQNameLevel_t;
+
     struct OPC_CONTAINER_INPUTSTREAM_STRUCT {
         opcZipInputStream *stream;
         opcContainer *container; // weak reference
@@ -113,6 +120,17 @@ extern "C" {
         opc_error_t error;
         opc_uint32_t reader_consume_element : 1;
         opc_uint32_t reader_element_handled : 1;
+        opc_uint32_t reader_mce : 1;
+        opcQNameLevel_t *ignored_array;
+        opc_uint32_t ignored_items;
+        int ignored_max_level;
+        opcQNameLevel_t *skip_end_stack;
+        opc_uint32_t skip_end_items;
+        opcQNameLevel_t *understands_array;
+        opc_uint32_t understands_items;
+        opcQNameLevel_t *processcontent_array;
+        opc_uint32_t processcontent_items;
+        int processcontent_max_level;
     };
 
     struct OPC_CONTAINER_OUTPUTSTREAM_STRUCT {
@@ -216,6 +234,12 @@ extern "C" {
     opc_bool_t opcContainerDeletePartEx(opcContainer *container, const xmlChar *partName, opc_bool_t rels_segment);
 
     opcContainerRelation *opcContainerFindRelationById(opcContainer *container, opcContainerRelation *relation_array, opc_uint32_t relation_items, const xmlChar *relation_id);
+
+    opc_error_t opcQNameLevelAdd(opcQNameLevel_t **list_array, opc_uint32_t *list_items, opcQNameLevel_t *item);
+    opcQNameLevel_t* opcQNameLevelLookup(opcQNameLevel_t *list_array, opc_uint32_t list_items, const xmlChar *ns, const xmlChar *ln);
+    opc_error_t opcQNameLevelCleanup(opcQNameLevel_t *list_array, opc_uint32_t *list_items, opc_uint32_t level, int *max_level);
+    opc_error_t opcQNameLevelPush(opcQNameLevel_t **list_array, opc_uint32_t *list_items, opcQNameLevel_t *item);
+    opc_bool_t opcQNameLevelPopIfMatch(opcQNameLevel_t *list_array, opc_uint32_t *list_items, const xmlChar *ns, const xmlChar *ln, opc_uint32_t level);
 
 #ifdef __cplusplus
 } /* extern "C" */

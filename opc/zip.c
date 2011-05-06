@@ -1411,7 +1411,7 @@ opc_bool_t opcZipSegmentDelete(opcZip *zip, opc_uint32_t *first_segment, opc_uin
     opc_bool_t ret=OPC_FALSE;
     opc_uint32_t segment_id=*first_segment;
     while(segment_id>=0 && segment_id<zip->segment_items) {
-        opc_uint32_t next_segment_id=segment_id;
+        opc_uint32_t next_segment_id=zip->segment_array[segment_id].next_segment_id;
         opcZipMarkSegmentDeleted(zip, segment_id, releaseCallback);
         segment_id=next_segment_id;
     }
