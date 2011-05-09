@@ -809,6 +809,7 @@ opcContainerInputStream* opcContainerOpenInputStreamEx(opcContainer *container, 
             ret->container=container;
             ret->stream=opcZipOpenInputStream(container->storage, *first_segment);
             if (NULL==ret->stream) {
+                mceCtxInit(&ret->mce);
                 xmlFree(ret); ret=NULL; // error
             }
         }
@@ -826,6 +827,7 @@ opc_uint32_t opcContainerReadInputStream(opcContainerInputStream* stream, opc_ui
 
 opc_error_t opcContainerCloseInputStream(opcContainerInputStream* stream) {
     opc_error_t ret=opcZipCloseInputStream(stream->container->storage, stream->stream);
+    mceCtxCleanup(&stream->mce);
     xmlFree(stream);
     return ret;
 }
