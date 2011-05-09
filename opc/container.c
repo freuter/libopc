@@ -826,11 +826,6 @@ opc_uint32_t opcContainerReadInputStream(opcContainerInputStream* stream, opc_ui
 
 opc_error_t opcContainerCloseInputStream(opcContainerInputStream* stream) {
     opc_error_t ret=opcZipCloseInputStream(stream->container->storage, stream->stream);
-    if (NULL!=stream->ignored_array) xmlFree(stream->ignored_array);
-    OPC_ENSURE(OPC_ERROR_NONE==opcQNameLevelCleanup(stream->understands_array, &stream->ignored_items, 0, NULL));
-    if (NULL!=stream->understands_array) xmlFree(stream->understands_array);
-    OPC_ENSURE(OPC_ERROR_NONE==opcQNameLevelCleanup(stream->processcontent_array, &stream->processcontent_items, 0, NULL));
-    if (NULL!=stream->processcontent_array) xmlFree(stream->processcontent_array);
     xmlFree(stream);
     return ret;
 }

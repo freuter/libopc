@@ -91,7 +91,12 @@
       <file path="opc_album.c"/>
     </source>
   </tool>
-  <tool name="mce_extract" dep="opc" mode="c99">
+  <tool name="mcepp" dep="mce" mode="c99">
+    <source root=".">
+      <file path="mcepp.c"/>
+    </source>
+  </tool>
+  <tool name="mce_extract" dep="opc mce" mode="c99">
     <source root=".">
       <file path="mce_extract.c"/>
     </source>

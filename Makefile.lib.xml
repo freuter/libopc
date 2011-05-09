@@ -30,7 +30,7 @@
  OF THE POSSIBILITY OF SUCH DAMAGE.
 -->
 <project>
-  <library name="opc" dep="plib zlib xml" mode="c99">
+  <library name="opc" dep="mce plib zlib xml" mode="c99">
     <header root="config">
       <file path="opc/config.h" install="yes"/>
     </header>
@@ -73,17 +73,19 @@
     </source>
   </tool>
 -->
-  <library name="mce" dep="opc" mode="c99">
+  <library name="mce" dep="plib xml" mode="c99">
     <header root="config">
       <file path="mce/config.h" install="yes"/>
     </header>
     <header root=".">
       <file path="mce/textreader.h" install="yes"/>
       <file path="mce/textwriter.h" install="yes"/>
+      <file path="mce/helper.h" install="yes"/>
     </header>
     <source root="mce">
       <file path="textreader.c"/>
       <file path="textwriter.c"/>
+      <file path="helper.c"/>
     </source>
   </library>
 </project>

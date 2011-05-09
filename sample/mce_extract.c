@@ -150,7 +150,7 @@ int main( int argc, const char* argv[] )
     }
     if (NULL==containerPath8 || NULL==writer) {
         printf("mce_extract FILENAME.\n\n");
-        printf("Sample: opc_extract test.docx word/document.xml\n");
+        printf("Sample: mce_extract test.docx word/document.xml\n");
     } else if (OPC_ERROR_NONE==opcInitLibrary()) {
         xmlTextWriterSetIndent(writer, writer_indent);
         opcContainer *c=NULL;

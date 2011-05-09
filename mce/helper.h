@@ -30,37 +30,50 @@
  OF THE POSSIBILITY OF SUCH DAMAGE.
  
 */
-/** @file mce/textreader.h
+/** @file mce/helper.h
  
  */
 #include <mce/config.h>
-#include <opc/opc.h>
-#include <mce/helper.h>
-#include <libxml/xmlwriter.h>
 
-#ifndef MCE_TEXTREADER_H
-#define MCE_TEXTREADER_H
+#ifndef MCE_HELPER_H
+#define MCE_HELPER_H
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-    typedef struct MCE_TEXTREADER {
-        xmlTextReaderPtr reader;
-        mceCtx_t mceCtx;
-    } mceTextReader_t;
+    typedef struct MCE_QNAME_LEVEL {
+        xmlChar *ns;
+        xmlChar *ln;
+        puint32_t level;
+        puint32_t alternatecontent_handled : 1;
+    } mceQNameLevel_t;
 
-    int mceTextReaderRead(mceTextReader_t *mceTextReader);
-    int mceTextReaderNext(mceTextReader_t *mceTextReader);
-    int mceTextReaderInit(mceTextReader_t *mceTextReader, xmlTextReaderPtr reader);
-    int mceTextReaderCleanup(mceTextReader_t *mceTextReader);
+    typedef struct MCE_QNAME_LEVEL_ARRAY {
+        mceQNameLevel_t *list_array;
+        puint32_t list_items;
+        puint32_t max_level;
+    } mceQNameLevelArray_t;
 
-    int mceTextReaderDump(mceTextReader_t *mceTextReader, xmlTextWriter *writer);
-    int mceTextReaderUnderstandsNamespace(mceTextReader_t *mceTextReader, const xmlChar *ns);
-    int mceTextReaderPostprocess(xmlTextReader *reader, mceCtx_t *ctx, int ret);
+    typedef struct MCE_CONTEXT {
+        mceQNameLevelArray_t ignored_array;
+        mceQNameLevelArray_t understands_array;
+        mceQNameLevelArray_t skip_array;
+        mceQNameLevelArray_t processcontent_array;
+    } mceCtx_t;
+
+    pbool_t mceQNameLevelAdd(mceQNameLevelArray_t *qname_level_array, const xmlChar *ns, const xmlChar *ln, puint32_t level);
+    mceQNameLevel_t* mceQNameLevelLookup(mceQNameLevelArray_t *qname_level_array, const xmlChar *ns, const xmlChar *ln);
+    pbool_t mceQNameLevelCleanup(mceQNameLevelArray_t *qname_level_array, puint32_t level);
+    pbool_t mceQNameLevelPush(mceQNameLevelArray_t *qname_level_array, const xmlChar *ns, const xmlChar *ln, puint32_t level);
+    pbool_t mceQNameLevelPopIfMatch(mceQNameLevelArray_t *qname_level_array, const xmlChar *ns, const xmlChar *ln, puint32_t level);
+
+    pbool_t mceCtxInit(mceCtx_t *ctx);
+    pbool_t mceCtxCleanup(mceCtx_t *ctx);
+    pbool_t mceCtxUnderstandsNamespace(mceCtx_t *ctx, const xmlChar *ns);
 
 #ifdef __cplusplus
 } /* extern "C" */
 #endif
 
-#endif /* MCE_TEXTREADER_H */
+#endif /* MCE_HELPER_H */

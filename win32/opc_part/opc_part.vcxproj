@@ -72,6 +72,9 @@
 <ProjectReference Include="../opc/opc.vcxproj">
 <Project>{f674b118-98cb-56eb-b398-3c0f6aa6c40b}</Project>
 </ProjectReference>
+<ProjectReference Include="../mce/mce.vcxproj">
+<Project>{662b4fea-25f4-5790-b59f-0daf49fbc412}</Project>
+</ProjectReference>
 <ProjectReference Include="../plib/plib.vcxproj">
 <Project>{9a6d5063-5bcd-597e-a440-5122933f70c4}</Project>
 </ProjectReference>

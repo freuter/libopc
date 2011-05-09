@@ -10,18 +10,18 @@
 </ProjectConfiguration>
 </ItemGroup>
 <PropertyGroup Label="Globals">
-    <ProjectGuid>{662b4fea-25f4-5790-b59f-0daf49fbc412}</ProjectGuid>
+    <ProjectGuid>{836267e2-b89d-5482-861c-767ac21c887b}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
-    <RootNamespace>mce</RootNamespace>
+    <RootNamespace>mcepp</RootNamespace>
 </PropertyGroup>
 <Import Project="$(VCTargetsPath)\Microsoft.Cpp.default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
-    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
-    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>Unicode</CharacterSet>
@@ -34,15 +34,21 @@
 <ItemDefinitionGroup>
 <ClCompile>
 <PreprocessorDefinitions>WIN32;LIBXML_STATIC;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-<AdditionalIncludeDirectories>..\..\config;..\..;..\..\config\win32-msvc\zlib-1.2.5;..\..\third_party\zlib-1.2.5;..\..\config\win32-msvc\libxml2-2.7.7;..\..\third_party\libxml2-2.7.7\include;..\..\config\win32-msvc\plib\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+<AdditionalIncludeDirectories>..\..\config\win32-msvc\zlib-1.2.5;..\..\third_party\zlib-1.2.5;..\..\config\win32-msvc\libxml2-2.7.7;..\..\third_party\libxml2-2.7.7\include;..\..\config\win32-msvc\plib\include;..\..\config;..\..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
 <CompileAs>CompileAsCpp</CompileAs>
 </ClCompile>
+<Link>
+<AdditionalDependencies>%(AdditionalDependencies)</AdditionalDependencies> 
+</Link>
 </ItemDefinitionGroup>
 <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
 <ClCompile>
 <WarningLevel>Level3</WarningLevel>
 <Optimization>Disabled</Optimization>
 </ClCompile>
+<Link>
+<GenerateDebugInformation>true</GenerateDebugInformation>
+</Link>
 </ItemDefinitionGroup>
 <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
 <ClCompile>
@@ -50,22 +56,22 @@
 <FunctionLevelLinking>true</FunctionLevelLinking> 
 <IntrinsicFunctions>true</IntrinsicFunctions> 
 </ClCompile>
+<Link>
+<GenerateDebugInformation>false</GenerateDebugInformation>
+<EnableCOMDATFolding>true</EnableCOMDATFolding>
+<OptimizeReferences>true</OptimizeReferences>
+</Link>
 </ItemDefinitionGroup>
 <ItemGroup>
-  <ClInclude Include="..\..\config\mce\config.h"/>
-  <ClInclude Include="..\..\mce\textreader.h"/>
-  <ClInclude Include="..\..\mce\textwriter.h"/>
-  <ClInclude Include="..\..\mce\helper.h"/>
 </ItemGroup>
 <ItemGroup>
-  <ClCompile Include="..\..\mce\textreader.c">
-  </ClCompile>
-  <ClCompile Include="..\..\mce\textwriter.c">
-  </ClCompile>
-  <ClCompile Include="..\..\mce\helper.c">
+  <ClCompile Include="..\..\sample\mcepp.c">
   </ClCompile>
 </ItemGroup>
 <ItemGroup>
+<ProjectReference Include="../mce/mce.vcxproj">
+<Project>{662b4fea-25f4-5790-b59f-0daf49fbc412}</Project>
+</ProjectReference>
 <ProjectReference Include="../plib/plib.vcxproj">
 <Project>{9a6d5063-5bcd-597e-a440-5122933f70c4}</Project>
 </ProjectReference>
