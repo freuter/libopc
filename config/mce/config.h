@@ -36,11 +36,23 @@
 
 #include <libxml/xmlstring.h>
 #include <stdio.h>
+#include <plib/plib.h>
+#include <assert.h>
 
 
 #ifdef __cplusplus
 extern "C" {
 #endif   
+
+#define PASSERT(e) assert(e)
+#ifdef NDEBUG
+#define PENSURE(e) (void)(e)
+#else
+#define PENSURE(e) assert(e)
+#endif
+#define PTRUE (0==0)
+#define PFALSE (0==1)
+
 
 /**
  Converts an ASCII string to a xmlChar string. This only works for ASCII strings.

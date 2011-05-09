@@ -41,6 +41,7 @@
 #include <opc/container.h>
 #include <opc/zip.h>
 #include <zlib.h>
+#include <mce/textreader.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -117,20 +118,11 @@ extern "C" {
         opcZipInputStream *stream;
         opcContainer *container; // weak reference
         xmlTextReaderPtr reader; // in case we have an xmlTextReader associated
+        mceCtx_t mce;
         opc_error_t error;
         opc_uint32_t reader_consume_element : 1;
         opc_uint32_t reader_element_handled : 1;
         opc_uint32_t reader_mce : 1;
-        opcQNameLevel_t *ignored_array;
-        opc_uint32_t ignored_items;
-        int ignored_max_level;
-        opcQNameLevel_t *skip_end_stack;
-        opc_uint32_t skip_end_items;
-        opcQNameLevel_t *understands_array;
-        opc_uint32_t understands_items;
-        opcQNameLevel_t *processcontent_array;
-        opc_uint32_t processcontent_items;
-        int processcontent_max_level;
     };
 
     struct OPC_CONTAINER_OUTPUTSTREAM_STRUCT {
