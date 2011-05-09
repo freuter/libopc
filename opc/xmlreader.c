@@ -97,7 +97,6 @@ opc_error_t opcXmlSetMCEProcessing(opcXmlReader *reader, opc_bool_t flag) {
 
 void opcXmlReaderStartDocument(opcXmlReader *reader) {
     if (OPC_ERROR_NONE==reader->error) {
-        mceCtxInit(&reader->mce);
         if(1!=_opcXmlTextReaderNext(reader)) {
             reader->error=OPC_ERROR_XML;
         }
@@ -108,7 +107,6 @@ void opcXmlReaderEndDocument(opcXmlReader *reader) {
     if (OPC_ERROR_NONE==reader->error) {
 //        printf("%i %s\n", xmlTextReaderNodeType(reader->reader), xmlTextReaderConstLocalName(reader->reader));
         OPC_ASSERT(0==xmlTextReaderDepth(reader->reader));
-        mceCtxCleanup(&reader->mce);
         if(XML_READER_TYPE_NONE!=xmlTextReaderNodeType(reader->reader)) {
             reader->error=OPC_ERROR_XML;
         }
