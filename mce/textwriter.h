@@ -31,9 +31,11 @@
  
 */
 /** @file mce/textwriter.h
- 
- */
+
+*/
 #include <mce/config.h>
+#include <libxml/xmlwriter.h>
+#include <mce/helper.h>
 
 #ifndef MCE_TEXTWRITER_H
 #define MCE_TEXTWRITER_H
@@ -42,32 +44,37 @@
 extern "C" {
 #endif    
 
-#include <opc/opc.h>
-	
 #define MCE_DEFAULT 0x0
 #define MCE_IGNORABLE 0x1
 #define MCE_MUSTUNDERSTAND 0x2
-	
-	typedef struct MCE_TEXTWRITER_STRUCT mceTextWriter;
 
-	mceTextWriter *mceTextWriterOpen(opcPart *part);
-	int mceTextWriterClose();
-	int mceTextWriterStartDocument();
-	int mceTextWriterEndDocument();
-	int mceTextWriterStartElement(const xmlChar *ns, const xmlChar *ln);
-	int mceTextWriterEndElement();
-	const xmlChar *mceTextWriterRegisterNamespace(const xmlChar *ns, const xmlChar *prefix, int flags); 	
-	int mceTextWriterProcessContent(const xmlChar *ns, const xmlChar *ln);
-	int mceTextWriterAttributeF(const xmlChar *ns, const xmlChar *ln, const char *value, ...);
-	int mceTextWriterStartAlternateContent();
-	int mceTextWriterEndAlternateContent();
-	int mceTextWriterStartChoice(const xmlChar *ns);
-	int mceTextWriterEndChoice();
-	int mceTextWriterStartFallback();
-	int mceTextWriterEndFallback();
-	
+    typedef struct MCE_TEXTWRITER_STRUCT mceTextWriter;
+
+    struct MCE_TEXTWRITER_STRUCT {
+        xmlTextWriterPtr writer;
+        puint32_t level;
+        mceQNameLevelArray_t registered_array;
+    };
+
+    mceTextWriter *mceTextWriterCreateIO(xmlOutputWriteCallback iowrite, xmlOutputCloseCallback  ioclose, void *ioctx, xmlCharEncodingHandlerPtr encoder);
+    int mceTextWriterFree(mceTextWriter *w);
+    int mceTextWriterStartDocument(mceTextWriter *w);
+    int mceTextWriterEndDocument(mceTextWriter *w);
+    int mceTextWriterStartElement(mceTextWriter *w, const xmlChar *ns, const xmlChar *ln);
+    int mceTextWriterEndElement(mceTextWriter *w, const xmlChar *ns, const xmlChar *ln);
+    int mceTextWriterWriteString(mceTextWriter *w, const xmlChar *content);
+    const xmlChar *mceTextWriterRegisterNamespace(mceTextWriter *w, const xmlChar *ns, const xmlChar *prefix, int flags);
+    int mceTextWriterProcessContent(mceTextWriter *w, const xmlChar *ns, const xmlChar *ln);
+    int mceTextWriterAttributeF(mceTextWriter *w, const xmlChar *ns, const xmlChar *ln, const char *value, ...);
+    int mceTextWriterStartAlternateContent(mceTextWriter *w);
+    int mceTextWriterEndAlternateContent(mceTextWriter *w);
+    int mceTextWriterStartChoice(mceTextWriter *w, const xmlChar *ns);
+    int mceTextWriterEndChoice(mceTextWriter *w);
+    int mceTextWriterStartFallback(mceTextWriter *w);
+    int mceTextWriterEndFallback(mceTextWriter *w);
+
 #ifdef __cplusplus
 } /* extern "C" */
 #endif    
-		
+
 #endif /* MCE_TEXTWRITER_H */

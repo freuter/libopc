@@ -31,62 +31,130 @@
  */
 #include <mce/textwriter.h>
 
-mceTextWriter *mceTextWriterOpen(opcPart *part) {
-	return NULL;
+mceTextWriter *mceTextWriterCreateIO(xmlOutputWriteCallback iowrite, xmlOutputCloseCallback  ioclose, void *ioctx, xmlCharEncodingHandlerPtr encoder) {
+    mceTextWriter *w=(mceTextWriter*)xmlMalloc(sizeof(mceTextWriter));
+    if (NULL!=w) {
+        memset(w, 0, sizeof(*w));
+        xmlOutputBufferPtr out=xmlOutputBufferCreateIO(iowrite, ioclose, ioctx, encoder);
+        w->writer=xmlNewTextWriter(out);
+        if (NULL==w->writer) {
+            // creation failed
+            xmlOutputBufferClose(out);
+            xmlFree(w);
+            w=NULL;
+        }
+    }
+    return w;
 }
 
-int mceTextWriterClose() {
-	return 0;
+int mceTextWriterFree(mceTextWriter *w) {
+    int ret=0;
+    if (NULL!=w) {
+        xmlFreeTextWriter(w->writer);
+        if (NULL!=w->registered_array.list_array) xmlFree(w->registered_array.list_array);
+        xmlFree(w);
+        ret=1;
+    }
+    return ret;
 }
 
-int mceTextWriterStartDocument() {
-	return 0;
+int mceTextWriterStartDocument(mceTextWriter *w) {
+    int ret=0;
+    ret=xmlTextWriterStartDocument(w->writer, NULL, NULL, NULL);
+    PASSERT(0==w->level);
+    return ret;
 }
 
-int mceTextWriterEndDocument() {
-	return 0;
+int mceTextWriterEndDocument(mceTextWriter *w) {
+    int ret=0;
+    PASSERT(0==w->level);
+    mceQNameLevelCleanup(&w->registered_array, w->level);
+    ret=xmlTextWriterEndDocument(w->writer);
+    return ret;
 }
 
-int mceTextWriterStartElement(const xmlChar *ns, const xmlChar *ln) {
-	return 0;
+int mceTextWriterStartElement(mceTextWriter *w, const xmlChar *ns, const xmlChar *ln) {
+    int ret=0;
+    PASSERT(w->level>=w->registered_array.max_level);
+    mceQNameLevel_t* qName=mceQNameLevelLookup(&w->registered_array, ns, NULL, PTRUE);
+    if (NULL!=qName) {
+        if (NULL==qName->ln) {
+            ret=xmlTextWriterStartElement(w->writer, ln);
+        } else {
+            ret=xmlTextWriterStartElementNS(w->writer, qName->ln, ln, (w->level==w->registered_array.max_level?ns:NULL));
+        }
+        if (w->level==w->registered_array.max_level) {
+            // register new namespaces
+            for(puint32_t i=0;i<w->registered_array.list_items;i++) {
+                if (w->registered_array.list_array[i].level==w->level && w->registered_array.list_array[i].ns!=ns) {
+                    xmlTextWriterWriteAttributeNS(w->writer, 
+                                                  _X("xmlns"), 
+                                                  w->registered_array.list_array[i].ln, 
+                                                  NULL, 
+                                                  w->registered_array.list_array[i].ns);
+                }
+            }
+        }
+
+
+    } else {
+        // namespace not registered => not good!
+        PASSERT(0==ret);
+    }
+    w->level++;
+    return ret;
 }
 
-int mceTextWriterEndElement() {
-	return 0;
+int mceTextWriterEndElement(mceTextWriter *w, const xmlChar *ns, const xmlChar *ln) {
+    int ret=0;
+    ret=xmlTextWriterEndElement(w->writer);
+    mceQNameLevelCleanup(&w->registered_array, w->level);
+    PASSERT(w->level>0);
+    w->level--;
+    return ret;
 }
 
-const xmlChar *mceTextWriterRegisterNamespace(const xmlChar *ns, const xmlChar *prefix, int flags) {
-	return 0;
+int mceTextWriterWriteString(mceTextWriter *w, const xmlChar *content) {
+    int ret=0;
+    ret=xmlTextWriterWriteString(w->writer, content);
+    return ret;
 }
 
-int mceTextWriterProcessContent(const xmlChar *ns, const xmlChar *ln) {
-	return 0;
+const xmlChar *mceTextWriterRegisterNamespace(mceTextWriter *w, const xmlChar *ns, const xmlChar *prefix, int flags) {
+    mceQNameLevelAdd(&w->registered_array, ns, prefix, w->level);
+    mceQNameLevel_t *ret=mceQNameLevelLookup(&w->registered_array, ns, prefix, PFALSE);
+    PASSERT(NULL!=ret); // not inserted? why?
+    return (NULL!=ret?ret->ns:NULL);
 }
 
-int mceTextWriterAttributeF(const xmlChar *ns, const xmlChar *ln, const char *value, ...) {
-	return 0;
+int mceTextWriterProcessContent(mceTextWriter *w, const xmlChar *ns, const xmlChar *ln) {
+    return 0;
 }
 
-int mceTextWriterStartAlternateContent() {
-	return 0;
+int mceTextWriterAttributeF(mceTextWriter *w, const xmlChar *ns, const xmlChar *ln, const char *value, ...) {
+    return 0;
 }
 
-int mceTextWriterEndAlternateContent() {
-	return 0;
+int mceTextWriterStartAlternateContent(mceTextWriter *w) {
+    return 0;
 }
 
-int mceTextWriterStartChoice(const xmlChar *ns) {
-	return 0;
+int mceTextWriterEndAlternateContent(mceTextWriter *w) {
+    return 0;
 }
 
-int mceTextWriterEndChoice() {
-	return 0;
+int mceTextWriterStartChoice(mceTextWriter *w, const xmlChar *ns) {
+    return 0;
 }
 
-int mceTextWriterStartFallback() {
-	return 0;
+int mceTextWriterEndChoice(mceTextWriter *w) {
+    return 0;
 }
 
-int mceTextWriterEndFallback() {
-	return 0;
+int mceTextWriterStartFallback(mceTextWriter *w) {
+    return 0;
+}
+
+int mceTextWriterEndFallback(mceTextWriter *w) {
+    return 0;
 }

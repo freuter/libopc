@@ -35,8 +35,8 @@
 opcXmlReader* opcXmlReaderOpenEx(opcContainer *container, const xmlChar *partName, opc_bool_t rels_segment, const char * URL, const char * encoding, int options) {
     opcContainerInputStream* stream=opcContainerOpenInputStreamEx(container, partName, rels_segment);
     if (NULL!=stream) {
-        OPC_ASSERT(NULL==stream->reader);
-        stream->reader=xmlReaderForIO((xmlInputReadCallback)opcContainerReadInputStream, 
+        OPC_ASSERT(NULL==stream->mceReader.reader);
+        stream->mceReader.reader=xmlReaderForIO((xmlInputReadCallback)opcContainerReadInputStream, 
                                       (xmlInputCloseCallback)opcContainerCloseInputStream, 
                                       stream, URL, encoding, options);
         return stream;
@@ -51,8 +51,8 @@ opcXmlReader* opcXmlReaderOpen(opcContainer *container, const xmlChar *partName,
 
 opc_error_t opcXmlReaderClose(opcXmlReader *reader) {
     opc_error_t ret=OPC_ERROR_NONE;
-    if (NULL!=reader && NULL!=reader->reader) {
-        if (0!=xmlTextReaderClose(reader->reader) && OPC_ERROR_NONE==ret) {
+    if (NULL!=reader && NULL!=reader->mceReader.reader) {
+        if (0!=xmlTextReaderClose(reader->mceReader.reader) && OPC_ERROR_NONE==ret) {
             ret=OPC_ERROR_STREAM;
         }
         // WARNING: reader is not longer valid here, since xmlTextReaderClose call stream close which will kill reader
@@ -78,21 +78,25 @@ static xmlChar *xmlStrDupArray(const xmlChar *value) {
 
 
 static inline int _opcXmlTextReaderRead(opcXmlReader *reader) {
-    return (1==reader->reader_mce?mceTextReaderPostprocess(reader->reader, &reader->mce, xmlTextReaderRead(reader->reader)):xmlTextReaderRead(reader->reader));
+    return (1==reader->reader_mce?mceTextReaderPostprocess(reader->mceReader.reader, &reader->mceReader.mceCtx, xmlTextReaderRead(reader->mceReader.reader)):xmlTextReaderRead(reader->mceReader.reader));
 }
 
 static inline int _opcXmlTextReaderNext(opcXmlReader *reader) {
-    return (1==reader->reader_mce?mceTextReaderPostprocess(reader->reader, &reader->mce, xmlTextReaderNext(reader->reader)):xmlTextReaderNext(reader->reader));
+    return (1==reader->reader_mce?mceTextReaderPostprocess(reader->mceReader.reader, &reader->mceReader.mceCtx, xmlTextReaderNext(reader->mceReader.reader)):xmlTextReaderNext(reader->mceReader.reader));
 }
 
 opc_error_t opcXmlUnderstandsNamespace(opcXmlReader *reader, const xmlChar *ns) {
-    mceCtxUnderstandsNamespace(&reader->mce, ns);
+    mceCtxUnderstandsNamespace(&reader->mceReader.mceCtx, ns);
     return OPC_ERROR_NONE;
 }
 
 opc_error_t opcXmlSetMCEProcessing(opcXmlReader *reader, opc_bool_t flag) {
     reader->reader_mce=(flag?1:0);
     return OPC_ERROR_NONE;
+}
+
+mceTextReader_t *opcXmlReaderGetMceReader(opcXmlReader *reader) {
+    return &reader->mceReader;
 }
 
 void opcXmlReaderStartDocument(opcXmlReader *reader) {
@@ -105,66 +109,66 @@ void opcXmlReaderStartDocument(opcXmlReader *reader) {
 
 void opcXmlReaderEndDocument(opcXmlReader *reader) {
     if (OPC_ERROR_NONE==reader->error) {
-//        printf("%i %s\n", xmlTextReaderNodeType(reader->reader), xmlTextReaderConstLocalName(reader->reader));
-        OPC_ASSERT(0==xmlTextReaderDepth(reader->reader));
-        if(XML_READER_TYPE_NONE!=xmlTextReaderNodeType(reader->reader)) {
+//        printf("%i %s\n", xmlTextReaderNodeType(reader->mceReader.reader), xmlTextReaderConstLocalName(reader->mceReader.reader));
+        OPC_ASSERT(0==xmlTextReaderDepth(reader->mceReader.reader));
+        if(XML_READER_TYPE_NONE!=xmlTextReaderNodeType(reader->mceReader.reader)) {
             reader->error=OPC_ERROR_XML;
         }
     }
 }
 
 const xmlChar *opcXmlReaderLocalName(opcXmlReader *reader) {
-    return xmlTextReaderConstLocalName(reader->reader);
+    return xmlTextReaderConstLocalName(reader->mceReader.reader);
 }
 
 const xmlChar *opcXmlReaderConstNamespaceUri(opcXmlReader *reader) {
-    return xmlTextReaderConstNamespaceUri(reader->reader);
+    return xmlTextReaderConstNamespaceUri(reader->mceReader.reader);
 }
 
 const xmlChar *opcXmlReaderConstPrefix(opcXmlReader *reader) {
-    return xmlTextReaderConstPrefix(reader->reader);
+    return xmlTextReaderConstPrefix(reader->mceReader.reader);
 }
 
 
 const xmlChar *opcXmlReaderConstValue(opcXmlReader *reader) {
-    return xmlTextReaderConstValue(reader->reader);
+    return xmlTextReaderConstValue(reader->mceReader.reader);
 }
 
 opc_bool_t opcXmlReaderStartElement(opcXmlReader *reader, xmlChar *ns, xmlChar *ln) {
-//    printf("%i %s %s\n", xmlTextReaderNodeType(reader->reader), xmlTextReaderConstLocalName(reader->reader), xmlTextReaderConstNamespaceUri(reader->reader));
+//    printf("%i %s %s\n", xmlTextReaderNodeType(reader->mceReader.reader), xmlTextReaderConstLocalName(reader->mceReader.reader), xmlTextReaderConstNamespaceUri(reader->mceReader.reader));
     return (OPC_ERROR_NONE==reader->error
-        && XML_READER_TYPE_ELEMENT==xmlTextReaderNodeType(reader->reader)
-        && (ln==NULL || xmlStrEqual(xmlTextReaderConstLocalName(reader->reader), ln))
-        && (ns==NULL || xmlStrEqual(xmlTextReaderConstNamespaceUri(reader->reader), ns))
+        && XML_READER_TYPE_ELEMENT==xmlTextReaderNodeType(reader->mceReader.reader)
+        && (ln==NULL || xmlStrEqual(xmlTextReaderConstLocalName(reader->mceReader.reader), ln))
+        && (ns==NULL || xmlStrEqual(xmlTextReaderConstNamespaceUri(reader->mceReader.reader), ns))
         && (1==(reader->reader_element_handled=1)));
 }
 
 opc_bool_t opcXmlReaderStartAttribute(opcXmlReader *reader, xmlChar *ns, xmlChar *ln) {
     return (OPC_ERROR_NONE==reader->error
-        && XML_READER_TYPE_ATTRIBUTE==xmlTextReaderNodeType(reader->reader)
-        && (ln==NULL || xmlStrEqual(xmlTextReaderConstLocalName(reader->reader), ln))
-        && (ns==NULL || xmlStrEqual(xmlTextReaderConstNamespaceUri(reader->reader), ns))
+        && XML_READER_TYPE_ATTRIBUTE==xmlTextReaderNodeType(reader->mceReader.reader)
+        && (ln==NULL || xmlStrEqual(xmlTextReaderConstLocalName(reader->mceReader.reader), ln))
+        && (ns==NULL || xmlStrEqual(xmlTextReaderConstNamespaceUri(reader->mceReader.reader), ns))
         && (1==(reader->reader_element_handled=1)));
 }
 
 opc_bool_t opcXmlReaderStartText(opcXmlReader *reader) {
     return (OPC_ERROR_NONE==reader->error
-        && (XML_READER_TYPE_TEXT==xmlTextReaderNodeType(reader->reader) || XML_READER_TYPE_SIGNIFICANT_WHITESPACE==xmlTextReaderNodeType(reader->reader))
+        && (XML_READER_TYPE_TEXT==xmlTextReaderNodeType(reader->mceReader.reader) || XML_READER_TYPE_SIGNIFICANT_WHITESPACE==xmlTextReaderNodeType(reader->mceReader.reader))
         && (1==(reader->reader_element_handled=1)));
 }
 
 opc_bool_t opcXmlReaderStartAttributes(opcXmlReader *reader) {
     return OPC_ERROR_NONE==reader->error
-        && (1==xmlTextReaderHasAttributes(reader->reader)) 
-        && (1==xmlTextReaderMoveToFirstAttribute(reader->reader));
+        && (1==xmlTextReaderHasAttributes(reader->mceReader.reader)) 
+        && (1==xmlTextReaderMoveToFirstAttribute(reader->mceReader.reader));
 }
 
 opc_bool_t opcXmlReaderEndAttributes(opcXmlReader *reader) {
     if (OPC_ERROR_NONE==reader->error) {
-        if (1==xmlTextReaderMoveToNextAttribute(reader->reader)) {
+        if (1==xmlTextReaderMoveToNextAttribute(reader->mceReader.reader)) {
             return OPC_FALSE;
         } else {
-            if(1!=xmlTextReaderMoveToElement(reader->reader)) {
+            if(1!=xmlTextReaderMoveToElement(reader->mceReader.reader)) {
                 reader->error=OPC_ERROR_XML;
             }
             return OPC_TRUE;
@@ -177,7 +181,7 @@ opc_bool_t opcXmlReaderEndAttributes(opcXmlReader *reader) {
 
 opc_bool_t opcXmlReaderStartChildren(opcXmlReader *reader) {
     if (OPC_ERROR_NONE==reader->error) {
-        if (0==xmlTextReaderIsEmptyElement(reader->reader)) {
+        if (0==xmlTextReaderIsEmptyElement(reader->mceReader.reader)) {
             if(1==_opcXmlTextReaderRead(reader)) {
                 reader->reader_consume_element=1;
                 reader->reader_element_handled=0;
@@ -198,8 +202,8 @@ opc_bool_t opcXmlReaderStartChildren(opcXmlReader *reader) {
 
 opc_bool_t opcXmlReaderEndChildren(opcXmlReader *reader) {
     if (OPC_ERROR_NONE==reader->error) {
-//        printf("%i %s\n", xmlTextReaderNodeType(reader->reader), xmlTextReaderConstLocalName(reader->reader));
-        if (XML_READER_TYPE_END_ELEMENT==xmlTextReaderNodeType(reader->reader)) {
+//        printf("%i %s\n", xmlTextReaderNodeType(reader->mceReader.reader), xmlTextReaderConstLocalName(reader->mceReader.reader));
+        if (XML_READER_TYPE_END_ELEMENT==xmlTextReaderNodeType(reader->mceReader.reader)) {
             OPC_ENSURE(-1!=_opcXmlTextReaderRead(reader));
             reader->reader_consume_element=0;
             reader->reader_element_handled=1;
@@ -207,7 +211,7 @@ opc_bool_t opcXmlReaderEndChildren(opcXmlReader *reader) {
         } else {
             if (reader->reader_consume_element) {
                 if (!reader->reader_element_handled) {
-                    fprintf(stderr, "UNHANDLED %i %s \"%s\n", xmlTextReaderNodeType(reader->reader), xmlTextReaderConstLocalName(reader->reader), xmlTextReaderConstValue(reader->reader));
+                    fprintf(stderr, "UNHANDLED %i %s \"%s\n", xmlTextReaderNodeType(reader->mceReader.reader), xmlTextReaderConstLocalName(reader->mceReader.reader), xmlTextReaderConstValue(reader->mceReader.reader));
                 }
                 OPC_ENSURE(-1!=_opcXmlTextReaderNext(reader));
             }
@@ -225,7 +229,7 @@ opc_bool_t opcXmlReaderEndChildren(opcXmlReader *reader) {
 xmlDocPtr opcXmlReaderReadDoc(opcContainer *container, const xmlChar *partName, const char * URL, const char * encoding, int options) {
     opcContainerInputStream* stream=opcContainerOpenInputStreamEx(container, partName, OPC_FALSE);
     if (NULL!=stream) {
-        OPC_ASSERT(NULL==stream->reader);
+        OPC_ASSERT(NULL==stream->mceReader.reader);
         xmlDocPtr doc=xmlReadIO((xmlInputReadCallback)opcContainerReadInputStream, 
                                 (xmlInputCloseCallback)opcContainerCloseInputStream, 
                                 stream, URL, encoding, options);

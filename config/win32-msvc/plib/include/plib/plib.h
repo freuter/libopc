@@ -45,7 +45,10 @@ extern "C" {
 #endif
 
 #ifdef WIN32
-#include <windows.h>
+//#include <windows.h>
+#include <crtdefs.h>
+#include <string.h>
+#include <stdlib.h>
 #endif
 
 #ifdef HAVE_STDDEF_H

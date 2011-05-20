@@ -34,6 +34,7 @@
  
  */
 #include <opc/config.h>
+#include <mce/textwriter.h>
 
 #ifndef OPC_XMLWRITER_H
 #define OPC_XMLWRITER_H
@@ -42,9 +43,8 @@
 extern "C" {
 #endif    
 
-    typedef struct OPC_XMLWRITER_STRUCT opcXmlWriter;
+    mceTextWriter *mceTextWriterOpen(opcContainer *c, opcPart part, opcCompressionOption_t compression_option);
 
-    
 #ifdef __cplusplus
 } /* extern "C" */
 #endif    

@@ -30,5 +30,24 @@
  OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 #include <opc/opc.h>
+#include <mce/textreader.h>
 
 
+static int opcTextWriterWrite(void * context, const char * buffer, int len) {
+    opcContainerOutputStream *stream=(opcContainerOutputStream *)context;
+    return opcContainerWriteOutputStream(stream, (const opc_uint8_t*)buffer, len);
+}
+
+static int opcTextWriterClose(void * context) {
+    opcContainerOutputStream *stream=(opcContainerOutputStream *)context;
+    return (OPC_ERROR_NONE==opcContainerCloseOutputStream(stream)?0:-1);
+}
+
+mceTextWriter *mceTextWriterOpen(opcContainer *c, opcPart part, opcCompressionOption_t compression_option) {
+    opcContainerOutputStream *stream=opcContainerCreateOutputStream(c, part, compression_option);
+    mceTextWriter *w=NULL;
+    if (NULL!=stream) {
+        w=mceTextWriterCreateIO(opcTextWriterWrite, opcTextWriterClose, stream, NULL);
+    }
+    return w;
+}

@@ -1,7 +1,7 @@
 #include <mce/helper.h>
 #include <libxml/xmlmemory.h>
 
-static pbool_t mceQNameLevelLookupEx(mceQNameLevelArray_t *qname_level_array, const xmlChar *ns, const xmlChar *ln, puint32_t *pos) {
+static pbool_t mceQNameLevelLookupEx(mceQNameLevelArray_t *qname_level_array, const xmlChar *ns, const xmlChar *ln, puint32_t *pos, pbool_t ignore_ln) {
     puint32_t i=0;
     puint32_t j=qname_level_array->list_items;
     while(i<j) {
@@ -9,7 +9,7 @@ static pbool_t mceQNameLevelLookupEx(mceQNameLevelArray_t *qname_level_array, co
         PASSERT(i<=m && m<j);
         mceQNameLevel_t *q2=&qname_level_array->list_array[m];
         int const ns_cmp=(NULL==ns?(NULL==q2->ns?0:-1):(NULL==q2->ns?+1:xmlStrcmp(ns, q2->ns)));
-        int const cmp=(0==ns_cmp?xmlStrcmp(ln, q2->ln):ns_cmp);
+        int const cmp=(ignore_ln?ns_cmp:(0==ns_cmp?xmlStrcmp(ln, q2->ln):ns_cmp));
         if (cmp<0) { j=m; } else if (cmp>0) { i=m+1; } else { *pos=m; return PTRUE; }
     }
     PASSERT(i==j); 
@@ -17,16 +17,15 @@ static pbool_t mceQNameLevelLookupEx(mceQNameLevelArray_t *qname_level_array, co
     return PFALSE;
 }
 
-mceQNameLevel_t* mceQNameLevelLookup(mceQNameLevelArray_t *qname_level_array, const xmlChar *ns, const xmlChar *ln) {
+mceQNameLevel_t* mceQNameLevelLookup(mceQNameLevelArray_t *qname_level_array, const xmlChar *ns, const xmlChar *ln, pbool_t ignore_ln) {
     puint32_t pos=0;
-    return (mceQNameLevelLookupEx(qname_level_array, ns, ln, &pos)?qname_level_array->list_array+pos:NULL);
-
+    return (mceQNameLevelLookupEx(qname_level_array, ns, ln, &pos, ignore_ln)?qname_level_array->list_array+pos:NULL);
 }
 
 pbool_t mceQNameLevelAdd(mceQNameLevelArray_t *qname_level_array, const xmlChar *ns, const xmlChar *ln, puint32_t level) {
     puint32_t i=0;
     pbool_t ret=PFALSE;
-    if (!mceQNameLevelLookupEx(qname_level_array, ns, ln, &i)) {
+    if (!mceQNameLevelLookupEx(qname_level_array, ns, ln, &i, PFALSE)) {
         mceQNameLevel_t *new_list_array=NULL;
         if (NULL!=(new_list_array=(mceQNameLevel_t *)xmlRealloc(qname_level_array->list_array, (1+qname_level_array->list_items)*sizeof(*qname_level_array->list_array)))) {
             qname_level_array->list_array=new_list_array;

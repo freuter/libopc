@@ -63,7 +63,7 @@ extern "C" {
     } mceCtx_t;
 
     pbool_t mceQNameLevelAdd(mceQNameLevelArray_t *qname_level_array, const xmlChar *ns, const xmlChar *ln, puint32_t level);
-    mceQNameLevel_t* mceQNameLevelLookup(mceQNameLevelArray_t *qname_level_array, const xmlChar *ns, const xmlChar *ln);
+    mceQNameLevel_t* mceQNameLevelLookup(mceQNameLevelArray_t *qname_level_array, const xmlChar *ns, const xmlChar *ln, pbool_t ignore_ln);
     pbool_t mceQNameLevelCleanup(mceQNameLevelArray_t *qname_level_array, puint32_t level);
     pbool_t mceQNameLevelPush(mceQNameLevelArray_t *qname_level_array, const xmlChar *ns, const xmlChar *ln, puint32_t level);
     pbool_t mceQNameLevelPopIfMatch(mceQNameLevelArray_t *qname_level_array, const xmlChar *ns, const xmlChar *ln, puint32_t level);

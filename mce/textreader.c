@@ -104,7 +104,7 @@ int mceTextReaderPostprocess(xmlTextReader *reader, mceCtx_t *ctx, int ret) {
                                 xmlChar *v=xmlStrDupArray(xmlTextReaderConstValue(reader));
                                 for(xmlChar *prefix=v;*prefix!=0;prefix+=1+xmlStrlen(prefix)) {
                                     xmlChar *ns_=xmlTextReaderLookupNamespace(reader, prefix);
-                                    if (NULL!=ns_ && NULL==mceQNameLevelLookup(&ctx->understands_array, ns_, NULL)) {
+                                    if (NULL!=ns_ && NULL==mceQNameLevelLookup(&ctx->understands_array, ns_, NULL, PFALSE)) {
                                         PASSERT(xmlTextReaderDepth(reader)>0); // remove one, since we need the element and not the attribute level
                                         PENSURE(mceQNameLevelAdd(&ctx->ignored_array, ns_, NULL, xmlTextReaderDepth(reader)-1));
                                     }
@@ -123,7 +123,7 @@ int mceTextReaderPostprocess(xmlTextReader *reader, mceCtx_t *ctx, int ret) {
                                         prefix=0;
                                     };
                                     xmlChar *ns_=xmlTextReaderLookupNamespace(reader, qname+prefix);
-                                    if (NULL!=ns_ && NULL==mceQNameLevelLookup(&ctx->understands_array, ns_, NULL)) {
+                                    if (NULL!=ns_ && NULL==mceQNameLevelLookup(&ctx->understands_array, ns_, NULL, PFALSE)) {
                                         PASSERT(xmlTextReaderDepth(reader)>0); // remove one, since we need the element and not the attribute level
                                         PENSURE(mceQNameLevelAdd(&ctx->processcontent_array, ns_, xmlStrdup(qname+ln), xmlTextReaderDepth(reader)-1));
 
@@ -149,7 +149,8 @@ int mceTextReaderPostprocess(xmlTextReader *reader, mceCtx_t *ctx, int ret) {
                             remove=(xmlAttrPtr)xmlTextReaderCurrentNode(reader);
                         } else if (NULL!=mceQNameLevelLookup(&ctx->ignored_array,
                                                              xmlTextReaderConstNamespaceUri(reader), 
-                                                             NULL)) {
+                                                             NULL, 
+                                                             PFALSE)) {
                             OPC_ASSERT(XML_ATTRIBUTE_NODE==xmlTextReaderCurrentNode(reader)->type);
                             remove=(xmlAttrPtr)xmlTextReaderCurrentNode(reader);
                         }
@@ -188,7 +189,7 @@ int mceTextReaderPostprocess(xmlTextReader *reader, mceCtx_t *ctx, int ret) {
                                 for(xmlChar *prefix=req;*prefix!=0;prefix+=1+xmlStrlen(prefix)) {
                                     xmlChar *ns_=xmlTextReaderLookupNamespace(reader, prefix);
                                     OPC_ASSERT(NULL!=ns_);
-                                    process_content&=(NULL!=ns_ && NULL!=mceQNameLevelLookup(&ctx->understands_array, ns_, NULL));
+                                    process_content&=(NULL!=ns_ && NULL!=mceQNameLevelLookup(&ctx->understands_array, ns_, NULL, PFALSE));
                                 }
                                 ctx->skip_array.list_array[ctx->skip_array.list_items-1].alternatecontent_handled=(process_content?1:0);
                             } else {
@@ -207,7 +208,7 @@ int mceTextReaderPostprocess(xmlTextReader *reader, mceCtx_t *ctx, int ret) {
                         process_content=(1!=ctx->skip_array.list_array[ctx->skip_array.list_items-1].alternatecontent_handled);
                     }
             } else {
-                ignore=NULL!=mceQNameLevelLookup(&ctx->ignored_array, xmlTextReaderConstNamespaceUri(reader), NULL);
+                ignore=NULL!=mceQNameLevelLookup(&ctx->ignored_array, xmlTextReaderConstNamespaceUri(reader), NULL, PFALSE);
             }
             if (1==xmlTextReaderIsEmptyElement(reader)) {
                 PENSURE(mceQNameLevelCleanup(&ctx->ignored_array, xmlTextReaderDepth(reader)));
@@ -221,7 +222,8 @@ int mceTextReaderPostprocess(xmlTextReader *reader, mceCtx_t *ctx, int ret) {
                     if (!process_content) {
                         process_content=NULL!=mceQNameLevelLookup(&ctx->processcontent_array, 
                                                                   xmlTextReaderConstNamespaceUri(reader), 
-                                                                  xmlTextReaderLocalName(reader));
+                                                                  xmlTextReaderLocalName(reader),
+                                                                  PFALSE);
                     }
                     if (process_content) {
                         PENSURE(mceQNameLevelPush(&ctx->skip_array, 
