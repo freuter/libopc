@@ -117,8 +117,9 @@ extern "C" {
     struct OPC_CONTAINER_INPUTSTREAM_STRUCT {
         opcZipInputStream *stream;
         opcContainer *container; // weak reference
-        xmlTextReaderPtr reader; // in case we have an xmlTextReader associated
-        mceCtx_t mce;
+        mceTextReader_t mceReader; 
+//        xmlTextReaderPtr reader; // in case we have an xmlTextReader associated
+//        mceCtx_t mce;
         opc_error_t error;
         opc_uint32_t reader_consume_element : 1;
         opc_uint32_t reader_element_handled : 1;

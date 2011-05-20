@@ -33,11 +33,6 @@
 /** @file mce/textreader.h
  
  */
-#include <mce/config.h>
-#include <opc/opc.h>
-#include <mce/helper.h>
-#include <libxml/xmlwriter.h>
-
 #ifndef MCE_TEXTREADER_H
 #define MCE_TEXTREADER_H
 
@@ -45,10 +40,27 @@
 extern "C" {
 #endif
 
-    typedef struct MCE_TEXTREADER {
+    typedef struct MCE_TEXTREADER mceTextReader_t;
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
+
+
+#include <mce/config.h>
+#include <opc/opc.h>
+#include <mce/helper.h>
+#include <libxml/xmlwriter.h>
+
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+    struct MCE_TEXTREADER {
         xmlTextReaderPtr reader;
         mceCtx_t mceCtx;
-    } mceTextReader_t;
+    };
 
     int mceTextReaderRead(mceTextReader_t *mceTextReader);
     int mceTextReaderNext(mceTextReader_t *mceTextReader);

@@ -33,11 +33,14 @@
 /** @file opc/xmlreader.h
  
  */
-#include <opc/config.h>
-#include <libxml/xmlreader.h>
 
 #ifndef OPC_XMLREADER_H
 #define OPC_XMLREADER_H
+
+#include <opc/config.h>
+#include <libxml/xmlreader.h>
+#include <mce/textreader.h>
+
 
 #ifdef __cplusplus
 extern "C" {
@@ -69,6 +72,7 @@ extern "C" {
 
     opc_error_t opcXmlSetMCEProcessing(opcXmlReader *reader, opc_bool_t flag);
     opc_error_t opcXmlUnderstandsNamespace(opcXmlReader *reader, const xmlChar *ns);
+    mceTextReader_t *opcXmlReaderGetMceReader(opcXmlReader *reader);
 
 #define opc_xml_start_document(reader) opcXmlReaderStartDocument(reader);
 #define opc_xml_end_document(reader) opcXmlReaderEndDocument(reader)
