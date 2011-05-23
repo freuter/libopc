@@ -184,14 +184,14 @@ int mceTextReaderPostprocess(xmlTextReader *reader, mceCtx_t *ctx, int ret) {
                         const xmlChar *top_ns=(ctx->skip_array.list_items>0?ctx->skip_array.list_array[ctx->skip_array.list_items-1].ns:NULL);
                         OPC_ASSERT(NULL!=top_ln && NULL!=top_ns && 0==xmlStrcmp(_X("AlternateContent"), top_ln) && 0==xmlStrcmp(_X(ns_mce), top_ns));
                         if (NULL!=top_ln && NULL!=top_ns && 0==xmlStrcmp(_X("AlternateContent"), top_ln) && 0==xmlStrcmp(_X(ns_mce), top_ns)) {
-                            if (0==ctx->skip_array.list_array[ctx->skip_array.list_items-1].alternatecontent_handled) {
+                            if (0==ctx->skip_array.list_array[ctx->skip_array.list_items-1].flag) {
                                 process_content=OPC_TRUE;
                                 for(xmlChar *prefix=req;*prefix!=0;prefix+=1+xmlStrlen(prefix)) {
                                     xmlChar *ns_=xmlTextReaderLookupNamespace(reader, prefix);
                                     OPC_ASSERT(NULL!=ns_);
                                     process_content&=(NULL!=ns_ && NULL!=mceQNameLevelLookup(&ctx->understands_array, ns_, NULL, PFALSE));
                                 }
-                                ctx->skip_array.list_array[ctx->skip_array.list_items-1].alternatecontent_handled=(process_content?1:0);
+                                ctx->skip_array.list_array[ctx->skip_array.list_items-1].flag=(process_content?1:0);
                             } else {
                                 OPC_ASSERT(OPC_FALSE==process_content);
                             }
@@ -205,7 +205,7 @@ int mceTextReaderPostprocess(xmlTextReader *reader, mceCtx_t *ctx, int ret) {
                         const xmlChar *top_ns=(ctx->skip_array.list_items>0?ctx->skip_array.list_array[ctx->skip_array.list_items-1].ns:NULL);
                     OPC_ASSERT(NULL!=top_ln && NULL!=top_ns && 0==xmlStrcmp(_X("AlternateContent"), top_ln) && 0==xmlStrcmp(_X(ns_mce), top_ns));
                     if (NULL!=top_ln && NULL!=top_ns && 0==xmlStrcmp(_X("AlternateContent"), top_ln) && 0==xmlStrcmp(_X(ns_mce), top_ns)) {
-                        process_content=(1!=ctx->skip_array.list_array[ctx->skip_array.list_items-1].alternatecontent_handled);
+                        process_content=(1!=ctx->skip_array.list_array[ctx->skip_array.list_items-1].flag);
                     }
             } else {
                 ignore=NULL!=mceQNameLevelLookup(&ctx->ignored_array, xmlTextReaderConstNamespaceUri(reader), NULL, PFALSE);

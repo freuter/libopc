@@ -71,6 +71,32 @@ extern "C" {
     int mceTextReaderUnderstandsNamespace(mceTextReader_t *mceTextReader, const xmlChar *ns);
     int mceTextReaderPostprocess(xmlTextReader *reader, mceCtx_t *ctx, int ret);
 
+#define mce_start_document(reader) if (NULL!=reader) { mceTextReaderRead(reader); if (0)
+#define mce_end_document(reader) }
+#define mce_skip_attributes(reader) 
+#define mce_skip_children(reader) 
+#define mce_start_children(reader) if (!xmlTextReaderIsEmptyElement(reader->reader)) { mceTextReaderRead(reader); do { if (0)
+#define mce_end_children(reader)  else { \
+        if (XML_READER_TYPE_END_ELEMENT!=xmlTextReaderNodeType(reader->reader)) mceTextReaderNext(reader); /*skip unhandled element */ \
+    } \
+    } while(XML_READER_TYPE_END_ELEMENT!=xmlTextReaderNodeType(reader->reader) && XML_READER_TYPE_NONE!=xmlTextReaderNodeType(reader->reader));\
+    }
+#define mce_match_element(reader, ns, ln) } else if (NULL==ln || 0==xmlStrcmp(ln, xmlTextReaderConstLocalName(reader->reader))) {
+#define mce_start_element(reader, ns, ln) mce_match_element(reader, ns, ln) 
+#define mce_end_element(reader) mceTextReaderNext(reader)
+#define mce_start_text(reader) } else if (XML_READER_TYPE_TEXT!=xmlTextReaderNodeType(reader->reader) || XML_READER_TYPE_SIGNIFICANT_WHITESPACE!=xmlTextReaderNodeType(reader->reader)) {
+#define mce_end_text(reader)  mceTextReaderNext(reader)
+
+#define mce_start_attributes(reader) if (1==xmlTextReaderMoveToFirstAttribute(reader->reader)) { do { if (0)
+#define mce_end_attributes(reader) else { /* skipped attribute */ } \
+} while(1==xmlTextReaderMoveToNextAttribute(reader->reader));\
+xmlTextReaderMoveToElement(reader->reader); }
+#define mce_match_attribute(reader, ns, ln) } else if (NULL==ln || 0==xmlStrcmp(ln, xmlTextReaderConstLocalName(reader->reader))) {
+#define mce_start_attribute(reader, ns, ln) mce_match_attribute(reader, ns, ln) 
+#define mce_end_attribute(reader)
+
+
+
 #ifdef __cplusplus
 } /* extern "C" */
 #endif

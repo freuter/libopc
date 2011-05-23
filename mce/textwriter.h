@@ -54,6 +54,7 @@ extern "C" {
         xmlTextWriterPtr writer;
         puint32_t level;
         mceQNameLevelArray_t registered_array;
+        const xmlChar *ns_mce;
     };
 
     mceTextWriter *mceTextWriterCreateIO(xmlOutputWriteCallback iowrite, xmlOutputCloseCallback  ioclose, void *ioctx, xmlCharEncodingHandlerPtr encoder);
