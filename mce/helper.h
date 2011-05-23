@@ -46,7 +46,7 @@ extern "C" {
         xmlChar *ns;
         xmlChar *ln;
         puint32_t level;
-        puint32_t alternatecontent_handled : 1;
+        puint32_t flag;
     } mceQNameLevel_t;
 
     typedef struct MCE_QNAME_LEVEL_ARRAY {
