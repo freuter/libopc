@@ -34,7 +34,7 @@
 <ItemDefinitionGroup>
 <ClCompile>
 <PreprocessorDefinitions>WIN32;LIBXML_STATIC;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-<AdditionalIncludeDirectories>..\..\config\win32-msvc\zlib-1.2.5;..\..\third_party\zlib-1.2.5;..\..\config\win32-msvc\libxml2-2.7.7;..\..\third_party\libxml2-2.7.7\include;..\..\config\win32-msvc\plib\include;..\..\config;..\..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+<AdditionalIncludeDirectories>..\..\config\win32-msvc\zlib-1.2.5;..\..\third_party\zlib-1.2.5;..\..\config\win32-msvc\libxml2-2.7.7;..\..\third_party\libxml2-2.7.7\include;..\..\plib\config\msvc\plib\include;..\..\config;..\..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
 <CompileAs>CompileAsCpp</CompileAs>
 </ClCompile>
 <Link>

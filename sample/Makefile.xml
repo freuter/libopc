@@ -9,13 +9,6 @@
       <file path="opc_zipread.c"/>
     </source>
   </tool>
-<!--
-  <tool name="opc_zipread2" dep="opc" mode="c99">
-    <source root=".">
-      <file path="opc_zipread2.c"/>
-    </source>
-  </tool>
--->
   <tool name="opc_zipextract" dep="opc" mode="c99">
     <source root=".">
       <file path="opc_zipextract.c"/>
@@ -94,6 +87,16 @@
   <tool name="mcepp" dep="mce" mode="c99">
     <source root=".">
       <file path="mcepp.c"/>
+    </source>
+  </tool>
+  <tool name="mce_read" dep="opc mce" mode="c99">
+    <source root=".">
+      <file path="mce_read.c"/>
+    </source>
+  </tool>
+  <tool name="mce_write" dep="opc mce" mode="c99">
+    <source root=".">
+      <file path="mce_write.c"/>
     </source>
   </tool>
   <tool name="mce_extract" dep="opc mce" mode="c99">

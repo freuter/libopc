@@ -89,7 +89,7 @@ def ensureDir(dir):
 		failure(None)
 
 
-def call(path, pre, args, outfile, post):
+def call(path, pre, args, outfile, post, attr):
 	try:
 		msg("executing "+path)
 		if os.path.exists(tmp("stderr.txt")):
@@ -103,6 +103,8 @@ def call(path, pre, args, outfile, post):
 		ret=subprocess.call(_args, stdout=out, stderr=err)
 		out.close()
 		err.close()
+		if "return" in attr and ret!=int(attr["return"]):
+			failure("ERROR: return code is "+str(ret)+" but "+str(attr["return"])+" is expected.")
 		result("OK")
 	except:
 		failure(None)
@@ -161,7 +163,7 @@ def compile(path):
 			"/I..\\..\\config\\win32-msvc\\libxml2-2.7.7",
 			"/I..\\..\\third_party\\libxml2-2.7.7\\include\\libxml",
 			"/I..\\..\\third_party\\libxml2-2.7.7\\include",
-			"/I..\\..\\config\\win32-msvc\\plib\\include",
+			"/I..\\..\\plib\\config\\msvc\\plib\\include",
 			"/I..\\..\\config",
 			"/I..\\..",
 			"/D", "WIN32",
@@ -170,7 +172,7 @@ def compile(path):
 			"/D", "UNICODE" ]
 		link_args=["link", "/OUT:"+os.path.abspath(exe),  os.path.abspath(os.path.splitext(path)[0]+".obj"),"/NOLOGO", "/MACHINE:X86",
 			"kernel32.lib", "user32.lib", "gdi32.lib", "winspool.lib", "comdlg32.lib", "advapi32.lib", "shell32.lib", "ole32.lib", "oleaut32.lib", "uuid.lib", "odbc32.lib", "odbccp32.lib", 
-			"opc.lib", "plib.lib", "zlib.lib", "xml.lib" ]
+			"mce.lib", "opc.lib", "plib.lib", "zlib.lib", "xml.lib" ]
 		cwd=os.getcwd()
 		os.chdir(tmp(""))
 		ret=subprocess.call(cl_args, stdout=out, stderr=err)

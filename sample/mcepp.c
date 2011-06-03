@@ -49,6 +49,7 @@ static int xmlOutputClose(void * context) {
 
 int main( int argc, const char* argv[] )
 {
+    int ret=-1;
     time_t start_time=time(NULL);
     FILE *file=NULL;
     xmlTextWriter *writer=NULL;
@@ -97,7 +98,11 @@ int main( int argc, const char* argv[] )
             }
         }
 
-        mceTextReaderDump(&mceTextReader, writer);
+        if (-1==mceTextReaderDump(&mceTextReader, writer, PFALSE)) {
+            ret=mceTextReaderGetError(&mceTextReader);
+        } else {
+            ret=0;
+        }
         mceTextReaderCleanup(&mceTextReader);
         xmlCleanupParser();
     }
@@ -105,5 +110,5 @@ int main( int argc, const char* argv[] )
     if (NULL!=file) fclose(file);
     time_t end_time=time(NULL);
     fprintf(stderr, "time %.2lfsec\n", difftime(end_time, start_time));
-    return 0;
+    return ret;
 }

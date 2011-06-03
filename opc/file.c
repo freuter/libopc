@@ -88,7 +88,7 @@ static opc_ofs_t opcFileSeek(void *iocontext, opc_ofs_t ofs) {
 }
 
 static int opcFileTrim(void *iocontext, opc_ofs_t new_size) {
-#ifdef P_WIN32
+#ifdef WIN32
     return _chsize(fileno((FILE*)iocontext), new_size);
 #else
     return ftruncate(fileno((FILE*)iocontext), new_size);

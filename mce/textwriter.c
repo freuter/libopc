@@ -54,7 +54,8 @@ int mceTextWriterFree(mceTextWriter *w) {
     int ret=0;
     if (NULL!=w) {
         xmlFreeTextWriter(w->writer);
-        if (NULL!=w->registered_array.list_array) xmlFree(w->registered_array.list_array);
+        if (NULL!=w->registered_set.list_array) xmlFree(w->registered_set.list_array);
+        if (NULL!=w->processcontent_set.list_array) xmlFree(w->processcontent_set.list_array);
         xmlFree(w);
         ret=1;
     }
@@ -71,40 +72,40 @@ int mceTextWriterStartDocument(mceTextWriter *w) {
 int mceTextWriterEndDocument(mceTextWriter *w) {
     int ret=0;
     PASSERT(0==w->level);
-    mceQNameLevelCleanup(&w->registered_array, w->level);
+    mceQNameLevelCleanup(&w->registered_set, w->level);
     ret=xmlTextWriterEndDocument(w->writer);
     return ret;
 }
 
 int mceTextWriterStartElement(mceTextWriter *w, const xmlChar *ns, const xmlChar *ln) {
     int ret=0;
-    PASSERT(w->level>=w->registered_array.max_level);
-    mceQNameLevel_t* qName=mceQNameLevelLookup(&w->registered_array, ns, NULL, PTRUE);
+    PASSERT(w->level>=w->registered_set.max_level);
+    mceQNameLevel_t* qName=mceQNameLevelLookup(&w->registered_set, ns, NULL, PTRUE);
     if (NULL!=qName) {
         if (NULL==qName->ln) {
             ret=xmlTextWriterStartElement(w->writer, ln);
         } else {
-            ret=xmlTextWriterStartElementNS(w->writer, qName->ln, ln, (w->level==w->registered_array.max_level?ns:NULL));
+            ret=xmlTextWriterStartElementNS(w->writer, qName->ln, ln, (w->level==w->registered_set.max_level?ns:NULL));
         }
-        if (w->level==w->registered_array.max_level) {
+        if (w->level==w->registered_set.max_level) {
             // register new namespaces
             puint32_t ignorables=0;
-            for(puint32_t i=0;i<w->registered_array.list_items;i++) {
-                if (w->registered_array.list_array[i].level==w->level) {
-                    if ((w->registered_array.list_array[i].flag&MCE_IGNORABLE)==MCE_IGNORABLE) {
+            for(puint32_t i=0;i<w->registered_set.list_items;i++) {
+                if (w->registered_set.list_array[i].level==w->level) {
+                    if ((w->registered_set.list_array[i].flag&MCE_IGNORABLE)==MCE_IGNORABLE) {
                         ignorables++;
                     }
-                    if (w->registered_array.list_array[i].ns!=ns) {
+                    if (w->registered_set.list_array[i].ns!=ns) {
                         xmlTextWriterWriteAttributeNS(w->writer, 
                                                       _X("xmlns"), 
-                                                      w->registered_array.list_array[i].ln, 
+                                                      w->registered_set.list_array[i].ln, 
                                                       NULL, 
-                                                      w->registered_array.list_array[i].ns);
+                                                      w->registered_set.list_array[i].ns);
                     }
                 }
             }
             if (ignorables>0) {
-                mceQNameLevel_t* mceQName=mceQNameLevelLookup(&w->registered_array, w->ns_mce, NULL, PTRUE);
+                mceQNameLevel_t* mceQName=mceQNameLevelLookup(&w->registered_set, w->ns_mce, NULL, PTRUE);
                 PASSERT(NULL!=mceQName);
                 if (NULL!=mceQName) {
                     xmlTextWriterStartAttributeNS(w->writer,
@@ -112,9 +113,9 @@ int mceTextWriterStartElement(mceTextWriter *w, const xmlChar *ns, const xmlChar
                                                   _X("Ignorable"),
                                                   NULL);
                     puint32_t j=0;
-                    for(puint32_t i=0;i<w->registered_array.list_items;i++) {
-                        if (w->registered_array.list_array[i].level==w->level && MCE_IGNORABLE==(w->registered_array.list_array[i].flag&MCE_IGNORABLE)) {
-                            xmlTextWriterWriteString(w->writer, w->registered_array.list_array[i].ln);
+                    for(puint32_t i=0;i<w->registered_set.list_items;i++) {
+                        if (w->registered_set.list_array[i].level==w->level && MCE_IGNORABLE==(w->registered_set.list_array[i].flag&MCE_IGNORABLE)) {
+                            xmlTextWriterWriteString(w->writer, w->registered_set.list_array[i].ln);
                             if (++j<ignorables) {
                                 xmlTextWriterWriteString(w->writer, _X(" "));
                             }
@@ -125,8 +126,34 @@ int mceTextWriterStartElement(mceTextWriter *w, const xmlChar *ns, const xmlChar
                 }
             }
         }
-
-
+        if (w->level==w->processcontent_set.max_level) {
+            // write process content attribute
+            puint32_t v_max=512;
+            puint32_t v_len=0;
+            xmlChar *v=NULL;
+            for(puint32_t i=0;i<w->processcontent_set.list_items;i++) {
+                if (w->processcontent_set.list_array[i].level==w->level) {
+                    mceQNameLevel_t* qName=mceQNameLevelLookup(&w->registered_set, w->processcontent_set.list_array[i].ns, NULL, PTRUE);
+                    PASSERT(NULL!=qName); // namespace not registered?
+                    if (NULL!=qName) {
+                        puint32_t len=(v_len>0?xmlStrlen(_X(" ")):0)+xmlStrlen(qName->ln)+xmlStrlen(_X(":"))+xmlStrlen(w->processcontent_set.list_array[i].ln)+1;
+                        v=(xmlChar *)xmlRealloc(v, v_len+len);
+                        if (v_len>0) { v[v_len++]=' '; len--; }
+                        int l=xmlStrPrintf(v+v_len, len, _X("%s:%s"), qName->ln, w->processcontent_set.list_array[i].ln);
+                        PASSERT(1+l==len); // cause by terminating "0"
+                        v_len+=l;
+                    }
+                }
+            }
+            if (NULL!=v) {
+                mceQNameLevel_t* mceQName=mceQNameLevelLookup(&w->registered_set, w->ns_mce, NULL, PTRUE);
+                PASSERT(NULL!=mceQName);
+                if (NULL!=mceQName) {
+                    xmlTextWriterWriteAttributeNS(w->writer, mceQName->ln, _X("ProcessContent"), NULL, v);
+                }
+                xmlFree(v); v=NULL;
+            }
+        }
     } else {
         // namespace not registered => not good!
         PASSERT(0==ret);
@@ -138,7 +165,8 @@ int mceTextWriterStartElement(mceTextWriter *w, const xmlChar *ns, const xmlChar
 int mceTextWriterEndElement(mceTextWriter *w, const xmlChar *ns, const xmlChar *ln) {
     int ret=0;
     ret=xmlTextWriterEndElement(w->writer);
-    mceQNameLevelCleanup(&w->registered_array, w->level);
+    mceQNameLevelCleanup(&w->registered_set, w->level);
+    mceQNameLevelCleanup(&w->processcontent_set, w->level);
     PASSERT(w->level>0);
     w->level--;
     return ret;
@@ -151,8 +179,8 @@ int mceTextWriterWriteString(mceTextWriter *w, const xmlChar *content) {
 }
 
 const xmlChar *mceTextWriterRegisterNamespace(mceTextWriter *w, const xmlChar *ns, const xmlChar *prefix, int flags) {
-    mceQNameLevelAdd(&w->registered_array, ns, prefix, w->level);
-    mceQNameLevel_t *ret=mceQNameLevelLookup(&w->registered_array, ns, prefix, PFALSE);
+    mceQNameLevelAdd(&w->registered_set, ns, prefix, w->level);
+    mceQNameLevel_t *ret=mceQNameLevelLookup(&w->registered_set, ns, prefix, PFALSE);
     PASSERT(NULL!=ret); // not inserted? why?
     if (NULL!=ret) {
         ret->flag=flags;
@@ -163,15 +191,15 @@ const xmlChar *mceTextWriterRegisterNamespace(mceTextWriter *w, const xmlChar *n
 }
 
 int mceTextWriterProcessContent(mceTextWriter *w, const xmlChar *ns, const xmlChar *ln) {
-    return 0;
+    return mceQNameLevelAdd(&w->processcontent_set, ns, ln, w->level)?0:-1;
 }
 
 int mceTextWriterAttributeF(mceTextWriter *w, const xmlChar *ns, const xmlChar *ln, const char *value, ...) {
     va_list args;
     int ret=0;
     va_start(args, value); 
-    PASSERT(w->level>=w->registered_array.max_level);
-    mceQNameLevel_t* qName=mceQNameLevelLookup(&w->registered_array, ns, NULL, PTRUE);
+    PASSERT(w->level>=w->registered_set.max_level);
+    mceQNameLevel_t* qName=mceQNameLevelLookup(&w->registered_set, ns, NULL, PTRUE);
     if (NULL!=qName) {
         if (NULL==qName->ln) {
             ret=xmlTextWriterWriteVFormatAttribute(w->writer, ln, value, args);
@@ -186,25 +214,35 @@ int mceTextWriterAttributeF(mceTextWriter *w, const xmlChar *ns, const xmlChar *
 }
 
 int mceTextWriterStartAlternateContent(mceTextWriter *w) {
-    return 0;
+    return xmlTextWriterStartElementNS(w->writer, _X("mce"), _X("AlternateContent"), NULL);
 }
 
 int mceTextWriterEndAlternateContent(mceTextWriter *w) {
-    return 0;
+    return xmlTextWriterEndElement(w->writer);
 }
 
 int mceTextWriterStartChoice(mceTextWriter *w, const xmlChar *ns) {
-    return 0;
+    int ret=xmlTextWriterStartElementNS(w->writer, _X("mce"), _X("Choice"), NULL);
+    if (-1!=ret) {
+        mceQNameLevel_t* qName=mceQNameLevelLookup(&w->registered_set, ns, NULL, PTRUE);
+        if (NULL!=qName) {
+            xmlTextWriterWriteAttribute(w->writer, _X("Requires"), qName->ln);
+        } else {
+            PASSERT(0); // namespace not registered
+            ret=-1;
+        }
+    }
+    return ret;
 }
 
 int mceTextWriterEndChoice(mceTextWriter *w) {
-    return 0;
+    return xmlTextWriterEndElement(w->writer);
 }
 
 int mceTextWriterStartFallback(mceTextWriter *w) {
-    return 0;
+    return xmlTextWriterStartElementNS(w->writer, _X("mce"), _X("AlternateContent"), NULL);
 }
 
 int mceTextWriterEndFallback(mceTextWriter *w) {
-    return 0;
+    return xmlTextWriterEndElement(w->writer);
 }

@@ -31,37 +31,6 @@
  */
 #include <mce/textreader.h>
 
-#if 0
-
-mceTextReader *mceTextReaderOpen(opcPart *part) {
-	return NULL;
-}
-
-int mceTextReaderRead(mceTextReader *reader) {
-	return 0;
-}
-
-int mceTextReaderClose(mceTextReader *reader) {
-	return 0;
-}
-
-int mceTextReaderNodeType(mceTextReader *reader) {
-	return 0;
-}
-
-int mceTextReaderIsEmptyElement(mceTextReader *reader) {
-	return 0;
-}
-
-const xmlChar *mceTextReaderLocalName(mceTextReader *reader) {
-	return NULL;
-}
-
-int mceTextReaderUnderstands(const xmlChar *ns) {
-	return 0;
-}
-
-#endif
 
 int mceTextReaderInit(mceTextReader_t *mceTextReader, xmlTextReaderPtr reader) {
     memset(mceTextReader, 0, sizeof(*mceTextReader));
@@ -90,181 +59,203 @@ static xmlChar *xmlStrDupArray(const xmlChar *value) {
     return ret;
 }
 
+static void mceRaiseError(xmlTextReader *reader, mceCtx_t *ctx, mceError_t error, const xmlChar *str, ...) {
+    va_list args;
+    va_start(args, str);
+    PASSERT(MCE_ERROR_NONE==ctx->error); // called twice? why?
+    ctx->error=error;
+    xmlChar buf[1024];
+    xmlStrVPrintf(buf, sizeof(buf), str, args);
+    xmlTextReaderErrorFunc f=NULL;
+    void *arg=NULL;
+    xmlTextReaderGetErrorHandler(reader, &f, &arg);    
+    if (NULL!=f) {
+        f(arg, (const char *)buf, XML_PARSER_SEVERITY_ERROR, (xmlTextReaderLocatorPtr)reader);
+    } else {
+        xmlGenericError(xmlGenericErrorContext, (const char *)buf);
+    }
+    va_end(args);
+}
+
 static char ns_mce[]="http://schemas.openxmlformats.org/markup-compatibility/2006";
-int mceTextReaderPostprocess(xmlTextReader *reader, mceCtx_t *ctx, int ret) {
-    pbool_t done=PFALSE;
-    while (1==ret && !done) {
-        done=OPC_TRUE;
-        if (XML_READER_TYPE_ELEMENT==xmlTextReaderNodeType(reader)) {
-            if (1==xmlTextReaderHasAttributes(reader)) {
-                if (1==xmlTextReaderMoveToFirstAttribute(reader)) {
-                    do {
-                        if (0==xmlStrcmp(_X("Ignorable"), xmlTextReaderConstLocalName(reader)) &&
-                            0==xmlStrcmp(_X(ns_mce), xmlTextReaderConstNamespaceUri(reader))) {
-                                xmlChar *v=xmlStrDupArray(xmlTextReaderConstValue(reader));
-                                for(xmlChar *prefix=v;*prefix!=0;prefix+=1+xmlStrlen(prefix)) {
-                                    xmlChar *ns_=xmlTextReaderLookupNamespace(reader, prefix);
-                                    if (NULL!=ns_ && NULL==mceQNameLevelLookup(&ctx->understands_array, ns_, NULL, PFALSE)) {
-                                        PASSERT(xmlTextReaderDepth(reader)>0); // remove one, since we need the element and not the attribute level
-                                        PENSURE(mceQNameLevelAdd(&ctx->ignored_array, ns_, NULL, xmlTextReaderDepth(reader)-1));
-                                    }
-                                }
-                                xmlFree(v);
-                        } else if (0==xmlStrcmp(_X("ProcessContent"), xmlTextReaderConstLocalName(reader)) &&
-                                   0==xmlStrcmp(_X(ns_mce), xmlTextReaderConstNamespaceUri(reader))) {
-                                xmlChar *v=xmlStrDupArray(xmlTextReaderConstValue(reader));
-                                xmlChar *qname=v;
-                                for(int qname_len=0;(qname_len=xmlStrlen(qname))>0;qname+=qname_len+1) {
-                                    int prefix=0; while(qname[prefix]!=':' && qname[prefix]!=0) prefix++;
-                                    OPC_ASSERT(prefix<=qname_len);
-                                    int ln=(prefix<qname_len?prefix+1:0);
-                                    if (prefix<qname_len) {
-                                        qname[prefix]=0;
-                                        prefix=0;
-                                    };
-                                    xmlChar *ns_=xmlTextReaderLookupNamespace(reader, qname+prefix);
-                                    if (NULL!=ns_ && NULL==mceQNameLevelLookup(&ctx->understands_array, ns_, NULL, PFALSE)) {
-                                        PASSERT(xmlTextReaderDepth(reader)>0); // remove one, since we need the element and not the attribute level
-                                        PENSURE(mceQNameLevelAdd(&ctx->processcontent_array, ns_, xmlStrdup(qname+ln), xmlTextReaderDepth(reader)-1));
-
-                                    }
-                                }
-                                xmlFree(v);
+static void mceTextReaderProcessAttributes(xmlTextReader *reader, mceCtx_t *ctx, puint32_t level) {
+    if (1==xmlTextReaderHasAttributes(reader)) {
+        if (1==xmlTextReaderMoveToFirstAttribute(reader)) {
+            do {
+                if (0==xmlStrcmp(_X("Ignorable"), xmlTextReaderConstLocalName(reader)) &&
+                    0==xmlStrcmp(_X(ns_mce), xmlTextReaderConstNamespaceUri(reader))) {
+                        xmlChar *v=xmlStrDupArray(xmlTextReaderConstValue(reader));
+                        for(xmlChar *prefix=v;*prefix!=0;prefix+=1+xmlStrlen(prefix)) {
+                            xmlChar *ns_=xmlTextReaderLookupNamespace(reader, prefix);
+                            if (NULL!=ns_ && NULL==mceQNameLevelLookup(&ctx->understands_set, ns_, NULL, PFALSE)) {
+                                PENSURE(mceQNameLevelAdd(&ctx->ignorable_set, ns_, NULL, level));
+                            }
                         }
+                        xmlFree(v);
+                } else if (0==xmlStrcmp(_X("ProcessContent"), xmlTextReaderConstLocalName(reader)) &&
+                    0==xmlStrcmp(_X(ns_mce), xmlTextReaderConstNamespaceUri(reader))) {
+                        xmlChar *v=xmlStrDupArray(xmlTextReaderConstValue(reader));
+                        xmlChar *qname=v;
+                        for(int qname_len=0;(qname_len=xmlStrlen(qname))>0;qname+=qname_len+1) {
+                            int prefix=0; while(qname[prefix]!=':' && qname[prefix]!=0) prefix++;
+                            OPC_ASSERT(prefix<=qname_len);
+                            int ln=(prefix<qname_len?prefix+1:0);
+                            if (prefix<qname_len) {
+                                qname[prefix]=0;
+                                prefix=0;
+                            };
+                            xmlChar *ns_=xmlTextReaderLookupNamespace(reader, qname+prefix);
+                            if (NULL!=ns_ && NULL==mceQNameLevelLookup(&ctx->understands_set, ns_, NULL, PFALSE)) {
+                                PENSURE(mceQNameLevelAdd(&ctx->processcontent_set, ns_, xmlStrdup(qname+ln), level));
 
-
-                    } while (1==xmlTextReaderMoveToNextAttribute(reader));
+                            }
+                        }
+                        xmlFree(v);
+                } else if (0==xmlStrcmp(_X("MustUnderstand"), xmlTextReaderConstLocalName(reader)) &&
+                    0==xmlStrcmp(_X(ns_mce), xmlTextReaderConstNamespaceUri(reader))) {
+                        xmlChar *v=xmlStrDupArray(xmlTextReaderConstValue(reader));
+                        for(xmlChar *prefix=v;*prefix!=0;prefix+=1+xmlStrlen(prefix)) {
+                            xmlChar *ns_=xmlTextReaderLookupNamespace(reader, prefix);
+                            if (NULL!=ns_ && NULL==mceQNameLevelLookup(&ctx->understands_set, ns_, NULL, PFALSE)) {
+                                mceRaiseError(reader, ctx, MCE_ERROR_MUST_UNDERSTAND, _X("MustUnderstand namespace \"%s\""), ns_);
+                            }
+                        }
+                        xmlFree(v);
                 }
-                OPC_ENSURE(1==xmlTextReaderMoveToElement(reader));
-            }
-            if (1==xmlTextReaderHasAttributes(reader)) {
-                xmlAttrPtr remove=NULL;
-                if (1==xmlTextReaderMoveToFirstAttribute(reader)) {
-                    do {
-                        if (NULL!=remove) {
-                            xmlRemoveProp(remove); remove=NULL;
-                        }
-                        if (0==xmlStrcmp(_X(ns_mce), xmlTextReaderConstNamespaceUri(reader))) {
-                            OPC_ASSERT(XML_ATTRIBUTE_NODE==xmlTextReaderCurrentNode(reader)->type);
-                            remove=(xmlAttrPtr)xmlTextReaderCurrentNode(reader);
-                        } else if (NULL!=mceQNameLevelLookup(&ctx->ignored_array,
-                                                             xmlTextReaderConstNamespaceUri(reader), 
-                                                             NULL, 
-                                                             PFALSE)) {
-                            OPC_ASSERT(XML_ATTRIBUTE_NODE==xmlTextReaderCurrentNode(reader)->type);
-                            remove=(xmlAttrPtr)xmlTextReaderCurrentNode(reader);
-                        }
-                    } while (1==xmlTextReaderMoveToNextAttribute(reader));
-                }
-                OPC_ENSURE(1==xmlTextReaderMoveToElement(reader));
+
+
+            } while (1==xmlTextReaderMoveToNextAttribute(reader));
+        }
+        xmlAttrPtr remove=NULL;
+        if (1==xmlTextReaderMoveToFirstAttribute(reader)) {
+            do {
                 if (NULL!=remove) {
                     xmlRemoveProp(remove); remove=NULL;
                 }
-                OPC_ASSERT(NULL==remove);
-            }
-            opc_bool_t ignore=OPC_FALSE;
-            opc_bool_t process_content=OPC_FALSE;
-            if (0==xmlStrcmp(_X("AlternateContent"), xmlTextReaderConstLocalName(reader)) &&
-                0==xmlStrcmp(_X(ns_mce), xmlTextReaderConstNamespaceUri(reader))) {
-                    ignore=OPC_TRUE;
-                    process_content=OPC_TRUE;
-            } else if (0==xmlStrcmp(_X("Choice"), xmlTextReaderConstLocalName(reader)) &&
-                       0==xmlStrcmp(_X(ns_mce), xmlTextReaderConstNamespaceUri(reader))) {
-                    xmlChar *req=NULL;
-                    if (1==xmlTextReaderMoveToAttribute(reader, _X("Requires"))) {
-                        req=xmlStrDupArray(xmlTextReaderConstValue(reader));
-                        OPC_ASSERT(1==xmlTextReaderMoveToElement(reader));
-                    } else if (1==xmlTextReaderMoveToAttributeNs(reader, _X("Requires"), _X(ns_mce))) {
-                        req=xmlStrDupArray(xmlTextReaderConstValue(reader));
-                        OPC_ASSERT(1==xmlTextReaderMoveToElement(reader));
-                    }
-                    if (NULL!=req) {
-                        ignore=OPC_TRUE;
-                        const xmlChar *top_ln=(ctx->skip_array.list_items>0?ctx->skip_array.list_array[ctx->skip_array.list_items-1].ln:NULL);
-                        const xmlChar *top_ns=(ctx->skip_array.list_items>0?ctx->skip_array.list_array[ctx->skip_array.list_items-1].ns:NULL);
-                        OPC_ASSERT(NULL!=top_ln && NULL!=top_ns && 0==xmlStrcmp(_X("AlternateContent"), top_ln) && 0==xmlStrcmp(_X(ns_mce), top_ns));
-                        if (NULL!=top_ln && NULL!=top_ns && 0==xmlStrcmp(_X("AlternateContent"), top_ln) && 0==xmlStrcmp(_X(ns_mce), top_ns)) {
-                            if (0==ctx->skip_array.list_array[ctx->skip_array.list_items-1].flag) {
-                                process_content=OPC_TRUE;
-                                for(xmlChar *prefix=req;*prefix!=0;prefix+=1+xmlStrlen(prefix)) {
-                                    xmlChar *ns_=xmlTextReaderLookupNamespace(reader, prefix);
-                                    OPC_ASSERT(NULL!=ns_);
-                                    process_content&=(NULL!=ns_ && NULL!=mceQNameLevelLookup(&ctx->understands_array, ns_, NULL, PFALSE));
-                                }
-                                ctx->skip_array.list_array[ctx->skip_array.list_items-1].flag=(process_content?1:0);
-                            } else {
-                                OPC_ASSERT(OPC_FALSE==process_content);
-                            }
-                        }
-                        OPC_ASSERT(NULL!=req); xmlFree(req);
-                    }
-            } else if (0==xmlStrcmp(_X("Fallback"), xmlTextReaderConstLocalName(reader)) &&
-                       0==xmlStrcmp(_X(ns_mce), xmlTextReaderConstNamespaceUri(reader))) {
-                    ignore=OPC_TRUE;
-                        const xmlChar *top_ln=(ctx->skip_array.list_items>0?ctx->skip_array.list_array[ctx->skip_array.list_items-1].ln:NULL);
-                        const xmlChar *top_ns=(ctx->skip_array.list_items>0?ctx->skip_array.list_array[ctx->skip_array.list_items-1].ns:NULL);
-                    OPC_ASSERT(NULL!=top_ln && NULL!=top_ns && 0==xmlStrcmp(_X("AlternateContent"), top_ln) && 0==xmlStrcmp(_X(ns_mce), top_ns));
-                    if (NULL!=top_ln && NULL!=top_ns && 0==xmlStrcmp(_X("AlternateContent"), top_ln) && 0==xmlStrcmp(_X(ns_mce), top_ns)) {
-                        process_content=(1!=ctx->skip_array.list_array[ctx->skip_array.list_items-1].flag);
-                    }
-            } else {
-                ignore=NULL!=mceQNameLevelLookup(&ctx->ignored_array, xmlTextReaderConstNamespaceUri(reader), NULL, PFALSE);
-            }
-            if (1==xmlTextReaderIsEmptyElement(reader)) {
-                PENSURE(mceQNameLevelCleanup(&ctx->ignored_array, xmlTextReaderDepth(reader)));
-                PENSURE(mceQNameLevelCleanup(&ctx->processcontent_array, xmlTextReaderDepth(reader)));
-                if (ignore) {
-                    PENSURE(-1!=(ret=xmlTextReaderRead(reader))); // consume empty element
-                    done=OPC_FALSE;
+                if (0==xmlStrcmp(_X(ns_mce), xmlTextReaderConstNamespaceUri(reader))) {
+                    OPC_ASSERT(XML_ATTRIBUTE_NODE==xmlTextReaderCurrentNode(reader)->type);
+                    remove=(xmlAttrPtr)xmlTextReaderCurrentNode(reader);
+                } else if (NULL!=mceQNameLevelLookup(&ctx->ignorable_set,
+                    xmlTextReaderConstNamespaceUri(reader), 
+                    NULL, 
+                    PFALSE)) {
+                        OPC_ASSERT(XML_ATTRIBUTE_NODE==xmlTextReaderCurrentNode(reader)->type);
+                        remove=(xmlAttrPtr)xmlTextReaderCurrentNode(reader);
                 }
-            } else {
-                if (ignore) {
-                    if (!process_content) {
-                        process_content=NULL!=mceQNameLevelLookup(&ctx->processcontent_array, 
-                                                                  xmlTextReaderConstNamespaceUri(reader), 
-                                                                  xmlTextReaderLocalName(reader),
-                                                                  PFALSE);
-                    }
-                    if (process_content) {
-                        PENSURE(mceQNameLevelPush(&ctx->skip_array, 
-                                                  xmlTextReaderConstNamespaceUri(reader), 
-                                                  xmlTextReaderConstLocalName(reader), 
-                                                  xmlTextReaderDepth(reader)));
-                        PENSURE(-1!=(ret=xmlTextReaderRead(reader))); // consume start element
-                        done=PFALSE;
-                    } else {
-                        PENSURE(mceQNameLevelCleanup(&ctx->ignored_array, xmlTextReaderDepth(reader)));
-                        PENSURE(mceQNameLevelCleanup(&ctx->processcontent_array, xmlTextReaderDepth(reader)));
-                        OPC_ENSURE(-1!=(ret=xmlTextReaderNext(reader))); // consume whole element
-                        done=PFALSE;
-                    }
-                }
+            } while (1==xmlTextReaderMoveToNextAttribute(reader));
+            OPC_ENSURE(1==xmlTextReaderMoveToElement(reader));
+            if (NULL!=remove) {
+                xmlRemoveProp(remove); remove=NULL;
             }
-        } else if (XML_READER_TYPE_END_ELEMENT==xmlTextReaderNodeType(reader)) {
-            PENSURE(mceQNameLevelCleanup(&ctx->ignored_array, xmlTextReaderDepth(reader)));
-            PENSURE(mceQNameLevelCleanup(&ctx->processcontent_array, xmlTextReaderDepth(reader)));
-            if (mceQNameLevelPopIfMatch(&ctx->skip_array,
-                                        xmlTextReaderConstNamespaceUri(reader), 
-                                        xmlTextReaderConstLocalName(reader),
-                                        xmlTextReaderDepth(reader))) {
-                PENSURE(-1!=(ret=xmlTextReaderRead(reader))); // consume end element
-                done=OPC_FALSE;
-            }
+            OPC_ASSERT(NULL==remove);
+
         }
     }
-    if (0) {
-        printf("mce: %i[%i] %s %s", xmlTextReaderNodeType(reader), xmlTextReaderIsEmptyElement(reader), xmlTextReaderConstNamespaceUri(reader), xmlTextReaderConstLocalName(reader));
-        printf("<");
-        for(opc_uint32_t i=0;i<ctx->skip_array.list_items;i++) {
-            printf("(%i;%s;%s)", ctx->skip_array.list_array[i].level, ctx->skip_array.list_array[i].ln, ctx->skip_array.list_array[i].ns);
-            if (i+1<ctx->skip_array.list_items) printf(" ");
+}
+
+static pbool_t mceTextReaderProcessStartElement(xmlTextReader *reader, mceCtx_t *ctx, puint32_t level) {
+    if (!mceSkipStackSkip(&ctx->skip_stack, level)) {
+        mceTextReaderProcessAttributes(reader, ctx, level);
+        const xmlChar *ns=xmlTextReaderNamespaceUri(reader);
+        const xmlChar *ln=xmlTextReaderLocalName(reader);
+        if (0==xmlStrcmp(_X(ns_mce), ns) && 0==xmlStrcmp(_X("AlternateContent"), ln)) {
+            mceSkipStackPush(&ctx->skip_stack, level, level+1, MCE_SKIP_STATE_ALTERNATE_CONTENT);
+        } else if (0==xmlStrcmp(_X(ns_mce), ns) && 0==xmlStrcmp(_X("Choice"), ln)) {
+            xmlChar *req_ns=NULL;
+            if (1==xmlTextReaderMoveToAttribute(reader, _X("Requires"))) {
+                req_ns=xmlTextReaderLookupNamespace(reader, xmlTextReaderConstValue(reader));
+                OPC_ENSURE(1==xmlTextReaderMoveToElement(reader));
+            } else if (1==xmlTextReaderMoveToAttributeNs(reader, _X("Requires"), _X(ns_mce))) {
+                req_ns=xmlTextReaderLookupNamespace(reader, xmlTextReaderConstValue(reader));
+                OPC_ENSURE(1==xmlTextReaderMoveToElement(reader));
+            }
+            if (NULL==req_ns) {
+                mceRaiseError(reader, ctx, MCE_ERROR_XML, _X("Missing \"Requires\" attribute"));
+            } else if (NULL==mceSkipStackTop(&ctx->skip_stack)
+                   || !(mceSkipStackTop(&ctx->skip_stack)->state==MCE_SKIP_STATE_ALTERNATE_CONTENT || mceSkipStackTop(&ctx->skip_stack)->state==MCE_SKIP_STATE_CHOICE_MATCHED)
+                   || mceSkipStackTop(&ctx->skip_stack)->level_start+1!=level
+                   || mceSkipStackTop(&ctx->skip_stack)->level_end!=level) {
+                mceRaiseError(reader, ctx, MCE_ERROR_XML, _X("Choice element does not appear at a valid position."));
+            } else if (mceQNameLevelLookup(&ctx->understands_set, req_ns, NULL, PFALSE) && mceSkipStackTop(&ctx->skip_stack)->state!=MCE_SKIP_STATE_CHOICE_MATCHED) {
+                mceSkipStackTop(&ctx->skip_stack)->state=MCE_SKIP_STATE_CHOICE_MATCHED;
+                mceSkipStackPush(&ctx->skip_stack, level, level+1, MCE_SKIP_STATE_IGNORE);
+            } else {
+                mceSkipStackPush(&ctx->skip_stack, level, PUINT32_MAX, MCE_SKIP_STATE_IGNORE);
+            }
+            if (NULL!=req_ns) xmlFree(req_ns);
+        } else if (0==xmlStrcmp(_X(ns_mce), ns) && 0==xmlStrcmp(_X("Fallback"), ln)) {
+            if (NULL==mceSkipStackTop(&ctx->skip_stack) 
+                || !(mceSkipStackTop(&ctx->skip_stack)->state==MCE_SKIP_STATE_ALTERNATE_CONTENT || mceSkipStackTop(&ctx->skip_stack)->state==MCE_SKIP_STATE_CHOICE_MATCHED)
+                || mceSkipStackTop(&ctx->skip_stack)->level_start+1!=level
+                || mceSkipStackTop(&ctx->skip_stack)->level_end!=level) {
+                mceRaiseError(reader, ctx, MCE_ERROR_XML, _X("Fallback element does not appear at a valid position."));
+            } else if (mceSkipStackTop(&ctx->skip_stack)->state!=MCE_SKIP_STATE_CHOICE_MATCHED) {
+                mceSkipStackPush(&ctx->skip_stack, level, level+1, MCE_SKIP_STATE_IGNORE);
+            } else {
+                mceSkipStackPush(&ctx->skip_stack, level, PUINT32_MAX, MCE_SKIP_STATE_IGNORE);
+            }
+        } else if (mceQNameLevelLookup(&ctx->ignorable_set, ns, NULL, PFALSE)
+            && !mceQNameLevelLookup(&ctx->understands_set, ns, NULL, PFALSE)) {
+                if (mceQNameLevelLookup(&ctx->processcontent_set, ns, ln, PFALSE)) {
+                    mceSkipStackPush(&ctx->skip_stack, level, level+1, MCE_SKIP_STATE_IGNORE);
+                } else {
+                    mceSkipStackPush(&ctx->skip_stack, level, PUINT32_MAX, MCE_SKIP_STATE_IGNORE);
+                }
         }
-        printf(">");
-        printf("\n");
+    }
+    return mceSkipStackSkip(&ctx->skip_stack, level);
+}
+
+static pbool_t mceTextReaderProcessEndElement(xmlTextReader *reader, mceCtx_t *ctx, puint32_t level) {
+    if (mceSkipStackSkip(&ctx->skip_stack, level)) {
+        if (mceSkipStackTop(&ctx->skip_stack)->level_start==level) {
+            mceSkipStackPop(&ctx->skip_stack);
+        } else if (mceSkipStackTop(&ctx->skip_stack)->level_end==level) {
+            mceSkipStackTop(&ctx->skip_stack)->level_end--;
+            PASSERT(mceSkipStackTop(&ctx->skip_stack)->level_start<mceSkipStackTop(&ctx->skip_stack)->level_end);
+        }
+        return PTRUE;
+    } else {
+        mceQNameLevelCleanup(&ctx->ignorable_set, level);
+        mceQNameLevelCleanup(&ctx->processcontent_set, level);
+        mceQNameLevelCleanup(&ctx->understands_set, level);
+        return PFALSE;
+    }
+}
+
+int mceTextReaderPostprocess(xmlTextReader *reader, mceCtx_t *ctx, int ret) {
+    pbool_t skip=PTRUE;
+    if (MCE_ERROR_NONE!=ctx->error) {
+        ret=-1;
+    }
+    while(1==ret && skip) {
+        if (XML_READER_TYPE_ELEMENT==xmlTextReaderNodeType(reader)) {
+            skip=mceTextReaderProcessStartElement(reader, ctx, xmlTextReaderDepth(reader));
+            if (xmlTextReaderIsEmptyElement(reader)) {
+                PENSURE(mceTextReaderProcessEndElement(reader, ctx, xmlTextReaderDepth(reader))==skip);
+            }
+        } else if (XML_READER_TYPE_END_ELEMENT==xmlTextReaderNodeType(reader)) {
+            skip=mceTextReaderProcessEndElement(reader, ctx, xmlTextReaderDepth(reader));
+        } else {
+            skip=mceSkipStackSkip(&ctx->skip_stack, xmlTextReaderDepth(reader));
+        }
+        if (skip) {
+            PENSURE(-1!=(ret=xmlTextReaderRead(reader))); // skip element
+        }
+        if (MCE_ERROR_NONE!=ctx->error) {
+            ret=-1;
+        }
+    }
+    if (-1==ret && MCE_ERROR_NONE==ctx->error) {
+        ctx->error=MCE_ERROR_XML; //@TODO be more specific about the type of libxml2 error.
     }
     return ret;
 }
 
+
+mceError_t mceTextReaderGetError(mceTextReader_t *mceTextReader) {
+    return mceTextReader->mceCtx.error;
+}
 
 int mceTextReaderRead(mceTextReader_t *mceTextReader) {
     return mceTextReaderPostprocess(mceTextReader->reader, &mceTextReader->mceCtx, xmlTextReaderRead(mceTextReader->reader));
@@ -275,7 +266,7 @@ int mceTextReaderNext(mceTextReader_t *mceTextReader) {
 }
 
 
-int mceTextReaderDump(mceTextReader_t *mceTextReader, xmlTextWriter *writer) {
+int mceTextReaderDump(mceTextReader_t *mceTextReader, xmlTextWriter *writer, pbool_t fragment) {
     int ret=-1;
     if (XML_READER_TYPE_ELEMENT==xmlTextReaderNodeType(mceTextReader->reader)) {
         const xmlChar *ns=xmlTextReaderConstNamespaceUri(mceTextReader->reader);
@@ -313,12 +304,12 @@ int mceTextReaderDump(mceTextReader_t *mceTextReader, xmlTextWriter *writer) {
         if (!xmlTextReaderIsEmptyElement(mceTextReader->reader)) {
             PENSURE(1==(ret=mceTextReaderRead(mceTextReader))); // read start element
             while (1==ret && XML_READER_TYPE_END_ELEMENT!=xmlTextReaderNodeType(mceTextReader->reader)) {
-                ret=mceTextReaderDump(mceTextReader, writer);
+                ret=mceTextReaderDump(mceTextReader, writer, fragment);
             }
-            PASSERT(XML_READER_TYPE_END_ELEMENT==xmlTextReaderNodeType(mceTextReader->reader));
-            PENSURE(-1!=(ret=mceTextReaderRead(mceTextReader))); // read end element
+            PASSERT(-1==ret || XML_READER_TYPE_END_ELEMENT==xmlTextReaderNodeType(mceTextReader->reader));
+            ret=mceTextReaderRead(mceTextReader); // read end element
         } else {
-            PENSURE(-1!=(ret=mceTextReaderRead(mceTextReader))); // read empty element
+            ret=mceTextReaderRead(mceTextReader); // read empty element
         }
         xmlTextWriterEndElement(writer);
     } else if (XML_READER_TYPE_TEXT==xmlTextReaderNodeType(mceTextReader->reader)) {
@@ -330,9 +321,9 @@ int mceTextReaderDump(mceTextReader_t *mceTextReader, xmlTextWriter *writer) {
     } else if (XML_READER_TYPE_NONE==xmlTextReaderNodeType(mceTextReader->reader)) {
         ret=mceTextReaderRead(mceTextReader);
         if (1==ret && XML_READER_TYPE_NONE!=xmlTextReaderNodeType(mceTextReader->reader)) {
-            xmlTextWriterStartDocument(writer, NULL, NULL, NULL);
-            ret=mceTextReaderDump(mceTextReader, writer);
-            xmlTextWriterEndDocument(writer);
+            if (!fragment) xmlTextWriterStartDocument(writer, NULL, NULL, NULL);
+            ret=mceTextReaderDump(mceTextReader, writer, fragment);
+            if (!fragment) xmlTextWriterEndDocument(writer);
         }
     } else {
         PENSURE(-1!=(ret=mceTextReaderNext(mceTextReader))); // skip element

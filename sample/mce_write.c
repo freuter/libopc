@@ -41,10 +41,10 @@ const char v3_ns[]="http://schemas.openxmlformats.org/Circles/v3";
  Produces sample 10-3 from ISO-IEC-29500 Part 3:
  
  <Circles xmlns="http://schemas.openxmlformats.org/Circles/v1" 
-		  xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+          xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
           xmlns:v2="http://schemas.openxmlformats.org/Circles/v2" 
           mc:Ignorable="v2" 
-		  mc:ProcessContent="v2:Blink" > 
+          mc:ProcessContent="v2:Blink" > 
   <v2:Watermark Opacity="v0.1"> 
    <Circle Center="0,0" Radius="20" Color="Blue" /> 
    <Circle Center="25,0" Radius="20" Color="Black" /> 
@@ -60,52 +60,58 @@ const char v3_ns[]="http://schemas.openxmlformats.org/Circles/v3";
 
 int main( int argc, const char* argv[] )
 {
-	if (opcInitLibrary()) {
-		opcContainer *c=opcContainerOpen(_X("sample.zip"), OPC_OPEN_WRITE_ONLY, NULL, NULL);
-		opcPart *part=opcPartOpen(c, _X("sample.txt"), NULL, OPC_PART_CREATE | OPC_PART_COMPRESSED);
-		mceTextWriter *writer=mceTextWriterOpen(part);
-		mceTextWriterStartDocument();
-		mceTextWriterRegisterNamespace(_X(v1_ns), NULL, MCE_DEFAULT);
-		mceTextWriterRegisterNamespace(_X(v2_ns), _X("v2"), MCE_IGNORABLE);
-		mceTextWriterStartElement(_X(v1_ns), _X("Circles"));
-		mceTextWriterProcessContent(_X(v2_ns), _X("Blink"));		
-		
-		mceTextWriterStartElement(_X(v2_ns), _X("Watermark"));
-		mceTextWriterAttributeF(_X(v1_ns), _X("Opacity"), "v0.1");	
-		mceTextWriterStartElement(_X(v1_ns), _X("Circle"));
-		mceTextWriterAttributeF(_X(v1_ns), _X("Center"), "0,0");
-		mceTextWriterAttributeF(_X(v1_ns), _X("Radius"), "20");
-		mceTextWriterAttributeF(_X(v1_ns), _X("Color"), "Blue");
-		mceTextWriterEndElement(); // Circle
-		mceTextWriterStartElement(_X(v1_ns), _X("Circle"));
-		mceTextWriterAttributeF(_X(v1_ns), _X("Center"), "25,0");
-		mceTextWriterAttributeF(_X(v1_ns), _X("Radius"), "20");
-		mceTextWriterAttributeF(_X(v1_ns), _X("Color"), "Black");
-		mceTextWriterEndElement(); // Circle
-		mceTextWriterStartElement(_X(v1_ns), _X("Circle"));
-		mceTextWriterAttributeF(_X(v1_ns), _X("Center"), "50,0");
-		mceTextWriterAttributeF(_X(v1_ns), _X("Radius"), "20");
-		mceTextWriterAttributeF(_X(v1_ns), _X("Color"), "Red");
-		mceTextWriterEndElement(); // Circle			
-		mceTextWriterEndElement(); // v2:Watermark
+    
+    if (OPC_ERROR_NONE==opcInitLibrary()) {
+        if (2==argc) {
+            opcContainer *c=opcContainerOpen(_X(argv[1]), OPC_OPEN_WRITE_ONLY, NULL, NULL);
+            opcExtensionRegister(c, _X("xml"), _X("text/xml"));
+            opcPart part=opcPartCreate(c, _X("sample.xml"), NULL, OPC_PART_CREATE | OPC_PART_COMPRESSED);
+            mceTextWriter *w=mceTextWriterOpen(c, part, OPC_COMPRESSIONOPTION_FAST);
+            mceTextWriterStartDocument(w);
+            mceTextWriterRegisterNamespace(w, _X(v1_ns), NULL, MCE_DEFAULT);
+            mceTextWriterRegisterNamespace(w, _X(v2_ns), _X("v2"), MCE_IGNORABLE);
+            mceTextWriterProcessContent(w, _X(v2_ns), _X("Blink"));
+            mceTextWriterStartElement(w, _X(v1_ns), _X("Circles"));
+            mceTextWriterStartElement(w, _X(v2_ns), _X("Watermark"));
+            mceTextWriterAttributeF(w, _X(v1_ns), _X("Opacity"), "v0.1");    
+            mceTextWriterStartElement(w, _X(v1_ns), _X("Circle"));
+            mceTextWriterAttributeF(w, _X(v1_ns), _X("Center"), "0,0");
+            mceTextWriterAttributeF(w, _X(v1_ns), _X("Radius"), "20");
+            mceTextWriterAttributeF(w, _X(v1_ns), _X("Color"), "Blue");
+            mceTextWriterEndElement(w, _X(v1_ns), _X("Circle"));
+            mceTextWriterStartElement(w, _X(v1_ns), _X("Circle"));
+            mceTextWriterAttributeF(w, _X(v1_ns), _X("Center"), "25,0");
+            mceTextWriterAttributeF(w, _X(v1_ns), _X("Radius"), "20");
+            mceTextWriterAttributeF(w, _X(v1_ns), _X("Color"), "Black");
+            mceTextWriterEndElement(w, _X(v1_ns), _X("Circle"));
+            mceTextWriterStartElement(w, _X(v1_ns), _X("Circle"));
+            mceTextWriterAttributeF(w, _X(v1_ns), _X("Center"), "50,0");
+            mceTextWriterAttributeF(w, _X(v1_ns), _X("Radius"), "20");
+            mceTextWriterAttributeF(w, _X(v1_ns), _X("Color"), "Red");
+            mceTextWriterEndElement(w, _X(v1_ns), _X("Circle"));
+            mceTextWriterEndElement(w, _X(v2_ns), _X("Watermark"));
 
-		mceTextWriterStartElement(_X(v2_ns), _X("BLink"));
-		mceTextWriterStartElement(_X(v1_ns), _X("Circle"));
-		mceTextWriterAttributeF(_X(v1_ns), _X("Center"), "13,0");
-		mceTextWriterAttributeF(_X(v1_ns), _X("Radius"), "20");
-		mceTextWriterAttributeF(_X(v1_ns), _X("Color"), "Yellow");
-		mceTextWriterEndElement(); // Circle			
-		mceTextWriterStartElement(_X(v1_ns), _X("Circle"));
-		mceTextWriterAttributeF(_X(v1_ns), _X("Center"), "38,0");
-		mceTextWriterAttributeF(_X(v1_ns), _X("Radius"), "20");
-		mceTextWriterAttributeF(_X(v1_ns), _X("Color"), "Green");
-		mceTextWriterEndElement(); // Circle			
-		mceTextWriterEndElement(); // v2:Blink			
-				
-		mceTextWriterEndElement(); // Circles
-		mceTextWriterEndDocument();
-		mceTextWriterClose(writer);	
-		opcFreeLibrary();
-	}
-	return 0;
+            mceTextWriterStartElement(w, _X(v2_ns), _X("Blink"));
+            mceTextWriterStartElement(w, _X(v1_ns), _X("Circle"));
+            mceTextWriterAttributeF(w, _X(v1_ns), _X("Center"), "13,0");
+            mceTextWriterAttributeF(w, _X(v1_ns), _X("Radius"), "20");
+            mceTextWriterAttributeF(w, _X(v1_ns), _X("Color"), "Yellow");
+            mceTextWriterEndElement(w, _X(v1_ns), _X("Circle"));
+            mceTextWriterStartElement(w, _X(v1_ns), _X("Circle"));
+            mceTextWriterAttributeF(w, _X(v1_ns), _X("Center"), "38,0");
+            mceTextWriterAttributeF(w, _X(v1_ns), _X("Radius"), "20");
+            mceTextWriterAttributeF(w, _X(v1_ns), _X("Color"), "Green");
+            mceTextWriterEndElement(w, _X(v1_ns), _X("Circle"));
+            mceTextWriterEndElement(w, _X(v2_ns), _X("Blink")); 
+                
+            mceTextWriterEndElement(w, _X(v1_ns), _X("Circles"));
+            mceTextWriterEndDocument(w);
+            mceTextWriterFree(w);
+            opcContainerClose(c, OPC_CLOSE_NOW);
+        } else {
+            printf("mce_write sample.zip\n");
+        }
+        opcFreeLibrary();
+    }
+    return 0;
 }

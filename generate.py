@@ -18,12 +18,12 @@ def platformCompare(a, b):
 
 
 def platformSubseteqTest(a, b):
-	a3=a.split("-")
-	b3=b.split("-")
-	ret=len(a3)==len(b3)
+	a4=a.split("-")
+	b4=b.split("-")
+	ret=len(a4)==len(b4)
 	i=0
-	while i<len(a3) and i<len(b3):		
-		ret=ret and (a3[i]==b3[i] or b3[i]=="*")
+	while i<len(a4) and i<len(b4):		
+		ret=ret and (a4[i]==b4[i] or b4[i]=="*")
 		i=i+1
 #	sys.stderr.write("platformSubseteqTest("+a+", "+b+")="+str(ret))
 	return ret
@@ -46,8 +46,10 @@ def parseFile(node, ctx, list):
 				if "install" in node.attrib and node.attrib["install"]=="yes":
 					install=os.path.dirname(os.path.relpath(abs_path, ctx["root"]))
 ##					sys.stderr.write install
-
-				list.append({ "path": abs_path, "ext": ext, "install": install })
+				file_item={ "path": abs_path, "ext": ext, "install": install }
+				if "x" in node.attrib:
+					file_item["x"]=node.attrib["x"]
+				list.append(file_item)
 			else:
 				parseError("file "+abs_path+" does not exist!")
 		else:
@@ -64,21 +66,61 @@ def setAttr(dict, node, tag):
 	if tag in node.attrib:
 		dict[tag]=node.attrib[tag]		
 
-def updateCtx(ctx, node):
+def fallbackCompare(a, b):
+	return -cmp(a.count('-'), b.count('-'))
+
+
+def generateFallbackList(platform):
+	ret=[]
+	p4=platform.split("-")
+	for i in range(1<<len(p4)):
+		p=""
+		for j in range(len(p4)):
+			m=(i&(1<<j))==(1<<j)
+#			print " "+str(i)+" "+str(j)+" "+str(m)+" "+p
+			if m:
+				if len(p)>0:
+					p=p+"-"
+				p=p+p4[j]
+		if len(p)>0:
+			ret.append(p)
+	ret.sort(fallbackCompare)
+	return ret
+
+def updateCtx(conf, ctx, node):
 	if "root" in node.attrib:
 		root=ctx["root"]
 		ctx=copy.copy(ctx)	
-		v=node.attrib["root"].format(platform=ctx["platform"], config=ctx["config"])
+		rel_prj_path=os.path.split(ctx["root"])[1]
+		prjconfigdir=os.path.join(ctx["config"], rel_prj_path, "config")
+#		print "rel_prj_path="+rel_prj_path+" prjconfigdir="+prjconfigdir
+		v=node.attrib["root"].format(platform=ctx["platform"], config=os.path.join(ctx["config"], "config"), prjconfig=prjconfigdir)
+		f=node.attrib["root"].format(platform="{platform}", config=os.path.join(ctx["config"], "config"), prjconfig=prjconfigdir)
+		if v!=f:
+			conf["format"][os.path.join(root, v)]=os.path.join(root, f)
+
 		ctx_root=os.path.join(root, v)
 		if not os.path.exists(ctx_root):
-#			print "NOT EXIST: "+str(ctx_root)
-			platform_array=ctx["platform"].split('-')
-			short_platform=platform_array[0]+"-"+platform_array[2]
-			v=node.attrib["root"].format(platform=short_platform, config=ctx["config"])
-#			print "TEST: "+str(ctx_root)
-			if os.path.exists(os.path.join(root, v)):
-				ctx_root=os.path.join(root, v)
-		ctx["root"]=os.path.join(root, v)
+			list=generateFallbackList(ctx["platform"])
+			for p in list:
+				v=node.attrib["root"].format(platform=p, config=os.path.join(ctx["config"], "config"), prjconfig=prjconfigdir)
+				if os.path.exists(os.path.join(root, v)):
+					map=os.path.join(root, v)
+					conf["mapping"][map]=ctx_root
+					ctx_root=map
+					list=[]
+		if not os.path.exists(ctx_root) and "platforms" in conf and ctx["platform"] in conf["platforms"] and "family" in conf["platforms"][ctx["platform"]]:
+			family=conf["platforms"][ctx["platform"]]["family"]
+			list=generateFallbackList(family)
+#			print "list="+str(list)
+			for p in list:
+				v=node.attrib["root"].format(platform=p, config=os.path.join(ctx["config"], "config"), prjconfig= prjconfigdir)
+				if os.path.exists(os.path.join(root, v)):
+					map=os.path.join(root, v)
+					conf["mapping"][map]=ctx_root
+					ctx_root=map
+					list=[]
+		ctx["root"]=ctx_root
 	return ctx
 
 def parseDefines(ctx, node, dict):
@@ -117,16 +159,16 @@ def parseLibrary(conf, node, ctx, seq_type):
 	lib_name=node.attrib["name"]
 	lib_uuid=uuid.uuid5(uuid.NAMESPACE_URL, "urn:lib:"+lib_name)
 	lib={"name": lib_name, "uuid": lib_uuid, "source": { "files": []}, "header": { "files": [], "target": "", "includes": [] }, "defines": {}, "exports": {}, "deps": parseDeps(node), "mode": "c90", "align": "", "external": False }	
-	ctx=updateCtx(ctx, node)
+	ctx=updateCtx(conf, ctx, node)
 	setAttr(lib, node, "mode")
 	setAttr(lib, node, "align")
 	if not(lib_name in ctx["externals"]) or not("external" in ctx["externals"][lib_name]) or not(ctx["externals"][lib_name]["external"]):
 		for child in list(node):
 			if child.tag=="source":
-				parseFiles(lib["source"]["files"], list(child), updateCtx(ctx, child))
+				parseFiles(lib["source"]["files"], list(child), updateCtx(conf, ctx, child))
 			elif child.tag=="header":
 				setAttr(lib["header"], child, "target")
-				child_ctx=updateCtx(ctx, child)
+				child_ctx=updateCtx(conf, ctx, child)
 				lib["header"]["includes"].append(child_ctx["root"])
 				parseFiles(lib["header"]["files"], list(child), child_ctx)
 			elif child.tag=="settings":
@@ -151,7 +193,8 @@ def isExcluded(conf, ctx, lib):
 def parsePlatform(conf, node, ctx):
 	if "name" in node.attrib:
 		name=node.attrib["name"]
-		platform={ "exclude": {}, "libs": [] }
+		platform={ "exclude": {}, "libs": [], "ldflags": "" }
+		setAttr(platform, node, "family")
 		setAttr(platform, node, "cc")
 		setAttr(platform, node, "ar")
 		setAttr(platform, node, "ld")
@@ -159,6 +202,7 @@ def parsePlatform(conf, node, ctx):
 		setAttr(platform, node, "cflags_c")
 		setAttr(platform, node, "cflags_cpp")
 		setAttr(platform, node, "cppflags")
+		setAttr(platform, node, "ldflags")
 		setAttr(platform, node, "host")
 		if "exclude" in node.attrib:
 			for prj in node.attrib["exclude"].split(" "):
@@ -238,25 +282,25 @@ def gatherSources(conf, ctx, lib):
 	sources=[]
 	for file in lib["source"]["files"]:
 		rel_source=os.path.relpath(file["path"], ctx["base"])
-		sources.append(rel_source)
+		sources.append((rel_source, file))
 	return sources
 
-def generateOBJS(conf, ctx, lib, out, obj_dir, cppflags):
-	objs=[]
-	for file in lib["source"]["files"]:
-		rel_source=os.path.relpath(file["path"], ctx["base"])
-		rel_obj=os.path.join(obj_dir, os.path.splitext(rel_source)[0]+".o")
-		out_dir=os.path.dirname(rel_obj)
-		out.write(rel_obj+": "+rel_source+"\n")
-		out.write("\t@mkdir -p "+out_dir+"\n")
-		specific=""
-		if file["ext"]=="c":
-			specific ="$(CFLAGS_C) "
-		elif file["ext"]=="cpp":
-			specific ="$(CFLAGS_CPP) "
-		out.write("\t$(CC) -c $(CFLAGS) "+ specific +"$(CPPFLAGS)"+cppflags+" "+ rel_source+" -o "+rel_obj+"\n")
-		objs.append(rel_obj)
-	return objs
+#def generateOBJS(conf, ctx, lib, out, obj_dir, cppflags):
+#	objs=[]
+#	for file in lib["source"]["files"]:
+#		rel_source=os.path.relpath(file["path"], ctx["base"])
+#		rel_obj=os.path.join(obj_dir, os.path.splitext(rel_source)[0]+".o")
+#		out_dir=os.path.dirname(rel_obj)
+#		out.write(rel_obj+": "+rel_source+"\n")
+#		out.write("\t@mkdir -p "+out_dir+"\n")
+#		specific=""
+#		if file["ext"]=="c":
+#			specific ="$(CFLAGS_C) "
+#		elif file["ext"]=="cpp":
+#			specific ="$(CFLAGS_CPP) "
+#		out.write("\t$(CC) -c $(CFLAGS) "+ specific +"$(CPPFLAGS)"+cppflags+" "+ rel_source+" -o "+rel_obj+"\n")
+#		objs.append(rel_obj)
+#	return objs
 
 def generateDEPS(conf, ctx, lib, out, obj_dir, cppflags, filename):
 	for file in lib["source"]["files"]:
@@ -443,17 +487,21 @@ def writeProject(out, solution_uuid, lib):
 	out.write("Project(\"{"+str(solution_uuid)+"}\") = \""+lib["name"]+"\", \""+lib["name"]+"\\"+lib["name"]+".vcxproj\", \"{"+str(lib["uuid"])+"}\"\n")
 	out.write("EndProject\n")
 
+def generatePlatformList(conf, ctx):
+	add=[]
+	for platform in conf["platforms"]:
+		if platformSubseteqTest(ctx["platform"], platform):
+			add.append(platform)
+	add.sort(platformCompare)
+	return add
+
 def generateConfiguration(ctx, includes, platform):
-	conf={ "libraries": [], "tools": [], "platforms": {} }
+	conf={ "libraries": [], "tools": [], "platforms": {}, "mapping": {}, "format": {} }
 	ctx["platform"]=platform
 	for include in includes:
 		parseConfiguration(conf, include, ctx)
 	if ctx["platform"] not in conf["platforms"]:	
-		add=[]
-		for platform in conf["platforms"]:
-			if platformSubseteqTest(ctx["platform"], platform):
-				add.append(platform)
-		add.sort(platformCompare)
+		add=generatePlatformList(conf, ctx);
 		if len(add)>0:
 			conf["platforms"][ctx["platform"]]=conf["platforms"][add[0]]
 	return conf
@@ -483,20 +531,30 @@ def generateWin32(ctx, source):
 	out.write("\n")
 	out.close()
 
+
 def writeSourceRules(conf, ctx, out, lib, build_dir):
 	dirs={}
 	sources=gatherSources(conf, ctx, lib)
 	out.write("objs_"+lib["name"]+"=\\\n")
 	for source in sources:
-		out.write("     $(BUILD_DIR)/"+os.path.splitext(source)[0]+".o\\\n")
-		dirs[os.path.dirname(source)]=None
+		out.write("     $(BUILD_DIR)/"+os.path.splitext(source[0])[0]+".o\\\n")
+		dirs[os.path.dirname(source[0])]=None
 	out.write("     \n")
 	out.write(lib["name"]+"_includes="+generateCPPFLAGS(conf, ctx, lib, build_dir)+"\n")
 	out.write("\n")
 	includes="$("+lib["name"]+"_includes)"
+	# write special rules
+	for source in sources:
+		file=source[1]
+		if "x" in file:
+			special="-x "+file["x"]+" "
+			out.write("$(BUILD_DIR)/"+os.path.splitext(source[0])[0]+".o: $(SRC_DIR)/"+source[0]+"\n")
+			out.write("\t@mkdir -p $(dir $@)\n")
+			out.write("\t$(CC) $(CFLAGS) $(CFLAGS_C) $(CPPFLAGS) "+special+includes+" -c \"$<\" -o \"$@\"\n")
+	# write generic rules
 	for dir in dirs:
 		for ext in EXT_MAPPING:
-			if EXT_MAPPING[ext]=='c':
+			if EXT_MAPPING[ext]=='c' or EXT_MAPPING[ext]=='s':
 				out.write("$(BUILD_DIR)/"+dir+"/%.o: $(SRC_DIR)/"+dir+"/%"+ext+"\n")
 				out.write("\t@mkdir -p $(dir $@)\n")
 				out.write("\t$(CC) $(CFLAGS) $(CFLAGS_C) $(CPPFLAGS) "+includes+" -c \"$<\" -o \"$@\"\n")
@@ -515,6 +573,7 @@ def writeMakefileFlags(conf, ctx, out):
 	out.write("CFLAGS_C="+conf["platforms"][platform]["cflags_c"]+"\n")
 	out.write("CFLAGS_CPP="+conf["platforms"][platform]["cflags_cpp"]+"\n")
 	out.write("CPPFLAGS="+conf["platforms"][platform]["cppflags"]+"\n");
+	out.write("LDFLAGS="+conf["platforms"][platform]["ldflags"]+"\n");
 
 def generateLibraryMakefile(conf, ctx, lib, filename, build_dir, src_dir):
 	sys.stderr.write("generating "+filename+"\n")
@@ -538,6 +597,37 @@ def generateLibraryMakefile(conf, ctx, lib, filename, build_dir, src_dir):
 	out.write("clean:\n")
 	out.write("\trm -f $(BUILD_DIR)/lib"+lib["name"]+".a $(objs_"+lib["name"]+")\n")
 	out.close()
+	
+def generateLibraryInclude(conf, ctx, lib, filename, build_dir, src_dir):
+	sys.stderr.write("generating "+filename+"\n")
+	if not os.path.exists(os.path.dirname(filename)):
+    		os.makedirs(os.path.dirname(filename))
+	ret=[]
+	lib_deps=lib["deps"]
+	lib_deps.append(lib["name"])
+#	out.write("deps="+str(lib["deps"])+"\n");
+	dep_closure=depClosure(conf, lib_deps, False)
+	dep_dirs=gatherIncludeDirs(conf, ctx, dep_closure)
+	for dep in dep_dirs:
+		dep_dir=os.path.join(ctx["base"], str(dep))
+		if dep_dir in conf["mapping"]:
+			dep_dir=conf["mapping"][dep_dir]
+		if dep_dir in conf["format"]:
+			ln_src=os.path.join(build_dir, "include", os.path.relpath(conf["format"][dep_dir], ctx["base"]).format(platform="platform").replace(os.sep, "_"))
+			ln_dst=os.path.join(src_dir, dep)
+			if os.path.exists(ln_src):
+				os.remove(ln_src)
+			os.symlink(ln_dst, ln_src)
+			ret.append(ln_src)
+		else:
+			ret.append(dep)
+
+	out=open(filename, "w")
+	for file in ret:
+		out.write(file+"\n")
+	out.close()
+
+
 
 def generateToolMakefile(conf, ctx, tool, filename, build_dir, src_dir):
 	sys.stderr.write("generating "+filename+"\n")
@@ -572,7 +662,7 @@ def generateToolMakefile(conf, ctx, tool, filename, build_dir, src_dir):
 					ext_ldflags=ext_ldflags+" "+ext_lib["ldflags"]
 
 	out.write("$(BUILD_DIR)/"+tool["name"]+": $(objs_"+tool["name"]+") $("+tool["name"]+"_ld)\n")			
-	out.write("\t$(CC) $(CFLAGS) $(CPPFLAGS) -o $(BUILD_DIR)/"+tool["name"]+" $(objs_"+tool["name"]+") $("+tool["name"]+"_ld)"+ ext_ldflags+"\n")
+	out.write("\t$(CC) $(CFLAGS) $(CPPFLAGS) -o $(BUILD_DIR)/"+tool["name"]+" $(objs_"+tool["name"]+") $("+tool["name"]+"_ld)"+ ext_ldflags+" $(LDFLAGS)\n")
 	out.write("\n")
 	out.write("clean:\n")
 	out.write("\trm -f $(BUILD_DIR)/"+tool["name"]+" $(objs_"+tool["name"]+")\n")
@@ -612,6 +702,8 @@ def generateMakefile(conf, ctx):
 		if not lib["external"]:
 			makefile=os.path.join(obj_dir, "Makefile."+lib["name"])
 			generateLibraryMakefile(conf, ctx, lib, makefile, obj_dir, os.path.join("..", ".."))
+			libincludefile=os.path.join(obj_dir, "include", lib["name"]+".inc")
+			generateLibraryInclude(conf, ctx, lib, libincludefile, obj_dir, os.path.join("..", "..", ".."))
 			out.write(lib["name"]+":")
 			deps=depClosure(conf, lib["deps"], True)
 			for dep in deps:
@@ -654,7 +746,7 @@ def generateMakefiles(ctx, source):
 			parseError("platform "+ctx["platform"]+" is unknown.")
 			sys.stderr.write("available platforms:");
 			for platform in conf["platforms"]:
-				sys.stderr.write(platform)
+				sys.stderr.write(platform+"\n")
 	out=open("Makefile", "w")
 	out.write(".phony: all clean");
 	for platform in ctx["platforms"]:
@@ -753,7 +845,7 @@ if __name__ == "__main__":
 		usage()
 		sys.exit(2)
 	ctx={ "base": os.path.abspath(os.curdir), "root": os.path.abspath(os.curdir), "platform": "?-?-?", "platforms": [], "externals": {} }
-	ctx["config"]=os.path.join(ctx["base"], "config")
+	ctx["config"]=ctx["base"]
 	includes=[]
 	dump_env=[]
 	install_zip=None
@@ -787,8 +879,10 @@ if __name__ == "__main__":
 		ctx["platforms"].append(platform)
 
 	if 1==len(ctx["platforms"]) and None!=install_zip and 1==len(includes):
+		ctx["root"]=os.path.abspath(os.path.split(includes[0])[0])
 		generateZipPackage(ctx, includes[0], install_zip)
-	elif 1==len(ctx["platforms"]) and platformSubseteqTest(ctx["platforms"][0], "win32-*-*") and 1==len(includes):
+	elif 1==len(ctx["platforms"]) and platformSubseteqTest(ctx["platforms"][0], "win32-*-msvc-*") and 1==len(includes):
+		ctx["root"]=os.path.abspath(os.path.split(includes[0])[0])
 		generateWin32(ctx, includes[0])
 	else:
 		if not os.path.exists("build"):
@@ -797,6 +891,7 @@ if __name__ == "__main__":
 		f.write(str(ctx))
 		f.close()		
 		for include in includes:
+			ctx["root"]=os.path.abspath(os.path.split(include)[0])
 			generateMakefiles(ctx, include)
 
 	for platform in dump_env:

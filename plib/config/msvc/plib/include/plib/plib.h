@@ -41,22 +41,35 @@ extern "C" {
 #undef HAVE_STDDEF_H
 #undef HAVE_STDIO_H
 #undef HAVE_STRING_H
-#undef WIN32
+#undef HAVE_LIMITS_H
+#undef HAVE_STDLIB_H
+#undef HAVE_IO_H
+#undef IS_CONFIGURED
+
+#if !defined(IS_CONFIGURED)
+#if defined(WIN32)
+#define HAVE_STRING_H
+#define HAVE_STDINT_H
+#define HAVE_LIMITS_H
+#define HAVE_STDDEF_H
+#define HAVE_STDIO_H
+#define HAVE_STDLIB_H
+#define HAVE_IO_H
+#define snprintf _snprintf
+#else
+#error "configure not executed and we are not on a win32 machine? please run configure or define WIN32 is you are on a WIN32 platform."
+#endif
+#endif
 
 #ifdef HAVE_STDDEF_H
 #include <stddef.h>
 typedef size_t pofs_t; // maximum file offset for eg. read write ops
-
-#elif defined(WIN32)
-
 #else
 #error "system types can not be determined"
 #endif
 
 #ifdef HAVE_STDIO_H
 #include <stdio.h>
-#elif defined(WIN32)
-
 #else
 #error "system io can not be determined"
 #endif
@@ -78,15 +91,36 @@ typedef uint64_t puint64_t;
 
 typedef int pbool_t;
 
-// INTN_MAX, INTN_MIN, UINTN_MAX
-#elif defined(WIN32)
+typedef size_t psize_t;
 
+// INTN_MAX, INTN_MIN, UINTN_MAX
 #else
 #error "system types can not be determined"
 #endif
 
 #ifdef HAVE_STRING_H
 #include <string.h>
+#endif
+
+#ifdef HAVE_LIMITS_H
+#include <limits.h>
+#define PUINT8_MAX UCHAR_MAX 
+#define PINT32_MAX INT_MAX 
+#define PINT32_MIN INT_MIN 
+#define PUINT32_MAX UINT_MAX 
+#define PUINT32_MIN 0 
+#define PUINT16_MAX	USHRT_MAX 
+#define PUINT16_MIN 0 
+#else
+#error "limits can not be determined"
+#endif
+
+#ifdef HAVE_STDLIB_H
+#include <stdlib.h>
+#endif
+
+#ifdef HAVE_IO_H
+#include <io.h>
 #endif
 
 #ifdef __cplusplus
