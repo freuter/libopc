@@ -44,47 +44,6 @@
 #include <time.h>
 #include <libxml/xmlwriter.h>
 
-static void dump(opcXmlReader *reader, xmlTextWriter *writer) {
-    if (opcXmlReaderStartElement(reader, NULL, NULL)) {
-        const xmlChar *ns=opcXmlReaderConstNamespaceUri(reader);
-        const xmlChar *ln=opcXmlReaderLocalName(reader);
-        if (NULL!=ns) {
-            xmlTextWriterStartElementNS(writer, opcXmlReaderConstPrefix(reader), ln, NULL);
-        } else {
-            xmlTextWriterStartElement(writer, ln);
-        }
-        if (opcXmlReaderStartAttributes(reader)) {
-            do {
-                static const char ns_xml[]="http://www.w3.org/2000/xmlns/";
-                static const char _xmlns[]="xmlns";
-                const xmlChar *attr_ns=opcXmlReaderConstNamespaceUri(reader);
-                const xmlChar *attr_ln=opcXmlReaderLocalName(reader);
-                const xmlChar *attr_val=opcXmlReaderConstValue(reader);
-                if (NULL!=attr_ns && 0==xmlStrcmp(attr_ns, _X(ns_xml))) {
-                    if (0==xmlStrcmp(attr_ln, _X(_xmlns))) {
-                        xmlTextWriterWriteAttribute(writer, attr_ln, attr_val);
-                    } else {
-                        xmlTextWriterWriteAttributeNS(writer, _X(_xmlns), attr_ln, NULL, attr_val);
-                    }
-                } else {
-                    if (NULL!=ns) {
-                        xmlTextWriterWriteAttributeNS(writer, opcXmlReaderConstPrefix(reader), attr_ln, NULL, attr_val);
-                    } else {
-                        xmlTextWriterWriteAttribute(writer, attr_ln, attr_val);
-                    }
-                }
-            } while (!opcXmlReaderEndAttributes(reader));
-        }
-        if (opcXmlReaderStartChildren(reader)) {
-            do {
-                dump(reader, writer);
-            } while (!opcXmlReaderEndChildren(reader));
-        }
-        xmlTextWriterEndElement(writer);
-    } else if (opcXmlReaderStartText(reader)) {
-        xmlTextWriterWriteString(writer, opcXmlReaderConstValue(reader));
-    }
-}
 
 static int  xmlOutputWrite(void * context, const char * buffer, int len) {
     FILE *out=(FILE*)context;
@@ -112,6 +71,7 @@ static void dumpPartsAsJSON(opcContainer *c, int indent) {
 
 int main( int argc, const char* argv[] )
 {
+    int ret=-1;
     time_t start_time=time(NULL);
     FILE *file=NULL;
     const xmlChar *containerPath8=NULL;
@@ -169,9 +129,12 @@ int main( int argc, const char* argv[] )
                                 opcXmlUnderstandsNamespace(reader, ns);
                             }
                         }
-                        opcXmlReaderStartDocument(reader);
-                        dump(reader, writer);
-                        opcXmlReaderEndDocument(reader);
+
+                        if (-1==mceTextReaderDump(opcXmlReaderGetMceReader(reader), writer, PTRUE)) {
+                            ret=mceTextReaderGetError(opcXmlReaderGetMceReader(reader));
+                        } else {
+                            ret=0;
+                        }
                         opcXmlReaderClose(reader);
                     } else {
                         fprintf(stderr, "ERROR: part \"%s\" could not be opened for XML reading.\n", argv[2]);
@@ -192,5 +155,5 @@ int main( int argc, const char* argv[] )
     if (NULL!=file) fclose(file);
     time_t end_time=time(NULL);
     fprintf(stderr, "time %.2lfsec\n", difftime(end_time, start_time));
-    return 0;
+    return ret;
 }

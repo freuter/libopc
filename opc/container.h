@@ -66,25 +66,32 @@ extern "C" {
     typedef enum {
         /**
          Opens the OPC container denoted by \a fileName in READ-ONLY mode. The \a destName parameter must be \a NULL.
+         \hideinitializer
          */
         OPC_OPEN_READ_ONLY=0, 
         /**
          Opens the OPC container denoted by \a fileName in WRITE-ONLY mode. The \a destName parameter must be \a NULL.
+         \hideinitializer
          */
         OPC_OPEN_WRITE_ONLY=1,
         /**
          Opens the OPC container denoted by \a fileName in READ/WRITE mode. The \a destName parameter must be \a NULL.
+         \hideinitializer
          */
         OPC_OPEN_READ_WRITE=2,
         /**
          This mode will open the container denoted by \a fileName in READ-ONLY mode and the container denoted by 
          \a destName in write-only mode. Any modifications will be written to the container denoted by \a destName 
          and the unmodified streams from \a fileName will be written to \a destName on closing.
+         \warning Currently not implemented.
+         \hideinitializer
          */
         OPC_OPEN_TEMPLATE=3,
         /**
          Like the OPC_OPEN_TEMPLATE mode, but the \a destName will be renamed to the \a fileName on closing. If \a destName 
          is \a NULL, then the name of the temporary file will be generated automatically.
+         \warning Currently not implemented.
+         \hideinitializer
          */
         OPC_OPEN_TRANSITION=4
     } opcContainerOpenMode; 
@@ -95,16 +102,20 @@ extern "C" {
     typedef enum {
         /**
          Close the OPC container without any further postprocessing.
+         \hideinitializer
          */
         OPC_CLOSE_NOW = 0,
         /**
          Close the OPC container and trim the file by removing unused fragments like e.g. 
          deleted parts.
+         \hideinitializer
          */
         OPC_CLOSE_TRIM = 1,
         /**
          Close the OPC container like in \a OPC_CLOSE_TRIM mode, but additionally remove any 
          "interleaved" parts by reordering them.
+         \warning Currently not implemented. Same semantic as OPC_CLOSE_TRIM.       
+         \hideinitializer
          */
         OPC_CLOSE_DEFRAG = 2
     } opcContainerCloseMode;
@@ -114,7 +125,7 @@ extern "C" {
      @param[in] fileName. For more details see \ref opcContainerOpenMode.
      @param[in] mode. For more details see \ref opcContainerOpenMode.
      @param[in] userContext. Will not be modified by libopc. Can be used to e.g. store the "this" pointer for C++ bindings.
-     @param[in] mode. For more details see \ref opcContainerOpenMode.
+     @param[in] destName. For more details see \ref opcContainerOpenMode.
      @return \a NULL if failed. 
      \see opcContainerOpenMode
      \see opcContainerDump
@@ -124,10 +135,32 @@ extern "C" {
                                    void *userContext, 
                                    const xmlChar *destName);
 
+    /**
+     Opens a ZIP-based OPC container from memory.
+     @param[in] data. 
+     @param[in] data_len.
+     @param[in] userContext. Will not be modified by libopc. Can be used to e.g. store the "this" pointer for C++ bindings.
+     @param[in] mode. For more details see \ref opcContainerOpenMode.
+     @return \a NULL if failed. 
+     */
     opcContainer* opcContainerOpenMem(const opc_uint8_t *data, opc_uint32_t data_len,
                                       opcContainerOpenMode mode, 
                                       void *userContext);
 
+    /**
+     Opens a ZIP-based OPC container from memory.
+     @param[in] ioread. 
+     @param[in] iowrite. 
+     @param[in] ioclose. 
+     @param[in] ioseek. 
+     @param[in] iotrim. 
+     @param[in] ioflush. 
+     @param[in] iocontext. 
+     @param[in] file_size. 
+     @param[in] userContext. Will not be modified by libopc. Can be used to e.g. store the "this" pointer for C++ bindings.
+     @param[in] mode. For more details see \ref opcContainerOpenMode.
+     @return \a NULL if failed. 
+     */
     opcContainer* opcContainerOpenIO(opcFileReadCallback *ioread,
                                      opcFileWriteCallback *iowrite,
                                      opcFileCloseCallback *ioclose,
@@ -166,23 +199,61 @@ extern "C" {
      Exports the OPC container to "Flat OPC" (http://blogs.msdn.com/b/ericwhite/archive/2008/09/29/the-flat-opc-format.aspx).
      The flat versions of an OPC file are very important when dealing with e.g XSL(T)-based or Javascript-based transformations.
      \see opcContainerFlatImport.
+     \todo Implementation needed.
      */
     int opcContainerFlatExport(opcContainer *c, const xmlChar *fileName);
     
     /**
      Imports the flat version of an OPC container. 
      \see opcContainerFlatExport.
+     \todo Implementation needed.
      */
     int opcContainerFlatImport(opcContainer *c, const xmlChar *fileName);
     
-
+    /**
+     Iterate all types.
+     \code
+     for(opcPart part=opcContentTypeFirst(c);
+         OPC_PART_INVALID!=part;
+         part=opcContentTypeNext(c, part)) {
+        printf("%s\n", part);
+     }
+     \endcode
+    */
     const xmlChar *opcContentTypeFirst(opcContainer *container);
+    
+    /**
+     \see opcContentTypeNext()
+    */
     const xmlChar *opcContentTypeNext(opcContainer *container, const xmlChar *type);
 
+    /**
+     Iterate extensions.
+     \code
+     for(const xmlChar *ext=opcExtensionFirst(c);
+         NULL!=ext;
+         ext=opcExtensionNext(ext)) {
+        printf("%s\n", ext);
+     }
+     \endcode
+    */
     const xmlChar *opcExtensionFirst(opcContainer *container);
+    
+    /**
+     \see opcExtensionFirst()
+     */
     const xmlChar *opcExtensionNext(opcContainer *container, const xmlChar *ext);
+    
+    /**
+     Get registered type for extension.
+     \see opcExtensionRegister()
+     */
     const xmlChar *opcExtensionGetType(opcContainer *container, const xmlChar *ext);
 
+    /**
+     Register a mime-type and and extension.
+     \see opcExtensionGetType()
+     */
     const xmlChar *opcExtensionRegister(opcContainer *container, const xmlChar *ext, const xmlChar *type);
 
 

@@ -53,7 +53,8 @@ extern "C" {
     struct MCE_TEXTWRITER_STRUCT {
         xmlTextWriterPtr writer;
         puint32_t level;
-        mceQNameLevelArray_t registered_array;
+        mceQNameLevelSet_t registered_set;
+        mceQNameLevelSet_t processcontent_set;
         const xmlChar *ns_mce;
     };
 

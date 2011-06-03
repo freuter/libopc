@@ -29,55 +29,38 @@
  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED 
  OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-#include <opc/opc.h>
 #include <mce/textreader.h>
 #include <stdio.h>
 
 int main( int argc, const char* argv[] )
 {
-	if (opcInitLibrary() && argc>=3) {
-		opcContainer *c=NULL;
-		if (NULL!=(c=opcContainerOpen(_X(argv[1]), OPC_OPEN_READ_ONLY, NULL, NULL))) {
-			opcContainerDump(c, stdout);
-			opcPart *part=NULL;
-			if ((part=opcPartOpen(c, _X(argv[2]), NULL, 0))!=NULL) {
-				mceTextReader *reader=NULL;
-				if ((reader=mceTextReaderOpen(part))!=NULL){
-					for(int i=3;i<=argc;i++) {
-						mceTextReaderUnderstands(_X(argv[i]));
-					}					
-					while(mceTextReaderRead(reader)>0) {
-						switch (mceTextReaderNodeType(reader)) {
-							case XML_READER_TYPE_ELEMENT:
-								if (mceTextReaderIsEmptyElement(reader)) {
-									printf("<%s/>\n", mceTextReaderLocalName(reader));
-								} else {
-									printf("<%s>\n", mceTextReaderLocalName(reader));
-								}
-								break;
-							case XML_READER_TYPE_END_ELEMENT:
-								printf("</%s>\n", mceTextReaderLocalName(reader));
-								break;
-						}
-					}
-					mceTextReaderClose(reader);
-				} else {
-					printf("ERROR: part \"%s\" could not be opened for XML reading.\n", argv[2]);
-				}
-				opcPartRelease(part);
-			} else {
-				printf("ERROR: part \"%s\" could not be opened in \"%s\".\n", argv[2], argv[1]);
-			}
-			opcContainerClose(c, OPC_CLOSE_NOW);
-		} else {
-			printf("ERROR: file \"%s\" could not be opened.\n", argv[1]);
-		}
-		opcFreeLibrary();
-	} else if (2==argc) {
-		printf("ERROR: initialization of libopc failed.\n");	
-	} else {
-		printf("mce_read FILENAME STREAM UNDERSTAND1...UNDERSTANDn.\n\n");
-		printf("Sample: mce_read test.docx word/document.xml http://schemas.microsoft.com/office/word/2010/wordml\n");
-	}
-	return 0;
+    xmlInitParser();
+    const char *src=NULL;
+    const char *dst=NULL;
+    for(int i=1;i<argc;i++) {
+        if (0==strcmp("--understands", argv[i])) i++;
+        else if (NULL==src) src=argv[i];
+        else if (NULL==dst) dst=argv[i];
+        else printf("skipped argument %s\n", argv[i]);
+    }
+    if (NULL!=dst && NULL!=src) {
+        mceTextReader_t reader;
+        if (-1!=mceTextReaderInit(&reader, xmlNewTextReaderFilename(src))) {
+            for(int i=1;i<argc;i++) {
+                if (0==strcmp("--understands", argv[i])) {
+                    mceTextReaderUnderstandsNamespace(&reader, _X(argv[++i]));
+                }
+            }
+            xmlTextWriterPtr writer=xmlNewTextWriterFilename(dst, 0);
+            mceTextReaderDump(&reader, writer, PFALSE);
+            xmlFreeTextWriter(writer);
+            mceTextReaderCleanup(&reader);
+        } else {
+            printf("ERROR: file \"%s\" could not be opened.\n", argv[1]);
+        }
+    } else {
+        printf("mce_read [--understands NAMESPACE] SRC.XML TARGET.XML\n");
+    }
+    xmlCleanupParser();
+    return 0;
 }

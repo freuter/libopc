@@ -42,14 +42,14 @@
 
 #include <opc/opc.h>
 #include <stdio.h>
-#ifdef P_WIN32
+#ifdef WIN32
 #include <io.h>
 #include <fcntl.h>
 #endif
 
 int main( int argc, const char* argv[] )
 {
-#ifdef P_WIN32
+#ifdef WIN32
     _setmode( _fileno( stdout ), _O_BINARY ); // make sure LF are not translated to CR LF on windows...
 #endif
 	if (OPC_ERROR_NONE==opcInitLibrary() && 3==argc) {

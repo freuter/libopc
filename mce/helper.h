@@ -31,7 +31,10 @@
  
 */
 /** @file mce/helper.h
- 
+Helper functions needed by mce/textreader.h and mce/textwriter.h to implement MCE:
+- mceQNameLevelAdd(), mceQNameLevelLookup() and mceQNameLevelCleanup() maintain a set of mceQNameLevel_t tuples.
+- mceQNameLevelPush() and mceQNameLevelPopIfMatch() maintain a stack of mceQNameLevel_t tuples.
+- mceCtxInit(), mceCtxCleanup() and mceCtxUnderstandsNamespace() manage a context which holds all information needed to do MCE proprocessing.
  */
 #include <mce/config.h>
 
@@ -42,34 +45,116 @@
 extern "C" {
 #endif
 
+    /**
+      Tiple (ns, ln, level).
+    */
     typedef struct MCE_QNAME_LEVEL {
         xmlChar *ns;
         xmlChar *ln;
         puint32_t level;
-        puint32_t flag;
+        puint32_t flag; // used by mceTextWriter
     } mceQNameLevel_t;
 
-    typedef struct MCE_QNAME_LEVEL_ARRAY {
+    /**
+     */
+    typedef enum MCE_SKIP_STATE_ENUM {
+        MCE_SKIP_STATE_IGNORE,
+        MCE_SKIP_STATE_ALTERNATE_CONTENT,
+        MCE_SKIP_STATE_CHOICE_MATCHED
+    } mceSkipState_t;
+
+    /**
+     Represents an intervall of levels which are "skipped" i.e. ignored.
+     */
+    typedef struct MCE_SKIP_ITEM {
+        puint32_t level_start;
+        puint32_t level_end;
+        mceSkipState_t state;
+    } mceSkipItem_t;
+
+    /**
+      Either represents a set of (ns, ln, level) triples.
+    */
+    typedef struct MCE_QNAME_LEVEL_SET {
         mceQNameLevel_t *list_array;
         puint32_t list_items;
         puint32_t max_level;
-    } mceQNameLevelArray_t;
+    } mceQNameLevelSet_t;
 
+    /**
+     The skip stack.
+     */
+    typedef struct MCE_SKIP_STACK {
+        mceSkipItem_t *stack_array;
+        puint32_t stack_items;
+    } mceSkipStack_t;
+
+
+    typedef enum MCE_ERROR_ENUM {
+        MCE_ERROR_NONE,
+        MCE_ERROR_XML,
+        MCE_ERROR_MUST_UNDERSTAND
+    } mceError_t;
+
+    /**
+      Holds all information to do MCE preprocessing.
+    */
     typedef struct MCE_CONTEXT {
-        mceQNameLevelArray_t ignored_array;
-        mceQNameLevelArray_t understands_array;
-        mceQNameLevelArray_t skip_array;
-        mceQNameLevelArray_t processcontent_array;
+        mceQNameLevelSet_t ignorable_set;
+        mceQNameLevelSet_t understands_set;
+        mceQNameLevelSet_t processcontent_set;
+        mceSkipStack_t skip_stack;
+        mceError_t error;
     } mceCtx_t;
 
-    pbool_t mceQNameLevelAdd(mceQNameLevelArray_t *qname_level_array, const xmlChar *ns, const xmlChar *ln, puint32_t level);
-    mceQNameLevel_t* mceQNameLevelLookup(mceQNameLevelArray_t *qname_level_array, const xmlChar *ns, const xmlChar *ln, pbool_t ignore_ln);
-    pbool_t mceQNameLevelCleanup(mceQNameLevelArray_t *qname_level_array, puint32_t level);
-    pbool_t mceQNameLevelPush(mceQNameLevelArray_t *qname_level_array, const xmlChar *ns, const xmlChar *ln, puint32_t level);
-    pbool_t mceQNameLevelPopIfMatch(mceQNameLevelArray_t *qname_level_array, const xmlChar *ns, const xmlChar *ln, puint32_t level);
+    /**
+      Add a new tiple (ns, ln, level) to the triple set \c qname_level_set.
+    */
+    pbool_t mceQNameLevelAdd(mceQNameLevelSet_t *qname_level_set, const xmlChar *ns, const xmlChar *ln, puint32_t level);
 
+    /**
+      Lookup a tiple (ns, ln, level) via \c ns and \c ln. If \c ignore_ln is PTRUE then the first tiple matching \c ns will be returned.
+    */
+    mceQNameLevel_t* mceQNameLevelLookup(mceQNameLevelSet_t *qname_level_set, const xmlChar *ns, const xmlChar *ln, pbool_t ignore_ln);
+
+    /**
+      Remove all triples (ns, ln, level) where the level greater or equal to \c level.
+    */
+    pbool_t mceQNameLevelCleanup(mceQNameLevelSet_t *qname_level_set, puint32_t level);
+
+    /**
+      Push a new skip intervall (level_start, level_end, state) on the stack \c skip_stack.
+    */
+    pbool_t mceSkipStackPush(mceSkipStack_t *skip_stack, puint32_t level_start, puint32_t level_end, mceSkipState_t state);
+
+    /**
+      Pop the intervall (ns, ln, level) from the stack \c qname_level_array.
+    */
+    void mceSkipStackPop(mceSkipStack_t *skip_stack);
+
+    /**
+     Returns top item or NULL.
+     */
+    mceSkipItem_t *mceSkipStackTop(mceSkipStack_t *skip_stack);
+
+    /**
+     Returns TRUE, if the \c level is in the top skip intervall.
+     */
+    pbool_t mceSkipStackSkip(mceSkipStack_t *skip_stack, puint32_t level);
+
+    /**
+      Initialize the mceCtx_t \c ctx.
+    */
     pbool_t mceCtxInit(mceCtx_t *ctx);
+
+    /**
+      Cleanup, i.e. release all resourced from the mceCtx_t \c ctx.
+    */
     pbool_t mceCtxCleanup(mceCtx_t *ctx);
+
+    /**
+      Register the namespace \ns in \c ctx.
+    */
     pbool_t mceCtxUnderstandsNamespace(mceCtx_t *ctx, const xmlChar *ns);
 
 #ifdef __cplusplus

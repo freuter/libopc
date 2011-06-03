@@ -40,6 +40,9 @@
 extern "C" {
 #endif
 
+    /**
+      A handle to an MCE-aware libxml2 xmlTextReader.
+    */
     typedef struct MCE_TEXTREADER mceTextReader_t;
 
 #ifdef __cplusplus
@@ -62,39 +65,273 @@ extern "C" {
         mceCtx_t mceCtx;
     };
 
+    /**
+      Wrapper around an libxml2 xmlTextReaderRead function.
+      \see http://xmlsoft.org/html/libxml-xmlreader.html#xmlTextReaderRead
+    */
     int mceTextReaderRead(mceTextReader_t *mceTextReader);
+
+    /**
+      Wrapper around a libxml2 xmlTextReaderNext function.
+      \see http://xmlsoft.org/html/libxml-xmlreader.html#xmlTextReaderNext
+    */
     int mceTextReaderNext(mceTextReader_t *mceTextReader);
+
+    /** 
+      Creates an mceTextReader from an XmlTextReader. 
+      \code
+      mceTextReader reader;
+      mceTextReaderInit(&reader, xmlNewTextReaderFilename("sample.xml"));
+      // reader is ready to use.
+      mceTextReaderCleanup(&reader);
+      \endcode
+      \see http://xmlsoft.org/html/libxml-xmlreader.html#xmlNewTextReaderFilename
+    */
     int mceTextReaderInit(mceTextReader_t *mceTextReader, xmlTextReaderPtr reader);
+
+    /**
+      Cleanup MCE reader, i.e. free all resources. Also calls xmlTextReaderClose and xmlFreeTextReader.
+      \see http://xmlsoft.org/html/libxml-xmlreader.html#xmlTextReaderClose
+      \see http://xmlsoft.org/html/libxml-xmlreader.html#xmlFreeTextReader
+    */
     int mceTextReaderCleanup(mceTextReader_t *mceTextReader);
 
-    int mceTextReaderDump(mceTextReader_t *mceTextReader, xmlTextWriter *writer);
+    /** 
+      Reads all events \c mceTextReader and pipes them to \writer.
+      \code
+      mceTextReader reader;
+      mceTextReaderInit(&reader, xmlNewTextReaderFilename("sample.xml"));
+      mceTextReaderUnderstandsNamespace(&reader, _X("http://myextension"));
+      xmlTextWriterPtr writer=xmlNewTextWriterFilename("out.xml", 0);
+      mceTextReaderDump(&reader, writer, P_FALSE);
+      xmlFreeTextWriter(writer);
+      mceTextReaderCleanup(&reader);
+      \endcode
+      */
+    int mceTextReaderDump(mceTextReader_t *mceTextReader, xmlTextWriter *writer, pbool_t fragment);
+
+    /**
+      Registers an MCE namespace.
+      \see mceTextReaderDump()
+      */
     int mceTextReaderUnderstandsNamespace(mceTextReader_t *mceTextReader, const xmlChar *ns);
+
+    /**
+        Internal function which does the MCE postprocessing. E.g. mceTextReaderRead() is implemented as
+        \code
+        mceTextReaderPostprocess(mceTextReader->reader, &mceTextReader->mceCtx, xmlTextReaderRead(mceTextReader->reader))
+        \endcode
+        This function is exposed to make existing libxm2 xmlTextReader MCE aware.
+    */
     int mceTextReaderPostprocess(xmlTextReader *reader, mceCtx_t *ctx, int ret);
 
-#define mce_start_document(reader) if (NULL!=reader) { mceTextReaderRead(reader); if (0)
-#define mce_end_document(reader) }
-#define mce_skip_attributes(reader) 
-#define mce_skip_children(reader) 
-#define mce_start_children(reader) if (!xmlTextReaderIsEmptyElement(reader->reader)) { mceTextReaderRead(reader); do { if (0)
-#define mce_end_children(reader)  else { \
-        if (XML_READER_TYPE_END_ELEMENT!=xmlTextReaderNodeType(reader->reader)) mceTextReaderNext(reader); /*skip unhandled element */ \
-    } \
-    } while(XML_READER_TYPE_END_ELEMENT!=xmlTextReaderNodeType(reader->reader) && XML_READER_TYPE_NONE!=xmlTextReaderNodeType(reader->reader));\
-    }
-#define mce_match_element(reader, ns, ln) } else if (NULL==ln || 0==xmlStrcmp(ln, xmlTextReaderConstLocalName(reader->reader))) {
-#define mce_start_element(reader, ns, ln) mce_match_element(reader, ns, ln) 
-#define mce_end_element(reader) mceTextReaderNext(reader)
-#define mce_start_text(reader) } else if (XML_READER_TYPE_TEXT!=xmlTextReaderNodeType(reader->reader) || XML_READER_TYPE_SIGNIFICANT_WHITESPACE!=xmlTextReaderNodeType(reader->reader)) {
-#define mce_end_text(reader)  mceTextReaderNext(reader)
+    /**
+     Get the error code.
+     */
+    mceError_t mceTextReaderGetError(mceTextReader_t *mceTextReader);
 
-#define mce_start_attributes(reader) if (1==xmlTextReaderMoveToFirstAttribute(reader->reader)) { do { if (0)
-#define mce_end_attributes(reader) else { /* skipped attribute */ } \
-} while(1==xmlTextReaderMoveToNextAttribute(reader->reader));\
-xmlTextReaderMoveToElement(reader->reader); }
-#define mce_match_attribute(reader, ns, ln) } else if (NULL==ln || 0==xmlStrcmp(ln, xmlTextReaderConstLocalName(reader->reader))) {
-#define mce_start_attribute(reader, ns, ln) mce_match_attribute(reader, ns, ln) 
+/**
+ Helper macro to declare a start/end document block in a declarative way:
+ \code
+  mce_start_document(reader) {
+  } mce_end_document(reader);
+  \endcode
+  \hideinitializer
+*/
+#define mce_start_document(reader) \
+    if (NULL!=reader) {            \
+        mceTextReaderRead(reader); \
+        if (0)                     
+
+/**
+  \see mce_start_document.
+  \hideinitializer
+*/
+#define mce_end_document(reader)   \
+    } /* if (NULL!=reader) */      \
+
+/**
+  Skips the attributes. 
+  \see mce_match_element.
+  \hideinitializer
+*/
+#define mce_skip_attributes(reader) \
+    mce_start_attributes(reader) {  \
+    } mce_end_attributes(reader);   
+
+
+/**
+  Skips the attributes. 
+  \see mce_match_attribute.
+  \hideinitializer
+*/
+#define mce_skip_children(reader) \
+    mce_start_children(reader) {  \
+    } mce_end_children(reader);   
+
+/**
+  \see mce_start_element.
+  \hideinitializer
+*/
+#define mce_start_children(reader)                  \
+if (!xmlTextReaderIsEmptyElement(reader->reader)) { \
+    mceTextReaderRead(reader); do {                 \
+        if (0)                                      
+
+/**
+  \see mce_start_element.
+  \hideinitializer
+*/
+#define mce_end_children(reader)                                                      \
+        else {                                                                        \
+            if (XML_READER_TYPE_END_ELEMENT!=xmlTextReaderNodeType(reader->reader)) { \
+                mceTextReaderNext(reader); /*skip unhandled element */                \
+            }                                                                         \
+        }                                                                             \
+    } while(XML_READER_TYPE_END_ELEMENT!=xmlTextReaderNodeType(reader->reader) &&     \
+            XML_READER_TYPE_NONE!=xmlTextReaderNodeType(reader->reader));             \
+} /* if (!xmlTextReaderIsEmptyElement(reader->reader)) */                             
+
+
+/**
+  Helper macro to match an element. Usefull for calling code in a seperate function:
+
+  \code
+  void handleElement(reader) {
+    mce_start_element(reader, _X("ns"), _X("element")) {
+
+    } mce_end_element(reader)
+  }
+
+  void parse(reader) {
+    mce_start_document(reader) {
+      mce_start_element(reader, _X("ns"), _X("ln")) {
+        mce_skip_attributes(reader);
+        mce_start_children(reader) {
+           mce_match_element(reader, _X("ns"), _X("element")) {
+             handleElement(reader);
+           }
+        } mce_end_children(reader);
+      } mce_end_element();
+    } mce_end_document(reader);
+  }
+  \endcode
+  \hideinitializer
+*/
+#define mce_match_element(reader, ns, ln)                                                   \
+    } else if (NULL==ln || 0==xmlStrcmp(ln, xmlTextReaderConstLocalName(reader->reader))) { 
+
+
+/**
+ Helper macro to declare a element block in a declarative way:
+ \code
+  mce_start_element(reader) {
+    mce_start_attributes(reader) {
+      mce_start_attribute(reader, _X("ns"), _X("lnA")) {
+         // code for handling lnA.
+      } mce_end_attribute(reader);
+      mce_start_attribute(reader, _X("ns"), _X("lnB")) {
+         // code for handling lnB.
+      } mce_end_attribute(reader);
+    } mce_end_attributes(reader);
+    mce_start_children(reader) {
+        mce_start_element(reader, _X("ns"), _X("lnA")) {
+         // code for handling lnA.
+        } mce_end_element(reader);
+        mce_start_element(reader, _X("ns"), _X("lnB")) {
+         // code for handling lnB.
+        } mce_end_element(reader);
+        mce_start_text(reader) {
+         // code for handling text.
+        } mce_end_text(reader);
+    } mce_end_children(reader);
+  } mce_end_element(reader);
+  \endcode
+  \hideinitializer
+*/
+#define mce_start_element(reader, ns, ln) \
+    mce_match_element(reader, ns, ln)     
+
+/**
+  \see mce_start_element.
+  \hideinitializer
+*/
+#define mce_end_element(reader) \
+    mceTextReaderNext(reader)   
+
+/**
+  \see mce_start_element.
+  \hideinitializer
+*/
+#define mce_start_text(reader)                                                                  \
+    } else if (XML_READER_TYPE_TEXT!=xmlTextReaderNodeType(reader->reader)                      \
+            || XML_READER_TYPE_SIGNIFICANT_WHITESPACE!=xmlTextReaderNodeType(reader->reader)) {
+
+/**
+  \see mce_start_element.
+  \hideinitializer
+*/
+#define mce_end_text(reader) \
+    mceTextReaderNext(reader)
+
+/**
+  \see mce_start_element.
+  \hideinitializer
+*/
+#define mce_start_attributes(reader)                            \
+    if (1==xmlTextReaderMoveToFirstAttribute(reader->reader)) { \
+        do {                                                    \
+            if (0)                                              
+
+/**
+  \see mce_start_element.
+  \hideinitializer
+*/
+#define mce_end_attributes(reader)                                    \
+            else { /* skipped attribute */ }                          \
+        } while(1==xmlTextReaderMoveToNextAttribute(reader->reader)); \
+    xmlTextReaderMoveToElement(reader->reader); }                     
+
+/**
+  Helper macro to match an attribute. Usefull for calling code in a seperate function:
+
+  \code
+  void handleA(reader) {
+    mce_start_attribute(reader, _X("ns"), _X("attr")) {
+
+    } mce_end_attribute(reader)
+  }
+
+  void parse(reader) {
+    mce_start_document(reader) {
+      mce_start_element(reader, _X("ns"), _X("ln")) {
+        mce_start_attributes(reader) {
+           mce_match_attribute(reader, _X("ns"), _X("attr")) {
+             handleA(reader);
+           }
+        } mce_end_attributes(reader);
+        mce_skip_children(reader);
+      } mce_end_element();
+    } mce_end_document(reader);
+  }
+  \endcode
+  \hideinitializer
+*/
+#define mce_match_attribute(reader, ns, ln) \
+    } else if (NULL==ln || 0==xmlStrcmp(ln, xmlTextReaderConstLocalName(reader->reader))) {
+
+/**
+  \see mce_start_element.
+  \hideinitializer
+*/
+#define mce_start_attribute(reader, ns, ln) \
+    mce_match_attribute(reader, ns, ln) 
+
+/**
+  \see mce_start_element.
+  \hideinitializer
+*/
 #define mce_end_attribute(reader)
-
 
 
 #ifdef __cplusplus

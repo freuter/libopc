@@ -32,7 +32,7 @@
 -->
 <project>
   <library name="plib">
-    <header root="{config}/{platform}/plib/include">
+    <header root="{prjconfig}/{platform}/plib/include">
       <file path="plib/plib.h" install="yes"/>
     </header>
     <header root=".">

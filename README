@@ -4,7 +4,7 @@ BUILD ON LINUX/MAC OSX:
 make
 
 BUILD ON WINDOWS:
-* Optionally generate project files: c:\Python26\python.exe generate.py --include Makefile.xml win32-*-msvc
+* Optionally generate project files: c:\Python26\python.exe generate.py --include Makefile.xml win32-*-msvc-*
 * Open win32\solution.sln in Visual Studio.
 
 RELASE in a ZIP file (win32):

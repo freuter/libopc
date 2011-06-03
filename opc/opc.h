@@ -35,7 +35,6 @@
 */
 #include <opc/config.h>
 #include <opc/container.h>
-#include <opc/type.h>
 #include <opc/part.h>
 #include <opc/relation.h>
 #include <opc/inputstream.h>
