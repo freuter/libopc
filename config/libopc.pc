@@ -1,0 +1,14 @@
+prefix=/usr
+exec_prefix=${prefix}
+libdir=${exec_prefix}/lib
+includedir=${prefix}/include
+modules=1
+
+Name: libopc
+Version: 0.0.2
+Description: LIBOPC
+Requires:
+Libs: -L${libdir} -lopc -lmce -lplib
+Libs.private:  -lxml2 -lz -lm  
+Cflags: -I${includedir}
+

@@ -62,21 +62,6 @@ opc_error_t opcXmlReaderClose(opcXmlReader *reader) {
     return ret;
 }
 
-static xmlChar *xmlStrDupArray(const xmlChar *value) {
-    opc_uint32_t len=xmlStrlen(value);
-    xmlChar *ret=(xmlChar *)xmlMalloc((2+len)*sizeof(xmlChar));
-    opc_uint32_t j=0;
-    for(opc_uint32_t i=0;i<len;i++) {
-        while(i<len && (value[i]==' ' || value[i]=='\t' || value[i]=='\r' || value[i]=='\n')) i++; // skip preceeding spaces
-        while(i<len && value[i]!=' ' && value[i]!='\t' && value[i]!='\r' && value[i]!='\n') ret[j++]=value[i++];
-        ret[j++]=0;
-    }
-    ret[j]=0;
-    return ret;
-}
-
-
-
 static inline int _opcXmlTextReaderRead(opcXmlReader *reader) {
     return (1==reader->reader_mce?mceTextReaderPostprocess(reader->mceReader.reader, &reader->mceReader.mceCtx, xmlTextReaderRead(reader->mceReader.reader)):xmlTextReaderRead(reader->mceReader.reader));
 }
@@ -96,7 +81,7 @@ opc_error_t opcXmlSetMCEProcessing(opcXmlReader *reader, opc_bool_t flag) {
 }
 
 mceTextReader_t *opcXmlReaderGetMceReader(opcXmlReader *reader) {
-    return &reader->mceReader;
+    return (NULL!=reader?&reader->mceReader:NULL);
 }
 
 void opcXmlReaderStartDocument(opcXmlReader *reader) {

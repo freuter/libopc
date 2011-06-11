@@ -33,6 +33,7 @@
 #include <stdio.h>
 #include <libxml/xmlmemory.h>
 #include <libxml/globals.h>
+#include <plib/plib.h>
 
 static void *opcFileOpen(const xmlChar *filename, int flags) {
     char mode[5];

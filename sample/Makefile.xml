@@ -1,107 +1,112 @@
 <project>
-  <tool name="opc_helloworld" dep="opc" mode="c99">
-    <source root=".">
-      <file path="opc_helloworld.c"/>
-    </source>
-  </tool>
-  <tool name="opc_zipread" dep="opc" mode="c99">
-    <source root=".">
-      <file path="opc_zipread.c"/>
-    </source>
-  </tool>
-  <tool name="opc_zipextract" dep="opc" mode="c99">
-    <source root=".">
-      <file path="opc_zipextract.c"/>
-    </source>
-  </tool>
-  <tool name="opc_zipwrite" dep="opc" mode="c99">
-    <source root=".">
-      <file path="opc_zipwrite.c"/>
-    </source>
-  </tool>
-  <tool name="opc_dump" dep="opc" mode="c99">
-    <source root=".">
-      <file path="opc_dump.c"/>
-    </source>
-  </tool>
-  <tool name="opc_trim" dep="opc" mode="c99">
-    <source root=".">
-      <file path="opc_trim.c"/>
-    </source>
-  </tool>
-  <tool name="opc_mem" dep="opc" mode="c99">
-    <source root=".">
-      <file path="opc_mem.c"/>
-    </source>
-  </tool>
-  <tool name="opc_extract" dep="opc" mode="c99">
-    <source root=".">
-      <file path="opc_extract.c"/>
-    </source>
-  </tool>
-  <tool name="opc_xml" dep="opc" mode="c99">
-    <source root=".">
-      <file path="opc_xml.c"/>
-    </source>
-  </tool>
-  <tool name="opc_xml2" dep="opc" mode="c99">
-    <source root=".">
-      <file path="opc_xml2.c"/>
-    </source>
-  </tool>
-  <tool name="opc_part" dep="opc" mode="c99">
-    <source root=".">
-      <file path="opc_part.c"/>
-    </source>
-  </tool>
-  <tool name="opc_relation" dep="opc" mode="c99">
-    <source root=".">
-      <file path="opc_relation.c"/>
-    </source>
-  </tool>
-  <tool name="opc_type" dep="opc" mode="c99">
-    <source root=".">
-      <file path="opc_type.c"/>
-    </source>
-  </tool>
-  <tool name="opc_image" dep="opc" mode="c99">
-    <source root=".">
-      <file path="opc_image.c"/>
-    </source>
-  </tool>
-  <tool name="opc_text" dep="opc" mode="c99">
-    <source root=".">
-      <file path="opc_text.c"/>
-    </source>
-  </tool>
-  <tool name="opc_generate" dep="opc" mode="c99">
-    <source root=".">
-      <file path="opc_generate.c"/>
-    </source>
-  </tool>
-  <tool name="opc_album" dep="opc" mode="c99">
-    <source root=".">
-      <file path="opc_album.c"/>
-    </source>
-  </tool>
-  <tool name="mcepp" dep="mce" mode="c99">
-    <source root=".">
-      <file path="mcepp.c"/>
-    </source>
-  </tool>
-  <tool name="mce_read" dep="opc mce" mode="c99">
-    <source root=".">
-      <file path="mce_read.c"/>
-    </source>
-  </tool>
-  <tool name="mce_write" dep="opc mce" mode="c99">
-    <source root=".">
-      <file path="mce_write.c"/>
-    </source>
-  </tool>
-  <tool name="mce_extract" dep="opc mce" mode="c99">
-    <source root=".">
-      <file path="mce_extract.c"/>
-    </source>
-  </tool>
+    <tool name="opc_helloworld" dep="opc" mode="c99">
+        <source root=".">
+            <file path="opc_helloworld.c"/>
+        </source>
+    </tool>
+    <tool name="opc_zipread" dep="opc" mode="c99">
+        <source root=".">
+            <file path="opc_zipread.c"/>
+        </source>
+    </tool>
+    <tool name="opc_zipextract" dep="opc" mode="c99">
+        <source root=".">
+            <file path="opc_zipextract.c"/>
+        </source>
+    </tool>
+    <tool name="opc_zipwrite" dep="opc" mode="c99">
+        <source root=".">
+            <file path="opc_zipwrite.c"/>
+        </source>
+    </tool>
+    <tool name="opc_dump" dep="opc" mode="c99">
+        <source root=".">
+            <file path="opc_dump.c"/>
+        </source>
+    </tool>
+    <tool name="opc_trim" dep="opc" mode="c99">
+        <source root=".">
+            <file path="opc_trim.c"/>
+        </source>
+    </tool>
+    <tool name="opc_mem" dep="opc" mode="c99">
+        <source root=".">
+            <file path="opc_mem.c"/>
+        </source>
+    </tool>
+    <tool name="opc_extract" dep="opc" mode="c99">
+        <source root=".">
+            <file path="opc_extract.c"/>
+        </source>
+    </tool>
+    <tool name="opc_xml" dep="opc" mode="c99">
+        <source root=".">
+            <file path="opc_xml.c"/>
+        </source>
+    </tool>
+    <tool name="opc_xml2" dep="opc" mode="c99">
+        <source root=".">
+            <file path="opc_xml2.c"/>
+        </source>
+    </tool>
+    <tool name="opc_part" dep="opc" mode="c99">
+        <source root=".">
+            <file path="opc_part.c"/>
+        </source>
+    </tool>
+    <tool name="opc_relation" dep="opc" mode="c99">
+        <source root=".">
+            <file path="opc_relation.c"/>
+        </source>
+    </tool>
+    <tool name="opc_type" dep="opc" mode="c99">
+        <source root=".">
+            <file path="opc_type.c"/>
+        </source>
+    </tool>
+    <tool name="opc_image" dep="opc" mode="c99">
+        <source root=".">
+            <file path="opc_image.c"/>
+        </source>
+    </tool>
+    <tool name="opc_text" dep="opc" mode="c99">
+        <source root=".">
+            <file path="opc_text.c"/>
+        </source>
+    </tool>
+    <tool name="opc_generate" dep="opc" mode="c99">
+        <source root=".">
+            <file path="opc_generate.c"/>
+        </source>
+    </tool>
+    <tool name="opc_album" dep="opc" mode="c99">
+        <source root=".">
+            <file path="opc_album.c"/>
+        </source>
+    </tool>
+    <tool name="opc_properties" dep="opc" mode="c99">
+        <source root=".">
+            <file path="opc_properties.c"/>
+        </source>
+    </tool>
+    <tool name="mcepp" dep="mce" mode="c99">
+        <source root=".">
+            <file path="mcepp.c"/>
+        </source>
+    </tool>
+    <tool name="mce_read" dep="opc mce" mode="c99">
+        <source root=".">
+            <file path="mce_read.c"/>
+        </source>
+    </tool>
+    <tool name="mce_write" dep="opc mce" mode="c99">
+        <source root=".">
+            <file path="mce_write.c"/>
+        </source>
+    </tool>
+    <tool name="mce_extract" dep="opc mce" mode="c99">
+        <source root=".">
+            <file path="mce_extract.c"/>
+        </source>
+    </tool>
 </project>

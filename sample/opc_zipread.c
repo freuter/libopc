@@ -61,7 +61,7 @@ opc_error_t loadSegment(void *iocontext,
                         opcFileReadCallback *read, 
                         opcFileCloseCallback *close, 
                         opcFileSkipCallback *skip) {
-    printf("%i: %s%s(%i%s) %i/%i %i/%i...", info->stream_ofs, 
+    printf("%i: %s%s(%i%s) %i/%i %i/%i...", (int)info->stream_ofs, 
                               info->name, 
                               (info->rels_segment?"(.rels)":""),
                               info->segment_number,

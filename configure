@@ -144,7 +144,7 @@ fi
 
 if [[ $PLATFORM =~ ^[^-]+-[^-]+-[^-]+-[^-]+$ ]]; then
 	PYTHON_VERSION="`$PYTHON_PATH -V 2>&1`"
-	if [[ $PYTHON_VERSION =~ ^"Python 2.6."[1-9][0-9]*$|^"Python 2."[7-9][0-9]*(\.[0-9]*)?$|^"Python "[3][0-9]*(\.[0-9]*(\.[0-9]*))?$ ]]; then
+	if [[ $PYTHON_VERSION =~ ^"Python 2.6."[1-9][0-9]*$|^"Python 2."[7-9][0-9]*(\.[0-9]*(\+)?)?$|^"Python "[3][0-9]*(\.[0-9]*(\.[0-9]*)(\+)?)?$ ]]; then
 		FLAGS=`$PYTHON_PATH generate.py --include Makefile.platform.xml --config-dir $BUILDDIR --with-zlib=$EXTERNAL_ZLIB --with-zlib-cppflags="$EXTERNAL_ZLIB_CPPFLAGS" --with-zlib-ldflags="$EXTERNAL_ZLIB_LDFLAGS" --with-libxml=$EXTERNAL_LIBXML --with-libxml-cppflags="$EXTERNAL_LIBXML_CPPFLAGS" --with-libxml-ldflags="$EXTERNAL_LIBXML_LDFLAGS" --print-env $PLATFORM`
 		eval $FLAGS
 		CONFIG_OPT=""
@@ -171,3 +171,4 @@ else
 fi
 echo "Configured platform $PLATFORM."
 echo "Executables will be generated in \"build/$PLATFORM\"."
+

@@ -44,6 +44,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "opc_generate", "opc_generat
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "opc_album", "opc_album\opc_album.vcxproj", "{2E5AE325-A3FD-592F-B7F0-7408ABD7C4CA}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "opc_properties", "opc_properties\opc_properties.vcxproj", "{37F21EAA-62F5-5294-8F58-1BC0201125A3}"
+EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "mcepp", "mcepp\mcepp.vcxproj", "{836267E2-B89D-5482-861C-767AC21C887B}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "mce_read", "mce_read\mce_read.vcxproj", "{F3F43A24-4F93-5FB8-A99B-76E381AB41A0}"
@@ -146,6 +148,10 @@ Global
 		{2E5AE325-A3FD-592F-B7F0-7408ABD7C4CA}.Debug|Win32.Build.0 = Debug|Win32
 		{2E5AE325-A3FD-592F-B7F0-7408ABD7C4CA}.Release|Win32.ActiveCfg = Release|Win32
 		{2E5AE325-A3FD-592F-B7F0-7408ABD7C4CA}.Release|Win32.Build.0 = Release|Win32
+		{37F21EAA-62F5-5294-8F58-1BC0201125A3}.Debug|Win32.ActiveCfg = Debug|Win32
+		{37F21EAA-62F5-5294-8F58-1BC0201125A3}.Debug|Win32.Build.0 = Debug|Win32
+		{37F21EAA-62F5-5294-8F58-1BC0201125A3}.Release|Win32.ActiveCfg = Release|Win32
+		{37F21EAA-62F5-5294-8F58-1BC0201125A3}.Release|Win32.Build.0 = Release|Win32
 		{836267E2-B89D-5482-861C-767AC21C887B}.Debug|Win32.ActiveCfg = Debug|Win32
 		{836267E2-B89D-5482-861C-767AC21C887B}.Debug|Win32.Build.0 = Debug|Win32
 		{836267E2-B89D-5482-861C-767AC21C887B}.Release|Win32.ActiveCfg = Release|Win32

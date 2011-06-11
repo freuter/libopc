@@ -85,14 +85,17 @@ extern "C" {
 #define opc_xml_text(reader) if (opcXmlReaderStartText(reader))
 #define opc_xml_const_value(reader) opcXmlReaderConstValue(reader)
 
+
 #define opc_xml_error_guard_start(reader) if (OPC_ERROR_NONE==reader->error) do 
 #define opc_xml_error_guard_end(reader)  while(0)
+#define opc_xml_error(reader, guard, err, msg) if (guard) { reader->error=(err); fprintf(stderr, (NULL!=msg?msg:#err));  continue; }
 #if defined(__GNUC__)
-#define opc_xml_error(reader, guard, err, msg, ...) if (guard) { reader->error=(err); fprintf(stderr, msg, ##__VA_ARGS__ );  continue; }
+#define opc_xml_errorf(reader, guard, err, msg, ...) if (guard) { reader->error=(err); fprintf(stderr, (NULL!=msg?msg:#err), ##__VA_ARGS__ );  continue; }
 #else
-#define opc_xml_error(reader, guard, err, msg, ...) if (guard) { reader->error=(err); fprintf(stderr, msg, __VA_ARGS__ );  continue; }
+#define opc_xml_errorf(reader, guard, err, msg, ...) if (guard) { reader->error=(err); fprintf(stderr, (NULL!=msg?msg:#err), __VA_ARGS__ );  continue; }
 #endif
 #define opc_xml_error_strict opc_xml_error
+#define opc_xml_error_strictf opc_xml_errorf
 
     xmlDocPtr opcXmlReaderReadDoc(opcContainer *container, const xmlChar *partName, const char * URL, const char * encoding, int options);
 

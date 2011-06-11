@@ -135,7 +135,6 @@ opc_error_t opcContainerDeletePart(opcContainer *container, const xmlChar *name)
 
 #define OPC_MAX_UINT16 65535
 static opc_uint32_t insertRelPrefix(opcContainer *container, const xmlChar *relPrefix) {
-    opc_uint32_t ret=-1;
     opc_uint32_t i=container->relprefix_items; 
     for(;i>0 && 0!=xmlStrcmp(container->relprefix_array[i-1].prefix, relPrefix);) {
         i--;
@@ -267,8 +266,9 @@ opcContainerRelation *opcContainerInsertRelation(opcContainerRelation **relation
                                             opc_uint32_t relation_id,
                                             xmlChar *relation_type,
                                             opc_uint32_t target_mode, xmlChar *target_ptr) {
+    OPC_ASSERT(NULL!=relation_items);
     opc_uint32_t i=0;
-    if (relation_items>0) {
+    if (*relation_items>0) {
         opc_bool_t ret=findItem(*relation_array, *relation_items, NULL, relation_id, relation_cmp_fct, &i);
         if (ret) { // error, relation already exists!
             return NULL;
@@ -343,7 +343,7 @@ opcContainerRelation *opcContainerFindRelationById(opcContainer *container, opcC
     ctx.counter=-1;
     ctx.id=relation_id;
     ctx.id_len=splitRelPrefix(container, relation_id, &ctx.counter);
-    opc_bool_t ret=findItem(relation_array, relation_items, &ctx, NULL, relation_ctx_cmp_fct, &i);
+    opc_bool_t ret=findItem(relation_array, relation_items, &ctx, 0, relation_ctx_cmp_fct, &i);
     return (ret?&relation_array[i]:NULL);
 }
 
@@ -427,7 +427,7 @@ static void opcConstainerParseRels(opcContainer *c, const xmlChar *partName, opc
                             opc_container_normalize_part_to_helper_buffer(target_part_name, sizeof(target_part_name), partName, target);
     //                        printf("%s (%s;%s)\n", target_part_name, base, target);
                             opcContainerPart *target_part=opcContainerInsertPart(c, target_part_name, OPC_FALSE);
-                            opc_xml_error(reader, NULL==target_part, OPC_ERROR_XML, "Referenced part %s (%s;%s) does not exists!", target_part_name, partName, target);
+                            opc_xml_errorf(reader, NULL==target_part, OPC_ERROR_XML, "Referenced part %s (%s;%s) does not exists!", target_part_name, partName, target);
 //                            printf("%s %i %s %s\n", id, counter, rel_type->type, target_part->name);
                             opcContainerRelation *rel=opcContainerInsertRelation(relation_array, relation_items, rel_id, rel_type->type, 0, target_part->name);
                             OPC_ASSERT(NULL!=rel);
@@ -437,7 +437,7 @@ static void opcConstainerParseRels(opcContainer *c, const xmlChar *partName, opc
                             opcContainerRelation *rel=opcContainerInsertRelation(relation_array, relation_items, rel_id, rel_type->type, 1, ext_rel->target);
                             OPC_ASSERT(NULL!=rel);
                         } else {
-                            opc_xml_error(reader, OPC_TRUE, OPC_ERROR_XML, "TargetMode %s unknown!\n", mode);
+                            opc_xml_errorf(reader, OPC_TRUE, OPC_ERROR_XML, "TargetMode %s unknown!\n", mode);
                         }
                     } opc_xml_error_guard_end(reader);
                     opc_xml_start_forall_children(reader) {
@@ -857,6 +857,10 @@ opcContainerOutputStream* opcContainerCreateOutputStreamEx(opcContainer *contain
             opc_uint16_t compression_method=0; // no compression by default
             opc_uint16_t bit_flag=0;
             switch(compression_option) {
+	    case OPC_COMPRESSIONOPTION_NONE:
+		OPC_ASSERT(0==compression_method);
+		OPC_ASSERT(0==bit_flag);
+		break;
             case OPC_COMPRESSIONOPTION_NORMAL:
                 compression_method=8;
                 bit_flag|=0<<1;
@@ -947,7 +951,7 @@ static opcContainer *opcContainerLoadFromZip(opcContainer *c) {
                                     opc_xml_error(reader, NULL==ct, OPC_ERROR_MEMORY, NULL);
                                     opcContainerExtension *ce=opcContainerInsertExtension(c, ext, OPC_TRUE);
                                     opc_xml_error(reader, NULL==ce, OPC_ERROR_MEMORY, NULL);
-                                    opc_xml_error(reader, NULL!=ce->type && 0!=xmlStrcmp(ce->type, type), OPC_ERROR_XML, "Extension \"%s\" is mapped to type \"%s\" as well as \"%s\"", ext, type, ce->type);
+                                    opc_xml_errorf(reader, NULL!=ce->type && 0!=xmlStrcmp(ce->type, type), OPC_ERROR_XML, "Extension \"%s\" is mapped to type \"%s\" as well as \"%s\"", ext, type, ce->type);
                                     ce->type=ct->type;
                                 } opc_xml_error_guard_end(reader);
                                 opc_xml_start_forall_children(reader) {
@@ -963,13 +967,13 @@ static opcContainer *opcContainerLoadFromZip(opcContainer *c) {
                                     }
                                 } opc_xml_end_attributes(reader);
                                 opc_xml_error_guard_start(reader) {
-                                    opc_xml_error(reader, NULL==name, OPC_ERROR_XML, "Attribute @PartName not given!", NULL);
-                                    opc_xml_error(reader, NULL==type, OPC_ERROR_XML, "Attribute @ContentType not given!", NULL);
+                                    opc_xml_error(reader, NULL==name, OPC_ERROR_XML, "Attribute @PartName not given!");
+                                    opc_xml_error(reader, NULL==type, OPC_ERROR_XML, "Attribute @ContentType not given!");
                                     opcContainerType*ct=insertType(c, type, OPC_TRUE);
                                     opc_xml_error(reader, NULL==ct, OPC_ERROR_MEMORY, NULL);
-                                    opc_xml_error_strict(reader, '/'!=name[0], OPC_ERROR_XML, "Part %s MUST start with a '/'", name);
+                                    opc_xml_error_strictf(reader, '/'!=name[0], OPC_ERROR_XML, "Part %s MUST start with a '/'", name);
                                     opcContainerPart *part=opcContainerInsertPart(c, (name[0]=='/'?name+1:name), OPC_FALSE);
-                                    opc_xml_error_strict(reader, NULL==part, OPC_ERROR_XML, "Part %s does not exist.", name);
+                                    opc_xml_error_strictf(reader, NULL==part, OPC_ERROR_XML, "Part %s does not exist.", name);
                                     if (NULL!=part) {
                                         part->type=ct->type;
                                     }
@@ -1427,4 +1431,39 @@ opc_bool_t opcQNameLevelPopIfMatch(opcQNameLevel_t *list_array, opc_uint32_t *li
         (*list_items)--;
     }
     return ret;
+}
+
+
+const xmlChar *opcRelationTypeFirst(opcContainer *container) {
+    if (container->relationtype_items>0) {
+        return container->relationtype_array[0].type;
+    } else {
+        return NULL;
+    }
+}
+
+const xmlChar *opcRelationTypeNext(opcContainer *container, const xmlChar *type) {
+    opcContainerRelationType* t=opcContainerInsertRelationType(container, type, OPC_FALSE);
+    if (NULL!=t && t>=container->relationtype_array && t+1<container->relationtype_array+container->relationtype_items) {
+        return (t+1)->type;
+    } else {
+        return NULL;
+    }
+}
+
+const xmlChar *opcExternalTargetFirst(opcContainer *container) {
+    if (container->externalrelation_items>0) {
+        return container->externalrelation_array[0].target;
+    } else {
+        return NULL;
+    }
+}
+
+const xmlChar *opcExternalTargetNext(opcContainer *container, const xmlChar *target) {
+    opcContainerExternalRelation*e=insertExternalRelation(container, target, OPC_FALSE);
+    if (NULL!=e && e>=container->externalrelation_array && e+1<container->externalrelation_array+container->externalrelation_items) {
+        return (e+1)->target;
+    } else {
+        return NULL;
+    }
 }

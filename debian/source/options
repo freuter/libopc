@@ -1,0 +1,9 @@
+extend-diff-ignore = "*third_party*|*svn*|*git*|*test_docs*|*\.pyc|*buid*|Makefile"
+tar-ignore = third_party
+tar-ignore = test_docs
+tar-ignore = .svn
+tar-ignore = .git
+tar-ignore = *.pyc
+tar-ignore = build
+tar-ignore = Makefile
+

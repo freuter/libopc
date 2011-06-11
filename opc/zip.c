@@ -80,7 +80,6 @@ static inline opc_uint32_t _opcZipFileWrite(opcIO_t *io, const opc_uint8_t *buf,
 
 static inline opc_error_t _opcZipFileClose(opcIO_t *io) {
     OPC_ASSERT(NULL!=io && io->_ioclose!=NULL);
-    opc_uint32_t ret=0;
     if (0!=io->_ioclose(io->iocontext)) {
         if (OPC_ERROR_NONE==io->state.err) {
             io->state.err=OPC_ERROR_STREAM;
@@ -836,7 +835,6 @@ opc_error_t opcZipLoader(opcIO_t *io, void *userctx, opcZipLoaderSegmentCallback
         &helper.info.header_size, &helper.info.min_header_size, &helper.info.compressed_size, &helper.info.uncompressed_size, &helper.info.bit_flag, &helper.info.data_crc, &helper.info.compression_method, &helper.info.stream_ofs, &helper.info.growth_hint)) {
         OPC_ASSERT(helper.info.min_header_size<=helper.info.header_size);
         helper.info.trailing_bytes=0;
-        opc_uint32_t const padding=helper.info.header_size-helper.info.min_header_size;
         OPC_ASSERT(NULL!=segmentCallback);
         OPC_ENSURE(OPC_ERROR_NONE==opcHelperSplitFilename(helper.info.name, helper.info.name_len, &helper.info.segment_number, &helper.info.last_segment, &helper.info.rels_segment));
         opc_error_t ret=segmentCallback(&helper, userctx, &helper.info, opcZipLoaderOpen, opcZipLoaderRead, opcZipLoaderClose, opcZipLoaderSkip);
@@ -879,7 +877,6 @@ opc_error_t opcZipLoader(opcIO_t *io, void *userctx, opcZipLoaderSegmentCallback
 }
 
 opcZipInputStream *opcZipOpenInputStream(opcZip *zip, opc_uint32_t segment_id) {
-    opc_error_t err=OPC_ERROR_NONE;
     OPC_ASSERT(segment_id>=0 && segment_id<zip->segment_items);
     opcZipInputStream *stream=(opcZipInputStream *)xmlMalloc(sizeof(opcZipInputStream));
     if (NULL!=stream) {        
@@ -1251,7 +1248,7 @@ static opc_bool_t opcZipOutputStreamFinishCompression(opcZip *zip, opcZipOutputS
         } else if (8==stream->compression_method) { // DEFLATE
             opc_uint32_t const free=stream->buf_size-stream->buf_ofs-stream->buf_len;
             OPC_ASSERT(free>0); // hmmm --- no space? make sure you correcly growed the segment...
-            stream->stream.avail_in=NULL;
+            stream->stream.avail_in=0;
             stream->stream.next_in=0;
             stream->stream.avail_out=free;
             stream->stream.next_out=stream->buf+stream->buf_ofs;

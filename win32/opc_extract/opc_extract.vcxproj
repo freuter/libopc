@@ -75,14 +75,14 @@
 <ProjectReference Include="../mce/mce.vcxproj">
 <Project>{662b4fea-25f4-5790-b59f-0daf49fbc412}</Project>
 </ProjectReference>
-<ProjectReference Include="../plib/plib.vcxproj">
-<Project>{9a6d5063-5bcd-597e-a440-5122933f70c4}</Project>
-</ProjectReference>
 <ProjectReference Include="../zlib/zlib.vcxproj">
 <Project>{e49ff4af-766a-598f-91a2-99f255aad4a8}</Project>
 </ProjectReference>
 <ProjectReference Include="../xml/xml.vcxproj">
 <Project>{c1949314-bf17-551a-a7a5-8c1e2b999681}</Project>
+</ProjectReference>
+<ProjectReference Include="../plib/plib.vcxproj">
+<Project>{9a6d5063-5bcd-597e-a440-5122933f70c4}</Project>
 </ProjectReference>
 </ItemGroup>
 <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

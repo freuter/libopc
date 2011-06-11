@@ -3,6 +3,9 @@ BUILD ON LINUX/MAC OSX:
 ./configure
 make
 
+BUILD on LINUX with system libs:
+./configure --with-zlib=yes --with-zlib-ldflags="`pkg-config zlib --libs`" --with-libxml=yes --with-libxml-cppflags="`pkg-config libxml-2.0 --cflags`" --with-libxml-ldflags="`pkg-config libxml-2.0 --libs`"
+
 BUILD ON WINDOWS:
 * Optionally generate project files: c:\Python26\python.exe generate.py --include Makefile.xml win32-*-msvc-*
 * Open win32\solution.sln in Visual Studio.
@@ -13,3 +16,17 @@ c:\Python26\python.exe generate.py --include Makefile.xml --package libopc-sdk-0
 
 RELASE in a ZIP file (MaxOSX):
 python generate.py --include Makefile.xml --package libopc-sdk-0.0.1.zip --config-dir=build/config  darwin-release-gcc
+
+PACKAGE LINUX
+./generate.py --with-zlib=yes --with-zlib-ldflags="`pkg-config zlib --libs`" --with-libxml=yes --with-libxml-cppflags="`pkg-config libxml-2.0 --cflags`" --with-libxml-ldflags="`pkg-config libxml-2.0 --libs`" --package usr.zip --config-dir=build --include Makefile.xml  linux-debug-gcc-i686
+
+PACKAGE DEBIAN [http://www.debian.org/doc/manuals/maint-guide/index.en.html]
+1) Adjust config/libopc.pc VERSION
+   Adjust debian/changelog
+2) ./configure --with-zlib=yes --with-zlib-ldflags="`pkg-config zlib --libs`" --with-libxml=yes --with-libxml-cppflags="`pkg-config libxml-2.0 --cflags`" --with-libxml-ldflags="`pkg-config libxml-2.0 --libs`" --arch=any
+DESTDIR=`pwd`/build/linux-debug-gcc-any/install make install
+3) dpkg-buildpackage
+or 
+3b) dpkg-buildpackage -B
+4) lintian -i -I --show-overrides ../libopc_0.0.2_i386.changes  | less
+
