@@ -1,0 +1,6 @@
+usr/include/*
+usr/lib/libopc.a
+usr/lib/libmce.a
+usr/lib/libplib.a
+usr/lib/pkgconfig/libopc.pc
+

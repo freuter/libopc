@@ -54,9 +54,11 @@ int main( int argc, const char* argv[] )
         opc_uint32_t data_len=ftell(f);
         fseek(f, 0, SEEK_SET);
         opc_uint8_t *data=(opc_uint8_t *)xmlMalloc(data_len);
-        fread(data, 1, data_len, f);
+        size_t fread_len=fread(data, 1, data_len, f);
         fclose(f);
-        if (NULL!=(c=opcContainerOpenMem(data, data_len, OPC_OPEN_READ_ONLY, NULL))) {
+	if (data_len!=fread_len) {
+            printf("ERROR: reading file.\n");
+	} else if (NULL!=(c=opcContainerOpenMem(data, data_len, OPC_OPEN_READ_ONLY, NULL))) {
             opcContainerDump(c, stdout);
             opcContainerClose(c, OPC_CLOSE_NOW);
         } else {

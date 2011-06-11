@@ -110,7 +110,7 @@ if __name__ == "__main__":
 	target_mode=None
 	input=[]
 	try:
-		opts, args = getopt.getopt(sys.argv[1:], "h", ["help", "target=", "generate=", "skip"])
+		opts, args = getopt.getopt(sys.argv[1:], "h", ["help", "target=", "generate=", "skip", "type="])
 	except getopt.GetoptError, err:
 		# print help information and exit:
 		print str(err) # will print something like "option -a not recognized"
@@ -122,6 +122,8 @@ if __name__ == "__main__":
 			sys.exit(0)
 		elif o in ("--target"):
 			target_mode=a
+		elif o in ("--type"):
+			target_mode=os.path.join(target_mode, a)
 	if None==target_mode:
 		print "please specify target mode, e.g. --target=debug"
 		sys.exit(2)

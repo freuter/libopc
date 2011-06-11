@@ -47,9 +47,9 @@ int main( int argc, const char* argv[] )
         opcContainer *c=opcContainerOpen(_X(argv[1]), OPC_OPEN_READ_ONLY, NULL, NULL);
         opcRelation rel=opcRelationFind(c, OPC_PART_INVALID, NULL, _X("http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument"));
         if (OPC_RELATION_INVALID!=rel) {
-            opcPart main=opcRelationGetInternalTarget(c, OPC_PART_INVALID, rel);
-            if (OPC_PART_INVALID!=main) {
-                const xmlChar *type=opcPartGetType(c, main);
+            opcPart mainPart=opcRelationGetInternalTarget(c, OPC_PART_INVALID, rel);
+            if (OPC_PART_INVALID!=mainPart) {
+                const xmlChar *type=opcPartGetType(c, mainPart);
                 printf("Office Document Type: %s\n", type);
                 if (0==xmlStrcmp(type, _X("application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"))) {
                     printf("WORD Document\n");

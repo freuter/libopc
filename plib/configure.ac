@@ -37,6 +37,8 @@ AC_CHECK_HEADERS([string.h])
 AC_CHECK_HEADERS([limits.h])
 AC_CHECK_HEADERS([stdlib.h])
 AC_CHECK_HEADERS([io.h])
+AC_CHECK_HEADERS([unistd.h])
+AC_CHECK_HEADERS([sys/types.h])
 AC_DEFINE(IS_CONFIGURED)
 AC_CONFIG_HEADERS([include/plib/plib.h:config/msvc/plib/include/plib/plib.h])
 AC_OUTPUT

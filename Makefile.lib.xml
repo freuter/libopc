@@ -46,6 +46,7 @@
       <file path="opc/zip.h" install="yes"/>
       <file path="opc/helper.h" install="yes"/>
       <file path="opc/file.h" install="yes"/>
+      <file path="opc/properties.h" install="yes"/>
     </header>
     <header root="opc">
       <file path="internal.h"/>
@@ -62,15 +63,9 @@
       <file path="zip.c"/>
       <file path="helper.c"/>
       <file path="file.c"/>
+      <file path="properties.c"/>
     </source>
   </library>
-<!--
-  <tool name="opcmain" dep="opc" mode="c99">
-    <source root="opc">
-      <file path="main.c"/>
-    </source>
-  </tool>
--->
   <library name="mce" dep="plib xml" mode="c99">
     <header root="config">
       <file path="mce/config.h" install="yes"/>

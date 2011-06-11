@@ -45,6 +45,7 @@ mceTextWriter *mceTextWriterCreateIO(xmlOutputWriteCallback iowrite, xmlOutputCl
         } else {
             // creation OK
             w->ns_mce=mceTextWriterRegisterNamespace(w, _X("http://schemas.openxmlformats.org/markup-compatibility/2006"), _X("mce"), 0);
+            mceTextWriterRegisterNamespace(w, _X("http://www.w3.org/XML/1998/namespace"), _X("xml"), 0);
         }
     }
     return w;
@@ -95,12 +96,17 @@ int mceTextWriterStartElement(mceTextWriter *w, const xmlChar *ns, const xmlChar
                     if ((w->registered_set.list_array[i].flag&MCE_IGNORABLE)==MCE_IGNORABLE) {
                         ignorables++;
                     }
-                    if (w->registered_set.list_array[i].ns!=ns) {
-                        xmlTextWriterWriteAttributeNS(w->writer, 
-                                                      _X("xmlns"), 
-                                                      w->registered_set.list_array[i].ln, 
-                                                      NULL, 
-                                                      w->registered_set.list_array[i].ns);
+                    if (w->registered_set.list_array[i].ns!=qName->ns) {
+                        if (!(w->registered_set.list_array[i].ln[0]=='x' 
+                           && w->registered_set.list_array[i].ln[1]=='m' 
+                           && w->registered_set.list_array[i].ln[2]=='l' 
+                           && w->registered_set.list_array[i].ln[3]==0)) {
+                            xmlTextWriterWriteAttributeNS(w->writer, 
+                                                          _X("xmlns"), 
+                                                          w->registered_set.list_array[i].ln, 
+                                                          NULL, 
+                                                          w->registered_set.list_array[i].ns);
+                        }
                     }
                 }
             }
@@ -128,7 +134,6 @@ int mceTextWriterStartElement(mceTextWriter *w, const xmlChar *ns, const xmlChar
         }
         if (w->level==w->processcontent_set.max_level) {
             // write process content attribute
-            puint32_t v_max=512;
             puint32_t v_len=0;
             xmlChar *v=NULL;
             for(puint32_t i=0;i<w->processcontent_set.list_items;i++) {

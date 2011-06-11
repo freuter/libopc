@@ -213,10 +213,10 @@ extern "C" {
     /**
      Iterate all types.
      \code
-     for(opcPart part=opcContentTypeFirst(c);
-         OPC_PART_INVALID!=part;
-         part=opcContentTypeNext(c, part)) {
-        printf("%s\n", part);
+     for(xmlChar *type=opcContentTypeFirst(c);
+         NULL!=type;
+         type=opcContentTypeNext(c, type)) {
+        printf("%s\n", type);
      }
      \endcode
     */
@@ -255,6 +255,42 @@ extern "C" {
      \see opcExtensionGetType()
      */
     const xmlChar *opcExtensionRegister(opcContainer *container, const xmlChar *ext, const xmlChar *type);
+
+
+    /**
+     Iterator through all relation types of the container:
+     \code
+     for(xmlChar *type=opcRelationTypeFirst(c);
+         NULL!=type;
+         type=opcRelationTypeNext(c, type)) {
+        printf("%s\n", type);
+     }
+     \endcode
+     */
+    const xmlChar *opcRelationTypeFirst(opcContainer *container);
+
+    /**
+     \see opcRelationTypeFirst()
+    */
+    const xmlChar *opcRelationTypeNext(opcContainer *container, const xmlChar *type);
+
+
+    /**
+     Iterator through all relation types of the container:
+     \code
+     for(xmlChar *target=opcExternalTargetFirst(c);
+         NULL!=target;
+         type=opcExternalTargetNext(c, target)) {
+        printf("%s\n", target);
+     }
+     \endcode
+     */
+    const xmlChar *opcExternalTargetFirst(opcContainer *container);
+
+    /**
+     \see opcExternalTargetFirst()
+    */
+    const xmlChar *opcExternalTargetNext(opcContainer *container, const xmlChar *target);
 
 
 #ifdef __cplusplus

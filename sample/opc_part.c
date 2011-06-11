@@ -80,7 +80,6 @@ static void dumpXml(opcXmlReader *reader, int level) {
         }
         xmlFree(ln);
     } else if (opcXmlReaderStartText(reader)) {
-        const xmlChar *txt=opcXmlReaderConstValue(reader);
         for(const xmlChar *txt=opcXmlReaderConstValue(reader);0!=*txt;txt++) {
             switch(*txt) {
                 case '<': 

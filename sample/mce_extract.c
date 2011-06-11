@@ -81,7 +81,7 @@ int main( int argc, const char* argv[] )
     opc_bool_t reader_mce=OPC_TRUE;
     for(int i=1;i<argc;i++) {
         if ((0==xmlStrcmp(_X("--understands"), _X(argv[i])) || 0==xmlStrcmp(_X("-u"), _X(argv[i]))) && i+1<argc) {
-            const xmlChar *ns=_X(argv[++i]);
+	    i++; // skip namespace, registered later when parser was created.
         } else if ((0==xmlStrcmp(_X("--out"), _X(argv[i])) || 0==xmlStrcmp(_X("--out"), _X(argv[i]))) && i+1<argc && NULL==file) {
             const char *filename=argv[++i];
             file=fopen(filename, "w");
@@ -124,7 +124,7 @@ int main( int argc, const char* argv[] )
                     if ((reader=opcXmlReaderOpen(c, part, NULL, NULL, 0))!=NULL) {
                         opcXmlSetMCEProcessing(reader, reader_mce);
                         for(int i=1;i<argc;i++) {
-                            if (0==xmlStrcmp(_X("--understands"), _X(argv[i])) || 0==xmlStrcmp(_X("-u"), _X(argv[i])) && i+1<argc) {
+                            if ((0==xmlStrcmp(_X("--understands"), _X(argv[i])) || 0==xmlStrcmp(_X("-u"), _X(argv[i]))) && i+1<argc) {
                                 const xmlChar *ns=_X(argv[++i]);
                                 opcXmlUnderstandsNamespace(reader, ns);
                             }

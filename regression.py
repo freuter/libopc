@@ -7,6 +7,7 @@ import shlex
 import subprocess
 import json
 import shutil
+import platform as python_platform
 
 def msg(msg):
 	print msg+"...",
@@ -24,12 +25,14 @@ def failure(msg):
 
 
 
-def init(mode):
+def init(mode, type):
 	global TARGET_MODE
+	global TARGET_TYPE
 	global TMP_DIR
 	global BUILD_DIR
 	global DOCS_DIR
 	TARGET_MODE=mode.lower()
+	TARGET_TYPE=type.lower()
 	if "nt"==os.name:
 		TMP_DIR="win32"+os.sep+mode
 	else:
@@ -45,7 +48,7 @@ def init(mode):
 		if 1==len(ctx["platforms"]):
 			platform=ctx["platforms"][0]
 			result(platform)
-			TMP_DIR="build"+os.sep+platform
+			TMP_DIR=os.path.join("build", platform, TARGET_TYPE)
 		else:
 			failure("Error. Please configure with exactly one platform!")
 	BUILD_DIR=TMP_DIR
@@ -91,6 +94,12 @@ def ensureDir(dir):
 
 def call(path, pre, args, outfile, post, attr):
 	try:
+		env={}
+		if TARGET_TYPE=="shared":
+			if python_platform.system().lower()=="darwin":			
+				env["DYLD_LIBRARY_PATH"]=os.path.abspath(BUILD_DIR)
+			elif python_platform.system().lower()=="linux":			
+				env["LD_LIBRARY_PATH"]=os.path.abspath(BUILD_DIR)
 		msg("executing "+path)
 		if os.path.exists(tmp("stderr.txt")):
 			os.remove(tmp("stderr.txt"))
@@ -100,7 +109,7 @@ def call(path, pre, args, outfile, post, attr):
 		_args.extend(args)
 		err = open(tmp("stderr.txt"), "w")
 		out = open(outfile, "w")
-		ret=subprocess.call(_args, stdout=out, stderr=err)
+		ret=subprocess.call(_args, stdout=out, stderr=err, env=env)
 		out.close()
 		err.close()
 		if "return" in attr and ret!=int(attr["return"]):

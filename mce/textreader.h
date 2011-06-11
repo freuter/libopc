@@ -138,26 +138,26 @@ extern "C" {
   \endcode
   \hideinitializer
 */
-#define mce_start_document(reader) \
-    if (NULL!=reader) {            \
-        mceTextReaderRead(reader); \
+#define mce_start_document(_reader_) \
+    if (NULL!=_reader_) {            \
+        mceTextReaderRead(_reader_); \
         if (0)                     
 
 /**
   \see mce_start_document.
   \hideinitializer
 */
-#define mce_end_document(reader)   \
-    } /* if (NULL!=reader) */      \
+#define mce_end_document(_reader_)   \
+    } /* if (NULL!=reader) */        \
 
 /**
   Skips the attributes. 
   \see mce_match_element.
   \hideinitializer
 */
-#define mce_skip_attributes(reader) \
-    mce_start_attributes(reader) {  \
-    } mce_end_attributes(reader);   
+#define mce_skip_attributes(_reader_) \
+    mce_start_attributes(_reader_) {  \
+    } mce_end_attributes(_reader_);   
 
 
 /**
@@ -165,32 +165,32 @@ extern "C" {
   \see mce_match_attribute.
   \hideinitializer
 */
-#define mce_skip_children(reader) \
-    mce_start_children(reader) {  \
-    } mce_end_children(reader);   
+#define mce_skip_children(_reader_) \
+    mce_start_children(_reader_) {  \
+    } mce_end_children(_reader_);   
 
 /**
   \see mce_start_element.
   \hideinitializer
 */
-#define mce_start_children(reader)                  \
-if (!xmlTextReaderIsEmptyElement(reader->reader)) { \
-    mceTextReaderRead(reader); do {                 \
-        if (0)                                      
+#define mce_start_children(_reader_)                  \
+if (!xmlTextReaderIsEmptyElement(_reader_->reader)) { \
+    mceTextReaderRead(_reader_); do {                 \
+        if (0)                                        
 
 /**
   \see mce_start_element.
   \hideinitializer
 */
-#define mce_end_children(reader)                                                      \
-        else {                                                                        \
-            if (XML_READER_TYPE_END_ELEMENT!=xmlTextReaderNodeType(reader->reader)) { \
-                mceTextReaderNext(reader); /*skip unhandled element */                \
-            }                                                                         \
-        }                                                                             \
-    } while(XML_READER_TYPE_END_ELEMENT!=xmlTextReaderNodeType(reader->reader) &&     \
-            XML_READER_TYPE_NONE!=xmlTextReaderNodeType(reader->reader));             \
-} /* if (!xmlTextReaderIsEmptyElement(reader->reader)) */                             
+#define mce_end_children(_reader_)                                                      \
+        else {                                                                          \
+            if (XML_READER_TYPE_END_ELEMENT!=xmlTextReaderNodeType(_reader_->reader)) { \
+                mceTextReaderNext(_reader_); /*skip unhandled element */                \
+            }                                                                           \
+        }                                                                               \
+    } while(XML_READER_TYPE_END_ELEMENT!=xmlTextReaderNodeType(_reader_->reader) &&     \
+            XML_READER_TYPE_NONE!=xmlTextReaderNodeType(_reader_->reader));             \
+} /* if (!xmlTextReaderIsEmptyElement(reader->reader)) */                               
 
 
 /**
@@ -218,8 +218,9 @@ if (!xmlTextReaderIsEmptyElement(reader->reader)) { \
   \endcode
   \hideinitializer
 */
-#define mce_match_element(reader, ns, ln)                                                   \
-    } else if (NULL==ln || 0==xmlStrcmp(ln, xmlTextReaderConstLocalName(reader->reader))) { 
+#define mce_match_element(_reader_, ns, ln)                                                     \
+    } else if ((NULL==ns || 0==xmlStrcmp(ns, xmlTextReaderConstNamespaceUri(_reader_->reader))) \
+            && (NULL==ln || 0==xmlStrcmp(ln, xmlTextReaderConstLocalName(_reader_->reader)))) { 
 
 
 /**
@@ -249,48 +250,48 @@ if (!xmlTextReaderIsEmptyElement(reader->reader)) { \
   \endcode
   \hideinitializer
 */
-#define mce_start_element(reader, ns, ln) \
-    mce_match_element(reader, ns, ln)     
+#define mce_start_element(_reader_, ns, ln) \
+    mce_match_element(_reader_, ns, ln)     
 
 /**
   \see mce_start_element.
   \hideinitializer
 */
-#define mce_end_element(reader) \
-    mceTextReaderNext(reader)   
+#define mce_end_element(_reader_) \
+    mceTextReaderNext(_reader_)   
 
 /**
   \see mce_start_element.
   \hideinitializer
 */
-#define mce_start_text(reader)                                                                  \
-    } else if (XML_READER_TYPE_TEXT!=xmlTextReaderNodeType(reader->reader)                      \
-            || XML_READER_TYPE_SIGNIFICANT_WHITESPACE!=xmlTextReaderNodeType(reader->reader)) {
+#define mce_start_text(_reader_)                                                                  \
+    } else if (XML_READER_TYPE_TEXT!=xmlTextReaderNodeType(_reader_->reader)                      \
+            || XML_READER_TYPE_SIGNIFICANT_WHITESPACE!=xmlTextReaderNodeType(_reader_->reader)) {
 
 /**
   \see mce_start_element.
   \hideinitializer
 */
-#define mce_end_text(reader) \
-    mceTextReaderNext(reader)
+#define mce_end_text(_reader_) \
+    mceTextReaderNext(_reader_)
 
 /**
   \see mce_start_element.
   \hideinitializer
 */
-#define mce_start_attributes(reader)                            \
-    if (1==xmlTextReaderMoveToFirstAttribute(reader->reader)) { \
-        do {                                                    \
-            if (0)                                              
+#define mce_start_attributes(_reader_)                            \
+    if (1==xmlTextReaderMoveToFirstAttribute(_reader_->reader)) { \
+        do {                                                      \
+            if (0)                                                
 
 /**
   \see mce_start_element.
   \hideinitializer
 */
-#define mce_end_attributes(reader)                                    \
-            else { /* skipped attribute */ }                          \
-        } while(1==xmlTextReaderMoveToNextAttribute(reader->reader)); \
-    xmlTextReaderMoveToElement(reader->reader); }                     
+#define mce_end_attributes(_reader_)                                    \
+            else { /* skipped attribute */ }                            \
+        } while(1==xmlTextReaderMoveToNextAttribute(_reader_->reader)); \
+    xmlTextReaderMoveToElement(_reader_->reader); }                     
 
 /**
   Helper macro to match an attribute. Usefull for calling code in a seperate function:
@@ -317,21 +318,22 @@ if (!xmlTextReaderIsEmptyElement(reader->reader)) { \
   \endcode
   \hideinitializer
 */
-#define mce_match_attribute(reader, ns, ln) \
-    } else if (NULL==ln || 0==xmlStrcmp(ln, xmlTextReaderConstLocalName(reader->reader))) {
+#define mce_match_attribute(_reader_, ns, ln)                                                   \
+    } else if ((NULL==ns || 0==xmlStrcmp(ns, xmlTextReaderConstNamespaceUri(_reader_->reader))) \
+            && (NULL==ln || 0==xmlStrcmp(ln, xmlTextReaderConstLocalName(_reader_->reader)))) { 
 
 /**
   \see mce_start_element.
   \hideinitializer
 */
-#define mce_start_attribute(reader, ns, ln) \
-    mce_match_attribute(reader, ns, ln) 
+#define mce_start_attribute(_reader_, ns, ln) \
+    mce_match_attribute(_reader_, ns, ln) 
 
 /**
   \see mce_start_element.
   \hideinitializer
 */
-#define mce_end_attribute(reader)
+#define mce_end_attribute(_reader_)
 
 
 #ifdef __cplusplus

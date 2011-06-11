@@ -72,7 +72,7 @@ static void mceRaiseError(xmlTextReader *reader, mceCtx_t *ctx, mceError_t error
     if (NULL!=f) {
         f(arg, (const char *)buf, XML_PARSER_SEVERITY_ERROR, (xmlTextReaderLocatorPtr)reader);
     } else {
-        xmlGenericError(xmlGenericErrorContext, (const char *)buf);
+        xmlGenericError(xmlGenericErrorContext, "%s", (const char *)buf);
     }
     va_end(args);
 }

@@ -42,6 +42,7 @@
 #include <opc/zip.h>
 #include <opc/xmlreader.h>
 #include <opc/xmlwriter.h>
+#include <opc/properties.h>
 
 #ifndef OPC_OPC_H
 #define OPC_OPC_H

@@ -130,10 +130,11 @@ def usage():
 
 if __name__ == "__main__":
 	target_mode=None
+	target_type=None
 	generate_path=None
 	generate_skip=False
 	try:
-		opts, args = getopt.getopt(sys.argv[1:], "h", ["help", "target=", "generate=", "skip"])
+		opts, args = getopt.getopt(sys.argv[1:], "h", ["help", "target=", "generate=", "skip", "type="])
 	except getopt.GetoptError, err:
 		# print help information and exit:
 		print str(err) # will print something like "option -a not recognized"
@@ -149,11 +150,17 @@ if __name__ == "__main__":
 			generate_path=a
 		elif o in ("--skip"):
 			generate_skip=True
-	if None==target_mode and "nt"==os.name:
+		elif o in ("--type"):
+			target_type=a
+	if None==target_type and "nt"==os.name:
+		target_type=""
+	if None==target_type:
+		print "please specify target type , e.g. --type=static or --type=shared"
+	if None==target_mode:
 		print "please specify target mode, e.g. --target=debug"
 		sys.exit(2)
 	else:
-		test.init(target_mode)
+		test.init(target_mode, target_type)
 #	sys.exit(0)
 
 	if None==generate_path:

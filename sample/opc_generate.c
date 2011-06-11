@@ -98,7 +98,7 @@ static xmlChar *xmlStrEscape(const xmlChar *str) {
 static void generate_relations(opcContainer *c, FILE *out, opcPart root) {
     for(opcRelation rel=opcRelationFirst(c, root)
        ;OPC_RELATION_INVALID!=rel
-       ;rel=rel=opcRelationNext(c, root, rel)) {
+       ;rel=opcRelationNext(c, root, rel)) {
             const xmlChar *prefix=NULL;
             opc_uint32_t counter=-1;
             const xmlChar *type=NULL;
@@ -241,7 +241,7 @@ static void generate_parts(opcContainer *c, FILE *out) {
 static void visit_all_parts(opcContainer *c, opcPart root, opcPart **visited_parts_array, opc_uint32_t *visited_parts_count) {
     for(opcRelation rel=opcRelationFirst(c, root)
        ;OPC_RELATION_INVALID!=rel
-       ;rel=rel=opcRelationNext(c, root, rel)) {
+       ;rel=opcRelationNext(c, root, rel)) {
            opcPart part=opcRelationGetInternalTarget(c, root, rel);
            if (OPC_PART_INVALID!=part) {
                if (!is_visited_part(*visited_parts_array, *visited_parts_count, part)) {

@@ -44,6 +44,8 @@ extern "C" {
 #undef HAVE_LIMITS_H
 #undef HAVE_STDLIB_H
 #undef HAVE_IO_H
+#undef HAVE_UNISTD_H
+#undef HAVE_SYS_TYPES_H
 #undef IS_CONFIGURED
 
 #if !defined(IS_CONFIGURED)
@@ -122,6 +124,15 @@ typedef size_t psize_t;
 #ifdef HAVE_IO_H
 #include <io.h>
 #endif
+
+#ifdef HAVE_UNISTD_H
+#include <unistd.h>
+#endif
+
+#ifdef HAVE_SYS_TYPES_H
+#include <sys/types.h>
+#endif
+
 
 #ifdef __cplusplus
 } /* extern "C" */
