@@ -251,3 +251,31 @@ int mceTextWriterStartFallback(mceTextWriter *w) {
 int mceTextWriterEndFallback(mceTextWriter *w) {
     return xmlTextWriterEndElement(w->writer);
 }
+
+
+static int  xmlOutputWrite(void * context, const char * buffer, int len) {
+    FILE *out=(FILE*)context;
+    return fwrite(buffer, sizeof(char), len, out);
+}
+
+static int xmlOutputClose(void * context) {
+    return 0;
+}
+
+xmlTextWriterPtr xmlNewTextWriterFile(FILE *file) {
+    xmlTextWriter *writer=NULL;
+    if (NULL!=file) {
+        xmlOutputBuffer *out=xmlOutputBufferCreateIO(xmlOutputWrite, xmlOutputClose, file, NULL);
+        if (NULL!=out) {
+            writer=xmlNewTextWriter(out);
+        }
+    } else {
+        xmlOutputBuffer *out=xmlOutputBufferCreateIO(xmlOutputWrite, xmlOutputClose, stdout, NULL);
+        if (NULL!=out) {
+            writer=xmlNewTextWriter(out);
+        }
+    }
+    return writer;
+}
+
+

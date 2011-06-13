@@ -44,7 +44,7 @@ def opc_text_test(path):
 
 def opc_part_test(path):
 	test.call(test.build("opc_part"), [], [test.docs(path), "word/document.xml"], test.tmp(path+".opc_part"), [], {})
-	test.regr(test.docs(path+".opc_part"), test.tmp(path+".opc_part"), False)
+	test.regr(test.docs(path+".opc_part"), test.tmp(path+".opc_part"), True)
 
 def opc_xml_test(path):
 	test.call(test.build("opc_xml"), [], [test.docs(path), "word/document.xml"], test.tmp(path+".opc_xml"), [], {})

@@ -117,6 +117,18 @@ extern "C" {
     int mceTextReaderUnderstandsNamespace(mceTextReader_t *mceTextReader, const xmlChar *ns);
 
     /**
+     Disable MCE processing.
+     \return Returns old value.
+     */
+    pbool_t mceTextReaderDisableMCE(mceTextReader_t *mceTextReader, pbool_t flag);
+
+
+    /**
+     Signal an error to the MCE processor.
+     */
+    void mceRaiseError(xmlTextReader *reader, mceCtx_t *ctx, mceError_t error, const xmlChar *str, ...);
+
+    /**
         Internal function which does the MCE postprocessing. E.g. mceTextReaderRead() is implemented as
         \code
         mceTextReaderPostprocess(mceTextReader->reader, &mceTextReader->mceCtx, xmlTextReaderRead(mceTextReader->reader))
@@ -139,7 +151,7 @@ extern "C" {
   \hideinitializer
 */
 #define mce_start_document(_reader_) \
-    if (NULL!=_reader_) {            \
+    if (NULL!=(_reader_)) {            \
         mceTextReaderRead(_reader_); \
         if (0)                     
 
@@ -174,7 +186,7 @@ extern "C" {
   \hideinitializer
 */
 #define mce_start_children(_reader_)                  \
-if (!xmlTextReaderIsEmptyElement(_reader_->reader)) { \
+if (!xmlTextReaderIsEmptyElement((_reader_)->reader)) { \
     mceTextReaderRead(_reader_); do {                 \
         if (0)                                        
 
@@ -184,12 +196,12 @@ if (!xmlTextReaderIsEmptyElement(_reader_->reader)) { \
 */
 #define mce_end_children(_reader_)                                                      \
         else {                                                                          \
-            if (XML_READER_TYPE_END_ELEMENT!=xmlTextReaderNodeType(_reader_->reader)) { \
+            if (XML_READER_TYPE_END_ELEMENT!=xmlTextReaderNodeType((_reader_)->reader)) { \
                 mceTextReaderNext(_reader_); /*skip unhandled element */                \
             }                                                                           \
         }                                                                               \
-    } while(XML_READER_TYPE_END_ELEMENT!=xmlTextReaderNodeType(_reader_->reader) &&     \
-            XML_READER_TYPE_NONE!=xmlTextReaderNodeType(_reader_->reader));             \
+    } while(XML_READER_TYPE_END_ELEMENT!=xmlTextReaderNodeType((_reader_)->reader) &&     \
+            XML_READER_TYPE_NONE!=xmlTextReaderNodeType((_reader_)->reader));             \
 } /* if (!xmlTextReaderIsEmptyElement(reader->reader)) */                               
 
 
@@ -218,9 +230,10 @@ if (!xmlTextReaderIsEmptyElement(_reader_->reader)) { \
   \endcode
   \hideinitializer
 */
-#define mce_match_element(_reader_, ns, ln)                                                     \
-    } else if ((NULL==ns || 0==xmlStrcmp(ns, xmlTextReaderConstNamespaceUri(_reader_->reader))) \
-            && (NULL==ln || 0==xmlStrcmp(ln, xmlTextReaderConstLocalName(_reader_->reader)))) { 
+#define mce_match_element(_reader_, ns, ln)                                                       \
+    } else if (XML_READER_TYPE_ELEMENT==xmlTextReaderNodeType((_reader_)->reader)                 \
+            && (NULL==ns || 0==xmlStrcmp(ns, xmlTextReaderConstNamespaceUri((_reader_)->reader))) \
+            && (NULL==ln || 0==xmlStrcmp(ln, xmlTextReaderConstLocalName((_reader_)->reader)))) { 
 
 
 /**
@@ -260,13 +273,20 @@ if (!xmlTextReaderIsEmptyElement(_reader_->reader)) { \
 #define mce_end_element(_reader_) \
     mceTextReaderNext(_reader_)   
 
+#define mce_match_child(_reader_)  \
+    if (0)                          
+
+#define mce_match_text(_reader_)                                                                   \
+    } else if (XML_READER_TYPE_TEXT==xmlTextReaderNodeType((_reader_)->reader)                     \
+            || XML_READER_TYPE_SIGNIFICANT_WHITESPACE==xmlTextReaderNodeType((_reader_)->reader)) {
+
+
 /**
   \see mce_start_element.
   \hideinitializer
 */
-#define mce_start_text(_reader_)                                                                  \
-    } else if (XML_READER_TYPE_TEXT!=xmlTextReaderNodeType(_reader_->reader)                      \
-            || XML_READER_TYPE_SIGNIFICANT_WHITESPACE!=xmlTextReaderNodeType(_reader_->reader)) {
+#define mce_start_text(_reader_) \
+    mce_match_text(_reader_)      
 
 /**
   \see mce_start_element.
@@ -280,7 +300,7 @@ if (!xmlTextReaderIsEmptyElement(_reader_->reader)) { \
   \hideinitializer
 */
 #define mce_start_attributes(_reader_)                            \
-    if (1==xmlTextReaderMoveToFirstAttribute(_reader_->reader)) { \
+    if (1==xmlTextReaderMoveToFirstAttribute((_reader_)->reader)) { \
         do {                                                      \
             if (0)                                                
 
@@ -290,8 +310,8 @@ if (!xmlTextReaderIsEmptyElement(_reader_->reader)) { \
 */
 #define mce_end_attributes(_reader_)                                    \
             else { /* skipped attribute */ }                            \
-        } while(1==xmlTextReaderMoveToNextAttribute(_reader_->reader)); \
-    xmlTextReaderMoveToElement(_reader_->reader); }                     
+        } while(1==xmlTextReaderMoveToNextAttribute((_reader_)->reader)); \
+    xmlTextReaderMoveToElement((_reader_)->reader); }                     
 
 /**
   Helper macro to match an attribute. Usefull for calling code in a seperate function:
@@ -319,8 +339,8 @@ if (!xmlTextReaderIsEmptyElement(_reader_->reader)) { \
   \hideinitializer
 */
 #define mce_match_attribute(_reader_, ns, ln)                                                   \
-    } else if ((NULL==ns || 0==xmlStrcmp(ns, xmlTextReaderConstNamespaceUri(_reader_->reader))) \
-            && (NULL==ln || 0==xmlStrcmp(ln, xmlTextReaderConstLocalName(_reader_->reader)))) { 
+    } else if ((NULL==ns || 0==xmlStrcmp(ns, xmlTextReaderConstNamespaceUri((_reader_)->reader))) \
+            && (NULL==ln || 0==xmlStrcmp(ln, xmlTextReaderConstLocalName((_reader_)->reader)))) { 
 
 /**
   \see mce_start_element.
@@ -334,6 +354,18 @@ if (!xmlTextReaderIsEmptyElement(_reader_->reader)) { \
   \hideinitializer
 */
 #define mce_end_attribute(_reader_)
+
+
+#define mce_error_guard_start(_reader_) if (MCE_ERROR_NONE==(_reader_)->mceCtx.error) do 
+#define mce_error_guard_end(_reader_)  while(0)
+#define mce_error(_reader_, guard, err, msg) if (guard) { (_reader_)->mceCtx.error=(err); fprintf(stderr, (NULL!=msg?msg:#err));  continue; }
+#if defined(__GNUC__)
+#define mce_errorf(_reader_, guard, err, msg, ...) if (guard) { mceRaiseError((_reader_)->reader, &(_reader_)->mceCtx, err, _X((NULL!=msg?msg:#err)), ##__VA_ARGS__ );  continue; }
+#else
+#define mce_errorf(_reader_, guard, err, msg, ...) if (guard) { mceRaiseError((_reader_)->reader, &(_reader_)->mceCtx, err, _X((NULL!=msg?msg:#err)), __VA_ARGS__ );  continue; }
+#endif
+#define mce_error_strict mce_error
+#define mce_error_strictf mce_errorf
 
 
 #ifdef __cplusplus

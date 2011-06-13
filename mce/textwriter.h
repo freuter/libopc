@@ -75,6 +75,8 @@ extern "C" {
     int mceTextWriterStartFallback(mceTextWriter *w);
     int mceTextWriterEndFallback(mceTextWriter *w);
 
+    xmlTextWriterPtr xmlNewTextWriterFile(FILE *file);
+
 #ifdef __cplusplus
 } /* extern "C" */
 #endif    
