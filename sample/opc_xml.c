@@ -43,25 +43,20 @@
 #include <stdio.h>
 #include <time.h>
 
-static void dump(opcXmlReader *reader) {
-    if (opcXmlReaderStartElement(reader, NULL, NULL)) {
-        xmlChar *ln=xmlStrdup(opcXmlReaderLocalName(reader));
-        printf("<%s>\n", ln);
-        if (opcXmlReaderStartAttributes(reader)) {
-            do {
-
-            } while (!opcXmlReaderEndAttributes(reader));
-        }
-        if (opcXmlReaderStartChildren(reader)) {
-            do {
-                dump(reader);
-            } while (!opcXmlReaderEndChildren(reader));
-        }
-        printf("</%s>\n", ln);
-        xmlFree(ln);
-    } else if (opcXmlReaderStartText(reader)) {
-
-    }
+static void dumpElement(mceTextReader_t *reader) {
+    xmlChar *ln=xmlStrdup(xmlTextReaderLocalName(reader->reader));
+    printf("<%s>\n", ln);
+    mce_start_attributes(reader) {
+    } mce_end_attributes(reader);
+    mce_start_children(reader) {
+        mce_start_element(reader, NULL, NULL) {
+            dumpElement(reader);
+        } mce_end_element(reader);
+        mce_start_text(reader) {
+        } mce_end_text(reader);
+    } mce_end_children(reader);
+    printf("</%s>\n", ln);
+    xmlFree(ln);
 }
 
 int main( int argc, const char* argv[] )
@@ -71,19 +66,16 @@ int main( int argc, const char* argv[] )
         opcContainer *c=NULL;
         if (NULL!=(c=opcContainerOpen(_X(argv[1]), OPC_OPEN_READ_ONLY, NULL, NULL))) {
             opcContainerDump(c, stdout);
-            opcPart part=OPC_PART_INVALID;
-            if ((part=opcPartOpen(c, _X(argv[2]), NULL, 0))!=OPC_PART_INVALID) {
-                opcXmlReader *reader=NULL;
-                if ((reader=opcXmlReaderOpen(c, part, NULL, NULL, 0))!=NULL){
-                    opcXmlReaderStartDocument(reader);
-                    dump(reader);
-                    opcXmlReaderEndDocument(reader);
-                    opcXmlReaderClose(reader);
-                } else {
-                    printf("ERROR: part \"%s\" could not be opened for XML reading.\n", argv[2]);
-                }
+            mceTextReader_t reader;
+            if (OPC_ERROR_NONE==opcXmlReaderOpen(c, &reader,  _X(argv[2]), NULL, 0, 0)) {
+                mce_start_document(&reader) {
+                    mce_start_element(&reader, NULL, NULL) {
+                        dumpElement(&reader);
+                    } mce_end_element(&reader);
+                } mce_end_document(&reader);
+                mceTextReaderCleanup(&reader);
             } else {
-                printf("ERROR: part \"%s\" could not be opened in \"%s\".\n", argv[2], argv[1]);
+                printf("ERROR: part \"%s\" could not be opened in \"%s\" for XML reading.\n", argv[2], argv[1]);
             }
             opcContainerClose(c, OPC_CLOSE_NOW);
         } else {

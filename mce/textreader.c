@@ -36,7 +36,7 @@ int mceTextReaderInit(mceTextReader_t *mceTextReader, xmlTextReaderPtr reader) {
     memset(mceTextReader, 0, sizeof(*mceTextReader));
     mceCtxInit(&mceTextReader->mceCtx);
     mceTextReader->reader=reader;
-    return 0;
+    return (NULL!=mceTextReader->reader?0:-1);
 }
 
 int mceTextReaderCleanup(mceTextReader_t *mceTextReader) {
@@ -59,7 +59,7 @@ static xmlChar *xmlStrDupArray(const xmlChar *value) {
     return ret;
 }
 
-static void mceRaiseError(xmlTextReader *reader, mceCtx_t *ctx, mceError_t error, const xmlChar *str, ...) {
+void mceRaiseError(xmlTextReader *reader, mceCtx_t *ctx, mceError_t error, const xmlChar *str, ...) {
     va_list args;
     va_start(args, str);
     PASSERT(MCE_ERROR_NONE==ctx->error); // called twice? why?
@@ -72,7 +72,7 @@ static void mceRaiseError(xmlTextReader *reader, mceCtx_t *ctx, mceError_t error
     if (NULL!=f) {
         f(arg, (const char *)buf, XML_PARSER_SEVERITY_ERROR, (xmlTextReaderLocatorPtr)reader);
     } else {
-        xmlGenericError(xmlGenericErrorContext, "%s", (const char *)buf);
+        xmlGenericError(xmlGenericErrorContext, "%s!\n", (const char *)buf);
     }
     va_end(args);
 }
@@ -224,7 +224,7 @@ static pbool_t mceTextReaderProcessEndElement(xmlTextReader *reader, mceCtx_t *c
 }
 
 int mceTextReaderPostprocess(xmlTextReader *reader, mceCtx_t *ctx, int ret) {
-    pbool_t skip=PTRUE;
+    pbool_t skip=!ctx->mce_disabled;
     if (MCE_ERROR_NONE!=ctx->error) {
         ret=-1;
     }
@@ -302,7 +302,7 @@ int mceTextReaderDump(mceTextReader_t *mceTextReader, xmlTextWriter *writer, pbo
             PENSURE(1==xmlTextReaderMoveToElement(mceTextReader->reader));
         }
         if (!xmlTextReaderIsEmptyElement(mceTextReader->reader)) {
-            PENSURE(1==(ret=mceTextReaderRead(mceTextReader))); // read start element
+            ret=mceTextReaderRead(mceTextReader); // read start element
             while (1==ret && XML_READER_TYPE_END_ELEMENT!=xmlTextReaderNodeType(mceTextReader->reader)) {
                 ret=mceTextReaderDump(mceTextReader, writer, fragment);
             }
@@ -314,10 +314,10 @@ int mceTextReaderDump(mceTextReader_t *mceTextReader, xmlTextWriter *writer, pbo
         xmlTextWriterEndElement(writer);
     } else if (XML_READER_TYPE_TEXT==xmlTextReaderNodeType(mceTextReader->reader)) {
         xmlTextWriterWriteString(writer, xmlTextReaderConstValue(mceTextReader->reader));
-        PENSURE(1==(ret=mceTextReaderRead(mceTextReader))); // read end element
+        ret=mceTextReaderRead(mceTextReader); // read end element
     } else if (XML_READER_TYPE_SIGNIFICANT_WHITESPACE==xmlTextReaderNodeType(mceTextReader->reader)) {
         xmlTextWriterWriteString(writer, xmlTextReaderConstValue(mceTextReader->reader));
-        PENSURE(1==(ret=mceTextReaderRead(mceTextReader))); // read end element
+        ret=mceTextReaderRead(mceTextReader); // read end element
     } else if (XML_READER_TYPE_NONE==xmlTextReaderNodeType(mceTextReader->reader)) {
         ret=mceTextReaderRead(mceTextReader);
         if (1==ret && XML_READER_TYPE_NONE!=xmlTextReaderNodeType(mceTextReader->reader)) {
@@ -326,11 +326,17 @@ int mceTextReaderDump(mceTextReader_t *mceTextReader, xmlTextWriter *writer, pbo
             if (!fragment) xmlTextWriterEndDocument(writer);
         }
     } else {
-        PENSURE(-1!=(ret=mceTextReaderNext(mceTextReader))); // skip element
+        ret=mceTextReaderNext(mceTextReader); // skip element
     }
     return ret;
 }
 
 int mceTextReaderUnderstandsNamespace(mceTextReader_t *mceTextReader, const xmlChar *ns) {
     return (mceCtxUnderstandsNamespace(&mceTextReader->mceCtx, ns)?0:-1);
+}
+
+pbool_t mceTextReaderDisableMCE(mceTextReader_t *mceTextReader, pbool_t flag) {
+    pbool_t ret=mceTextReader->mceCtx.mce_disabled;
+    mceTextReader->mceCtx.mce_disabled=flag;
+    return ret;
 }

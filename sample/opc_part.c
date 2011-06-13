@@ -43,63 +43,6 @@
 #include <stdio.h>
 #include <time.h>
 
-static void dumpXml(opcXmlReader *reader, int level) {
-    if (opcXmlReaderStartElement(reader, NULL, NULL)) {
-        xmlChar *ln=xmlStrdup(opcXmlReaderLocalName(reader));
-        xmlChar *prefix=(NULL!=opcXmlReaderConstPrefix(reader)?xmlStrdup(opcXmlReaderConstPrefix(reader)):NULL);
-        if (NULL==prefix) {
-            printf("<%s", ln);
-        } else {
-            printf("<%s:%s", prefix, ln);
-        }
-        if (opcXmlReaderStartAttributes(reader)) {
-            do {
-                if (opcXmlReaderStartAttribute(reader, _X("http://www.w3.org/2000/xmlns/"), NULL)) {
-                    printf(" xmlns:%s=\"%s\"", opcXmlReaderLocalName(reader), opcXmlReaderConstValue(reader));
-                } else if (opcXmlReaderStartAttribute(reader, NULL, NULL)) {
-                    const xmlChar *p=opcXmlReaderConstPrefix(reader);
-                    if (NULL==p) {
-                        printf(" %s=\"%s\"", opcXmlReaderLocalName(reader), opcXmlReaderConstValue(reader));
-                    } else {
-                        printf(" %s:%s=\"%s\"", p, opcXmlReaderLocalName(reader), opcXmlReaderConstValue(reader));
-                    }
-                }
-            } while (!opcXmlReaderEndAttributes(reader));
-        }
-        printf(">");
-        if (opcXmlReaderStartChildren(reader)) {
-            do {
-                dumpXml(reader, level+1);
-            } while (!opcXmlReaderEndChildren(reader));
-        }
-        if (NULL==prefix) {
-            printf("</%s>", ln);
-        } else {
-            printf("</%s:%s>", prefix, ln);
-            xmlFree(prefix);
-        }
-        xmlFree(ln);
-    } else if (opcXmlReaderStartText(reader)) {
-        for(const xmlChar *txt=opcXmlReaderConstValue(reader);0!=*txt;txt++) {
-            switch(*txt) {
-                case '<': 
-                    printf("&lt;");
-                    break;
-                case '>': 
-                    printf("&gt;");
-                    break;
-                case '&': 
-                    printf("&amp;");
-                    break;
-                default:
-                    putc(*txt, stdout);
-                    break;
-            }
-        }
-        
-    }
-}
-
 
 int main( int argc, const char* argv[] )
 {
@@ -113,12 +56,15 @@ int main( int argc, const char* argv[] )
             opc_bool_t is_xml=NULL!=type && type_len>=3 && 'x'==type[type_len-3] && 'm'==type[type_len-2] && 'l'==type[type_len-1];
             fprintf(stderr, "type=%s is_xml=%i\n", type, is_xml);
             if (is_xml) {
-                opcXmlReader *reader=opcXmlReaderOpen(c, part, NULL, 0, 0);
-                if (NULL!=reader) {
-                    opcXmlReaderStartDocument(reader);
-                    dumpXml(reader, 0);
-                    opcXmlReaderEndDocument(reader);
-                    opcXmlReaderClose(reader);
+                mceTextReader_t reader;
+                if (OPC_ERROR_NONE==opcXmlReaderOpen(c, &reader, part, NULL, 0, 0)) {
+                    xmlTextWriter *writer=xmlNewTextWriterFile(NULL);
+                    xmlTextWriterSetIndent(writer, 1);
+                    if (NULL!=writer) {
+                        mceTextReaderDump(&reader, writer, 1);
+                    }
+                    xmlFreeTextWriter(writer);
+                    mceTextReaderCleanup(&reader);
                 }
             } else  {
                 opcContainerInputStream *stream=opcContainerOpenInputStream(c, part);

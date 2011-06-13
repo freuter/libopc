@@ -37,22 +37,12 @@
 #include <libxml/xmlreader.h>
 
 
-static int  xmlOutputWrite(void * context, const char * buffer, int len) {
-    FILE *out=(FILE*)context;
-    return fwrite(buffer, sizeof(char), len, out);
-}
-
-static int xmlOutputClose(void * context) {
-    return 0;
-}
-
 
 int main( int argc, const char* argv[] )
 {
     int ret=-1;
     time_t start_time=time(NULL);
     FILE *file=NULL;
-    xmlTextWriter *writer=NULL;
     int writer_indent=0;
     pbool_t reader_mce=PTRUE;
     const char *fileName=NULL;
@@ -72,17 +62,7 @@ int main( int argc, const char* argv[] )
             fprintf(stderr, "IGNORED: %s\n", argv[i]);
         }
     }
-    if (NULL!=file) {
-        xmlOutputBuffer *out=xmlOutputBufferCreateIO(xmlOutputWrite, xmlOutputClose, file, NULL);
-        if (NULL!=out) {
-            writer=xmlNewTextWriter(out);
-        }
-    } else {
-        xmlOutputBuffer *out=xmlOutputBufferCreateIO(xmlOutputWrite, xmlOutputClose, stdout, NULL);
-        if (NULL!=out) {
-            writer=xmlNewTextWriter(out);
-        }
-    }
+    xmlTextWriter *writer=xmlNewTextWriterFile(file);
     if (NULL==fileName || NULL==writer) {
         printf("mcepp [--understands NAMESPACE] [--out FILENAME] [--indent] [--raw] [FILENAME | - ]\n\n");
         printf("Sample: mcepp sample.xml\n");

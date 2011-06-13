@@ -93,7 +93,9 @@ extern "C" {
     typedef enum MCE_ERROR_ENUM {
         MCE_ERROR_NONE,
         MCE_ERROR_XML,
-        MCE_ERROR_MUST_UNDERSTAND
+        MCE_ERROR_MUST_UNDERSTAND,
+        MCE_ERROR_VALIDATION,
+        MCE_ERROR_MEMORY
     } mceError_t;
 
     /**
@@ -105,6 +107,7 @@ extern "C" {
         mceQNameLevelSet_t processcontent_set;
         mceSkipStack_t skip_stack;
         mceError_t error;
+        pbool_t mce_disabled;
     } mceCtx_t;
 
     /**

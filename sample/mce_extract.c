@@ -120,22 +120,22 @@ int main( int argc, const char* argv[] )
             } else {
                 opcPart part=OPC_PART_INVALID;
                 if ((part=opcPartOpen(c, partName8, NULL, 0))!=OPC_PART_INVALID) {
-                    opcXmlReader *reader=NULL;
-                    if ((reader=opcXmlReaderOpen(c, part, NULL, NULL, 0))!=NULL) {
-                        opcXmlSetMCEProcessing(reader, reader_mce);
+                    mceTextReader_t reader;
+                    if (OPC_ERROR_NONE==opcXmlReaderOpen(c, &reader, part, NULL, NULL, 0)) {
+                        mceTextReaderDisableMCE(&reader, !reader_mce);
                         for(int i=1;i<argc;i++) {
                             if ((0==xmlStrcmp(_X("--understands"), _X(argv[i])) || 0==xmlStrcmp(_X("-u"), _X(argv[i]))) && i+1<argc) {
                                 const xmlChar *ns=_X(argv[++i]);
-                                opcXmlUnderstandsNamespace(reader, ns);
+                                mceTextReaderUnderstandsNamespace(&reader, ns);
                             }
                         }
 
-                        if (-1==mceTextReaderDump(opcXmlReaderGetMceReader(reader), writer, PTRUE)) {
-                            ret=mceTextReaderGetError(opcXmlReaderGetMceReader(reader));
+                        if (-1==mceTextReaderDump(&reader, writer, PTRUE)) {
+                            ret=mceTextReaderGetError(&reader);
                         } else {
                             ret=0;
                         }
-                        opcXmlReaderClose(reader);
+                        mceTextReaderCleanup(&reader);
                     } else {
                         fprintf(stderr, "ERROR: part \"%s\" could not be opened for XML reading.\n", argv[2]);
                     }

@@ -45,16 +45,14 @@
 #include <time.h>
 
 
-static void dumpText(opcXmlReader *reader) {
-    if (opcXmlReaderStartElement(reader, _X("http://schemas.openxmlformats.org/wordprocessingml/2006/main"), _X("t"))) {
-        if (opcXmlReaderStartAttributes(reader)) {
-            do {
-            } while (!opcXmlReaderEndAttributes(reader));
-        }
-        if (opcXmlReaderStartChildren(reader)) {
-            do {
-                if (opcXmlReaderStartText(reader)) {
-                    for(const xmlChar *txt=opcXmlReaderConstValue(reader);0!=*txt;txt++) {
+static void dumpText(mceTextReader_t *reader) {
+    mce_skip_attributes(reader);
+    mce_start_children(reader) {
+        mce_start_element(reader, _X("http://schemas.openxmlformats.org/wordprocessingml/2006/main"), _X("t")) {
+            mce_skip_attributes(reader);
+            mce_start_children(reader) {
+                mce_start_text(reader) {
+                    for(const xmlChar *txt=xmlTextReaderConstValue(reader->reader);0!=*txt;txt++) {
                         switch(*txt) {
                         case '<': 
                             printf("&lt;");
@@ -70,33 +68,18 @@ static void dumpText(opcXmlReader *reader) {
                             break;
                         }
                     }
-                }
-            } while (!opcXmlReaderEndChildren(reader));
-        }
-    } else if (opcXmlReaderStartElement(reader, _X("http://schemas.openxmlformats.org/wordprocessingml/2006/main"), _X("p"))) {
-        if (opcXmlReaderStartAttributes(reader)) {
-            do {
-            } while (!opcXmlReaderEndAttributes(reader));
-        }
-        printf("<p>");
-        if (opcXmlReaderStartChildren(reader)) {
-            do {
-                dumpText(reader);
-            } while (!opcXmlReaderEndChildren(reader));
-        }
-        printf("</p>\n");
-    } else if (opcXmlReaderStartElement(reader, NULL, NULL)) {
-        if (opcXmlReaderStartAttributes(reader)) {
-            do {
-            } while (!opcXmlReaderEndAttributes(reader));
-        }
-        if (opcXmlReaderStartChildren(reader)) {
-            do {
-                dumpText(reader);
-            } while (!opcXmlReaderEndChildren(reader));
-        }
-    } else if (opcXmlReaderStartText(reader)) {
-    }
+                } mce_end_text(reader);
+            } mce_end_children(reader);
+        } mce_end_element(reader);
+        mce_start_element(reader, _X("http://schemas.openxmlformats.org/wordprocessingml/2006/main"), _X("p")) {
+            printf("<p>");
+            dumpText(reader);
+            printf("</p>\n");
+        } mce_end_element(reader);
+        mce_start_element(reader, NULL, NULL) {
+            dumpText(reader);
+        } mce_end_element(reader);
+    } mce_end_children(reader);
 }
 
 int main( int argc, const char* argv[] )
@@ -104,23 +87,22 @@ int main( int argc, const char* argv[] )
     opcInitLibrary();
     opcContainer *c=opcContainerOpen(_X(argv[1]), OPC_OPEN_READ_ONLY, NULL, NULL);
     if (NULL!=c) {
-        opcPart part=opcPartOpen(c, _X("/word/document.xml"), NULL, 0);
-        if (OPC_PART_INVALID!=part) {
-                opcXmlReader *reader=opcXmlReaderOpen(c, part, NULL, 0, 0);
-                if (NULL!=reader) {
-                    opcXmlReaderStartDocument(reader);
+        mceTextReader_t reader;
+        if (OPC_ERROR_NONE==opcXmlReaderOpen(c, &reader, _X("/word/document.xml"), NULL, 0, 0)) {
+            mce_start_document(&reader) {
+                mce_start_element(&reader, NULL, NULL) {
                     printf("<html>\n");
                     printf("<head>\n");
                     printf("<meta http-equiv=\"Content-Type\" content=\"text/html; charset=utf-8\">\n");
                     printf("</head>\n");
                     printf("<body>\n");
-                    dumpText(reader);
+                    dumpText(&reader);
                     printf("<body>\n");
                     printf("</html>\n");
-                    opcXmlReaderEndDocument(reader);
-                    opcXmlReaderClose(reader);
-                }
-            }
+                } mce_end_element(&reader);
+            } mce_end_document(&reader);
+            mceTextReaderCleanup(&reader);
+        }
         opcContainerClose(c, OPC_CLOSE_NOW);
     }
     opcFreeLibrary();

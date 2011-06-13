@@ -389,64 +389,67 @@ static void opc_container_normalize_part_to_helper_buffer(xmlChar *buf, int buf_
 }
 
 static void opcConstainerParseRels(opcContainer *c, const xmlChar *partName, opcContainerRelation **relation_array, opc_uint32_t *relation_items) {
-    opcXmlReader *reader=opcXmlReaderOpenEx(c, partName, OPC_TRUE, NULL, NULL, 0);
-    static char ns[]="http://schemas.openxmlformats.org/package/2006/relationships";
-    opc_xml_start_document(reader) {
-        opc_xml_element(reader, _X(ns), _X("Relationships")) {
-            opc_xml_start_attributes(reader) {
-            } opc_xml_end_attributes(reader);
-            opc_xml_start_forall_children(reader) {
-                opc_xml_element(reader, NULL, _X("Relationship")) {
-                    const xmlChar *id=NULL;
-                    const xmlChar *type=NULL;
-                    const xmlChar *target=NULL;
-                    const xmlChar *mode=NULL;
-                    opc_xml_start_attributes(reader) {
-                        opc_xml_attribute(reader, NULL, _X("Id")) {
-                            id=opc_xml_const_value(reader);
-                        } else opc_xml_attribute(reader, NULL, _X("Type")) {
-                            type=opc_xml_const_value(reader);
-                        } else opc_xml_attribute(reader, NULL, _X("Target")) {
-                            target=opc_xml_const_value(reader);
-                        } else opc_xml_attribute(reader, NULL, _X("TargetMode")) {
-                            mode=opc_xml_const_value(reader);
-                        }
-                    } opc_xml_end_attributes(reader);
-                    opc_xml_error_guard_start(reader) {
-                        opc_xml_error(reader, NULL==id || id[0]==0, OPC_ERROR_XML, "Missing @Id attribute!");
-                        opc_xml_error(reader, NULL==type || type[0]==0, OPC_ERROR_XML, "Missing @Type attribute!");
-                        opc_xml_error(reader, NULL==target || target[0]==0, OPC_ERROR_XML, "Missing @Id attribute!");
-                        opcContainerRelationType *rel_type=opcContainerInsertRelationType(c, type, OPC_TRUE);
-                        opc_xml_error(reader, NULL==rel_type, OPC_ERROR_MEMORY, NULL);
-                        opc_uint32_t counter=-1;
-                        opc_uint32_t id_len=splitRelPrefix(c, id, &counter);
-                        ((xmlChar *)id)[id_len]=0;
-                        opc_uint32_t rel_id=createRelId(c, id, counter);
-                        if (NULL==mode || 0==xmlStrcasecmp(mode, _X("Internal"))) {
-                            xmlChar target_part_name[OPC_MAX_PATH];
-                            opc_container_normalize_part_to_helper_buffer(target_part_name, sizeof(target_part_name), partName, target);
-    //                        printf("%s (%s;%s)\n", target_part_name, base, target);
-                            opcContainerPart *target_part=opcContainerInsertPart(c, target_part_name, OPC_FALSE);
-                            opc_xml_errorf(reader, NULL==target_part, OPC_ERROR_XML, "Referenced part %s (%s;%s) does not exists!", target_part_name, partName, target);
-//                            printf("%s %i %s %s\n", id, counter, rel_type->type, target_part->name);
-                            opcContainerRelation *rel=opcContainerInsertRelation(relation_array, relation_items, rel_id, rel_type->type, 0, target_part->name);
-                            OPC_ASSERT(NULL!=rel);
-                        } else if (0==xmlStrcasecmp(mode, _X("External"))) {
-                            opcContainerExternalRelation *ext_rel=insertExternalRelation(c, target, OPC_TRUE);
-                            opc_xml_error(reader, NULL==ext_rel, OPC_ERROR_MEMORY, NULL);
-                            opcContainerRelation *rel=opcContainerInsertRelation(relation_array, relation_items, rel_id, rel_type->type, 1, ext_rel->target);
-                            OPC_ASSERT(NULL!=rel);
-                        } else {
-                            opc_xml_errorf(reader, OPC_TRUE, OPC_ERROR_XML, "TargetMode %s unknown!\n", mode);
-                        }
-                    } opc_xml_error_guard_end(reader);
-                    opc_xml_start_forall_children(reader) {
-                    } opc_xml_end_forall_children(reader);
-                }
-            } opc_xml_end_forall_children(reader);
-        } 
-    } opc_xml_end_document(reader);
-    OPC_ENSURE(OPC_ERROR_NONE==opcXmlReaderClose(reader));
+    mceTextReader_t reader;
+    if (OPC_ERROR_NONE==opcXmlReaderOpenEx(c, &reader, partName, OPC_TRUE, NULL, NULL, 0)) {
+        static char ns[]="http://schemas.openxmlformats.org/package/2006/relationships";
+        mce_start_document(&reader) {
+            mce_start_element(&reader, _X(ns), _X("Relationships")) {
+                mce_skip_attributes(&reader);
+                mce_start_children(&reader) {
+                    mce_start_element(&reader, NULL, _X("Relationship")) {
+                        const xmlChar *id=NULL;
+                        const xmlChar *type=NULL;
+                        const xmlChar *target=NULL;
+                        const xmlChar *mode=NULL;
+                        mce_start_attributes(&reader) {
+                            mce_start_attribute(&reader, NULL, _X("Id")) {
+                                id=xmlTextReaderConstValue(reader.reader);
+                            } mce_end_attribute(&reader);
+                            mce_start_attribute(&reader, NULL, _X("Type")) {
+                                type=xmlTextReaderConstValue(reader.reader);
+                            } mce_end_attribute(&reader);
+                            mce_start_attribute(&reader, NULL, _X("Target")) {
+                                target=xmlTextReaderConstValue(reader.reader);
+                            } mce_end_attribute(&reader);
+                            mce_start_attribute(&reader, NULL, _X("TargetMode")) {
+                                mode=xmlTextReaderConstValue(reader.reader);
+                            }
+                        } mce_end_attributes(&reader);
+                        mce_error_guard_start(&reader) {
+                            mce_error(&reader, NULL==id || id[0]==0, MCE_ERROR_VALIDATION, "Missing @Id attribute!");
+                            mce_error(&reader, NULL==type || type[0]==0, MCE_ERROR_VALIDATION, "Missing @Type attribute!");
+                            mce_error(&reader, NULL==target || target[0]==0, MCE_ERROR_VALIDATION, "Missing @Id attribute!");
+                            opcContainerRelationType *rel_type=opcContainerInsertRelationType(c, type, OPC_TRUE);
+                            mce_error(&reader, NULL==rel_type, MCE_ERROR_MEMORY, NULL);
+                            opc_uint32_t counter=-1;
+                            opc_uint32_t id_len=splitRelPrefix(c, id, &counter);
+                            ((xmlChar *)id)[id_len]=0;
+                            opc_uint32_t rel_id=createRelId(c, id, counter);
+                            if (NULL==mode || 0==xmlStrcasecmp(mode, _X("Internal"))) {
+                                xmlChar target_part_name[OPC_MAX_PATH];
+                                opc_container_normalize_part_to_helper_buffer(target_part_name, sizeof(target_part_name), partName, target);
+        //                        printf("%s (%s;%s)\n", target_part_name, base, target);
+                                opcContainerPart *target_part=opcContainerInsertPart(c, target_part_name, OPC_FALSE);
+                                mce_errorf(&reader, NULL==target_part, MCE_ERROR_VALIDATION, "Referenced part %s (%s;%s) does not exists!", target_part_name, partName, target);
+    //                            printf("%s %i %s %s\n", id, counter, rel_type->type, target_part->name);
+                                opcContainerRelation *rel=opcContainerInsertRelation(relation_array, relation_items, rel_id, rel_type->type, 0, target_part->name);
+                                OPC_ASSERT(NULL!=rel);
+                            } else if (0==xmlStrcasecmp(mode, _X("External"))) {
+                                opcContainerExternalRelation *ext_rel=insertExternalRelation(c, target, OPC_TRUE);
+                                mce_error(&reader, NULL==ext_rel, MCE_ERROR_MEMORY, NULL);
+                                opcContainerRelation *rel=opcContainerInsertRelation(relation_array, relation_items, rel_id, rel_type->type, 1, ext_rel->target);
+                                OPC_ASSERT(NULL!=rel);
+                            } else {
+                                mce_errorf(&reader, OPC_TRUE, MCE_ERROR_VALIDATION, "TargetMode %s unknown!\n", mode);
+                            }
+                        } mce_error_guard_end(reader);
+                        mce_skip_children(&reader);
+                    } mce_end_element(&reader);
+                } mce_end_children(&reader);
+            } mce_end_element(&reader);
+        } mce_end_document(reader);
+        OPC_ENSURE(0==mceTextReaderCleanup(&reader));
+    }
 }
 
 const xmlChar OPC_SEGMENT_CONTENTTYPES[]={'[', 'C', 'o', 'n', 't', 'e', 'n', 't', '_', 'T', 'y', 'p', 'e', 's', ']', '.', 'x', 'm', 'l', 0};
@@ -810,8 +813,6 @@ opcContainerInputStream* opcContainerOpenInputStreamEx(opcContainer *container, 
             ret->stream=opcZipOpenInputStream(container->storage, *first_segment);
             if (NULL==ret->stream) {
                 xmlFree(ret); ret=NULL; // error
-            } else {
-                mceCtxInit(&ret->mceReader.mceCtx);
             }
         }
     }
@@ -828,7 +829,6 @@ opc_uint32_t opcContainerReadInputStream(opcContainerInputStream* stream, opc_ui
 
 opc_error_t opcContainerCloseInputStream(opcContainerInputStream* stream) {
     opc_error_t ret=opcZipCloseInputStream(stream->container->storage, stream->stream);
-    mceCtxCleanup(&stream->mceReader.mceCtx);
     xmlFree(stream);
     return ret;
 }
@@ -857,10 +857,10 @@ opcContainerOutputStream* opcContainerCreateOutputStreamEx(opcContainer *contain
             opc_uint16_t compression_method=0; // no compression by default
             opc_uint16_t bit_flag=0;
             switch(compression_option) {
-	    case OPC_COMPRESSIONOPTION_NONE:
-		OPC_ASSERT(0==compression_method);
-		OPC_ASSERT(0==bit_flag);
-		break;
+            case OPC_COMPRESSIONOPTION_NONE:
+                OPC_ASSERT(0==compression_method);
+                OPC_ASSERT(0==bit_flag);
+                break;
             case OPC_COMPRESSIONOPTION_NORMAL:
                 compression_method=8;
                 bit_flag|=0<<1;
@@ -927,66 +927,69 @@ static opcContainer *opcContainerLoadFromZip(opcContainer *c) {
             // successfull loaded!
             OPC_ENSURE(OPC_ERROR_NONE==opcZipGC(c->storage));
             if (-1!=c->content_types_segment_id) {
-                opcXmlReader *reader=opcXmlReaderOpenEx(c, OPC_SEGMENT_CONTENTTYPES, OPC_FALSE, NULL, NULL, 0);
-                static char ns[]="http://schemas.openxmlformats.org/package/2006/content-types";
-                opc_xml_start_document(reader) {
-                    opc_xml_element(reader, _X(ns), _X("Types")) {
-                        opc_xml_start_attributes(reader) {
-                        } opc_xml_end_attributes(reader);
-                        opc_xml_start_forall_children(reader) {
-                            opc_xml_element(reader, NULL, _X("Default")) {
-                                const xmlChar *ext=NULL;
-                                const xmlChar *type=NULL;
-                                opc_xml_start_attributes(reader) {
-                                    opc_xml_attribute(reader, NULL, _X("Extension")) {
-                                        ext=opc_xml_const_value(reader);
-                                    } else opc_xml_attribute(reader, NULL, _X("ContentType")) {
-                                        type=opc_xml_const_value(reader);
-                                    }
-                                } opc_xml_end_attributes(reader);
-                                opc_xml_error_guard_start(reader) {
-                                    opc_xml_error(reader, NULL==ext || ext[0]==0, OPC_ERROR_XML, "Missing @Extension attribute!");
-                                    opc_xml_error(reader, NULL==type || type[0]==0, OPC_ERROR_XML, "Missing @ContentType attribute!");
-                                    opcContainerType *ct=insertType(c, type, OPC_TRUE);
-                                    opc_xml_error(reader, NULL==ct, OPC_ERROR_MEMORY, NULL);
-                                    opcContainerExtension *ce=opcContainerInsertExtension(c, ext, OPC_TRUE);
-                                    opc_xml_error(reader, NULL==ce, OPC_ERROR_MEMORY, NULL);
-                                    opc_xml_errorf(reader, NULL!=ce->type && 0!=xmlStrcmp(ce->type, type), OPC_ERROR_XML, "Extension \"%s\" is mapped to type \"%s\" as well as \"%s\"", ext, type, ce->type);
-                                    ce->type=ct->type;
-                                } opc_xml_error_guard_end(reader);
-                                opc_xml_start_forall_children(reader) {
-                                } opc_xml_end_forall_children(reader);
-                            } else opc_xml_element(reader, NULL, _X("Override")) {
-                                const xmlChar *name=NULL;
-                                const xmlChar *type=NULL;
-                                opc_xml_start_attributes(reader) {
-                                    opc_xml_attribute(reader, NULL, _X("PartName")) {
-                                        name=opc_xml_const_value(reader);
-                                    } else opc_xml_attribute(reader, NULL, _X("ContentType")) {
-                                        type=opc_xml_const_value(reader);
-                                    }
-                                } opc_xml_end_attributes(reader);
-                                opc_xml_error_guard_start(reader) {
-                                    opc_xml_error(reader, NULL==name, OPC_ERROR_XML, "Attribute @PartName not given!");
-                                    opc_xml_error(reader, NULL==type, OPC_ERROR_XML, "Attribute @ContentType not given!");
-                                    opcContainerType*ct=insertType(c, type, OPC_TRUE);
-                                    opc_xml_error(reader, NULL==ct, OPC_ERROR_MEMORY, NULL);
-                                    opc_xml_error_strictf(reader, '/'!=name[0], OPC_ERROR_XML, "Part %s MUST start with a '/'", name);
-                                    opcContainerPart *part=opcContainerInsertPart(c, (name[0]=='/'?name+1:name), OPC_FALSE);
-                                    opc_xml_error_strictf(reader, NULL==part, OPC_ERROR_XML, "Part %s does not exist.", name);
-                                    if (NULL!=part) {
-                                        part->type=ct->type;
-                                    }
-                                } opc_xml_error_guard_end(reader);
-                                opc_xml_start_forall_children(reader) {
-                                } opc_xml_end_forall_children(reader);
-                            } else opc_xml_text(reader) {
-                                //@TODO ensure whitespaces...
-                            }
-                        } opc_xml_end_forall_children(reader);
-                    } 
-                } opc_xml_end_document(reader);
-                OPC_ENSURE(OPC_ERROR_NONE==opcXmlReaderClose(reader));
+                mceTextReader_t reader;
+                if (OPC_ERROR_NONE==opcXmlReaderOpenEx(c, &reader, OPC_SEGMENT_CONTENTTYPES, OPC_FALSE, NULL, NULL, 0)) {
+                    static char ns[]="http://schemas.openxmlformats.org/package/2006/content-types";
+                    mce_start_document(&reader) {
+                        mce_start_element(&reader, _X(ns), _X("Types")) {
+                            mce_skip_attributes(&reader);
+                            mce_start_children(&reader) {
+                                mce_start_element(&reader, NULL, _X("Default")) {
+                                    const xmlChar *ext=NULL;
+                                    const xmlChar *type=NULL;
+                                    mce_start_attributes(&reader) {
+                                        mce_start_attribute(&reader, NULL, _X("Extension")) {
+                                            ext=xmlTextReaderConstValue(reader.reader);
+                                        } mce_end_attribute(&reader);
+                                        mce_start_attribute(&reader, NULL, _X("ContentType")) {
+                                            type=xmlTextReaderConstValue(reader.reader);
+                                        } mce_end_attribute(&reader);
+                                    } mce_end_attributes(&reader);
+                                    mce_error_guard_start(&reader) {
+                                        mce_error(&reader, NULL==ext || ext[0]==0, MCE_ERROR_VALIDATION, "Missing @Extension attribute!");
+                                        mce_error(&reader, NULL==type || type[0]==0, MCE_ERROR_VALIDATION, "Missing @ContentType attribute!");
+                                        opcContainerType *ct=insertType(c, type, OPC_TRUE);
+                                        mce_error(&reader, NULL==ct, MCE_ERROR_MEMORY, NULL);
+                                        opcContainerExtension *ce=opcContainerInsertExtension(c, ext, OPC_TRUE);
+                                        mce_error(&reader, NULL==ce, MCE_ERROR_MEMORY, NULL);
+                                        mce_errorf(&reader, NULL!=ce->type && 0!=xmlStrcmp(ce->type, type), MCE_ERROR_VALIDATION, "Extension \"%s\" is mapped to type \"%s\" as well as \"%s\"", ext, type, ce->type);
+                                        ce->type=ct->type;
+                                    } mce_error_guard_end(&reader);
+                                    mce_skip_children(&reader);
+                                } mce_end_element(&reader);
+                                mce_start_element(&reader, NULL, _X("Override")) {
+                                    const xmlChar *name=NULL;
+                                    const xmlChar *type=NULL;
+                                    mce_start_attributes(&reader) {
+                                        mce_start_attribute(&reader, NULL, _X("PartName")) {
+                                            name=xmlTextReaderConstValue(reader.reader);
+                                        } mce_end_attribute(&reader);
+                                        mce_start_attribute(&reader, NULL, _X("ContentType")) {
+                                            type=xmlTextReaderConstValue(reader.reader);
+                                        } mce_end_attribute(&reader);
+                                    } mce_end_attributes(&reader);
+                                    mce_error_guard_start(&reader) {
+                                        mce_error(&reader, NULL==name, MCE_ERROR_XML, "Attribute @PartName not given!");
+                                        mce_error(&reader, NULL==type, MCE_ERROR_XML, "Attribute @ContentType not given!");
+                                        opcContainerType*ct=insertType(c, type, OPC_TRUE);
+                                        mce_error(&reader, NULL==ct, MCE_ERROR_MEMORY, NULL);
+                                        mce_error_strictf(&reader, '/'!=name[0], MCE_ERROR_MEMORY, "Part %s MUST start with a '/'", name);
+                                        opcContainerPart *part=opcContainerInsertPart(c, (name[0]=='/'?name+1:name), OPC_FALSE);
+                                        mce_error_strictf(&reader, NULL==part, MCE_ERROR_MEMORY, "Part %s does not exist.", name);
+                                        if (NULL!=part) {
+                                            part->type=ct->type;
+                                        }
+                                    } mce_error_guard_end(&reader);
+                                    mce_skip_children(&reader);
+                                } mce_end_element(&reader);
+                                mce_start_text(&reader) {
+                                    //@TODO ensure whitespaces...
+                                } mce_end_text(&reader);
+                            } mce_end_children(&reader);
+                        } mce_end_element(&reader);
+                    } mce_end_document(&reader);
+                    OPC_ENSURE(0==mceTextReaderCleanup(&reader));
+                }
             }
             if (NULL!=c && -1!=c->rels_segment_id) {
                 opcConstainerParseRels(c, OPC_SEGMENT_ROOTRELS, &c->relation_array, &c->relation_items);
