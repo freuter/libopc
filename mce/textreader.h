@@ -162,6 +162,23 @@ extern "C" {
 #define mce_end_document(_reader_)   \
     } /* if (NULL!=reader) */        \
 
+
+/**
+  Container for mce_start_element and mce_start_attribute declarations.
+  \see mce_match_element
+  \see mce_match_attribute
+  \hideinitializer
+  */
+#define mce_start_choice(_reader_)  \
+    if (0)                          
+
+/**
+  \see mce_start_choice
+  \hideinitializer
+  */
+#define mce_end_choice(_reader_) 
+
+
 /**
   Skips the attributes. 
   \see mce_match_element.
@@ -210,9 +227,11 @@ if (!xmlTextReaderIsEmptyElement((_reader_)->reader)) { \
 
   \code
   void handleElement(reader) {
-    mce_start_element(reader, _X("ns"), _X("element")) {
-
-    } mce_end_element(reader)
+    mce_start_choice(reader) {
+        mce_start_element(reader, _X("ns"), _X("element")) {
+            
+        } mce_end_element(reader)
+    } mce_end_choice(reader);
   }
 
   void parse(reader) {
@@ -273,9 +292,10 @@ if (!xmlTextReaderIsEmptyElement((_reader_)->reader)) { \
 #define mce_end_element(_reader_) \
     mceTextReaderNext(_reader_)   
 
-#define mce_match_child(_reader_)  \
-    if (0)                          
-
+/**
+  Matches #TEXT without consuming it.
+  \hideinitializer
+*/
 #define mce_match_text(_reader_)                                                                   \
     } else if (XML_READER_TYPE_TEXT==xmlTextReaderNodeType((_reader_)->reader)                     \
             || XML_READER_TYPE_SIGNIFICANT_WHITESPACE==xmlTextReaderNodeType((_reader_)->reader)) {
@@ -318,9 +338,11 @@ if (!xmlTextReaderIsEmptyElement((_reader_)->reader)) { \
 
   \code
   void handleA(reader) {
-    mce_start_attribute(reader, _X("ns"), _X("attr")) {
+    mce_start_choice(reader) {
+        mce_start_attribute(reader, _X("ns"), _X("attr")) {
 
-    } mce_end_attribute(reader)
+        } mce_end_attribute(reader);
+    } mce_end_choice(reader);
   }
 
   void parse(reader) {
@@ -356,16 +378,83 @@ if (!xmlTextReaderIsEmptyElement((_reader_)->reader)) { \
 #define mce_end_attribute(_reader_)
 
 
-#define mce_error_guard_start(_reader_) if (MCE_ERROR_NONE==(_reader_)->mceCtx.error) do 
-#define mce_error_guard_end(_reader_)  while(0)
+/**
+  Error handling for MCE parsers.
+  \code
+   mce_start_element(&reader, NULL, _X("Default")) {
+       const xmlChar *ext=NULL;
+       const xmlChar *type=NULL;
+       mce_start_attributes(&reader) {
+           mce_start_attribute(&reader, NULL, _X("Extension")) {
+               ext=xmlTextReaderConstValue(reader.reader);
+           } mce_end_attribute(&reader);
+           mce_start_attribute(&reader, NULL, _X("ContentType")) {
+               type=xmlTextReaderConstValue(reader.reader);
+           } mce_end_attribute(&reader);
+       } mce_end_attributes(&reader);
+       mce_error_guard_start(&reader) {
+           mce_error(&reader, NULL==ext || ext[0]==0, MCE_ERROR_VALIDATION, "Missing @Extension attribute!");
+           mce_error(&reader, NULL==type || type[0]==0, MCE_ERROR_VALIDATION, "Missing @ContentType attribute!");
+           opcContainerType *ct=insertType(c, type, OPC_TRUE);
+           mce_error(&reader, NULL==ct, MCE_ERROR_MEMORY, NULL);
+           opcContainerExtension *ce=opcContainerInsertExtension(c, ext, OPC_TRUE);
+           mce_error(&reader, NULL==ce, MCE_ERROR_MEMORY, NULL);
+           mce_errorf(&reader, NULL!=ce->type && 0!=xmlStrcmp(ce->type, type), MCE_ERROR_VALIDATION, "Extension \"%s\" is mapped to type \"%s\" as well as \"%s\"", ext, type, ce->type);
+           ce->type=ct->type;
+       } mce_error_guard_end(&reader);
+       mce_skip_children(&reader);
+   } mce_end_element(&reader);
+  \endcode
+  \hideinitializer
+*/
+#define mce_error_guard_start(_reader_) if (MCE_ERROR_NONE==(_reader_)->mceCtx.error) do {
+
+/**
+  \see mce_error_guard_start
+  \hideinitializer
+*/
+#define mce_error_guard_end(_reader_)  } while(0)
+
+/**
+  Signal an error if guard if false.
+  \hideinitializer
+*/
 #define mce_error(_reader_, guard, err, msg) if (guard) { (_reader_)->mceCtx.error=(err); fprintf(stderr, (NULL!=msg?msg:#err));  continue; }
+
+/**
+  Signal an error if guard if false.
+  \hideinitializer
+*/
 #if defined(__GNUC__)
 #define mce_errorf(_reader_, guard, err, msg, ...) if (guard) { mceRaiseError((_reader_)->reader, &(_reader_)->mceCtx, err, _X((NULL!=msg?msg:#err)), ##__VA_ARGS__ );  continue; }
 #else
 #define mce_errorf(_reader_, guard, err, msg, ...) if (guard) { mceRaiseError((_reader_)->reader, &(_reader_)->mceCtx, err, _X((NULL!=msg?msg:#err)), __VA_ARGS__ );  continue; }
 #endif
+
+/**
+  Only issues the error when in "strict mode".
+  \hideinitializer
+*/
 #define mce_error_strict mce_error
+
+/**
+  \see mce_error_strict
+  \hideinitializer
+*/
 #define mce_error_strictf mce_errorf
+
+
+/**
+  Marker for a MCE defintion.
+  \hideinitializer
+*/
+#define mce_def
+
+/**
+  Marker for a MCE reference.
+  \hideinitializer
+*/
+#define mce_ref(r) (r)
 
 
 #ifdef __cplusplus

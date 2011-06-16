@@ -43,14 +43,14 @@
 #include <stdio.h>
 #include <time.h>
 
-static void dumpElement(mceTextReader_t *reader) {
+static void mce_def dumpElement(mceTextReader_t *reader) {
     xmlChar *ln=xmlStrdup(xmlTextReaderLocalName(reader->reader));
     printf("<%s>\n", ln);
     mce_start_attributes(reader) {
     } mce_end_attributes(reader);
     mce_start_children(reader) {
         mce_start_element(reader, NULL, NULL) {
-            dumpElement(reader);
+            mce_ref(dumpElement(reader));
         } mce_end_element(reader);
         mce_start_text(reader) {
         } mce_end_text(reader);
@@ -70,7 +70,7 @@ int main( int argc, const char* argv[] )
             if (OPC_ERROR_NONE==opcXmlReaderOpen(c, &reader,  _X(argv[2]), NULL, 0, 0)) {
                 mce_start_document(&reader) {
                     mce_start_element(&reader, NULL, NULL) {
-                        dumpElement(&reader);
+                        mce_ref(dumpElement(&reader));
                     } mce_end_element(&reader);
                 } mce_end_document(&reader);
                 mceTextReaderCleanup(&reader);
