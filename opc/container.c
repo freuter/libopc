@@ -391,7 +391,7 @@ static void opc_container_normalize_part_to_helper_buffer(xmlChar *buf, int buf_
 static void opcConstainerParseRels(opcContainer *c, const xmlChar *partName, opcContainerRelation **relation_array, opc_uint32_t *relation_items) {
     mceTextReader_t reader;
     if (OPC_ERROR_NONE==opcXmlReaderOpenEx(c, &reader, partName, OPC_TRUE, NULL, NULL, 0)) {
-        static char ns[]="http://schemas.openxmlformats.org/package/2006/relationships";
+        static const char ns[]="http://schemas.openxmlformats.org/package/2006/relationships";
         mce_start_document(&reader) {
             mce_start_element(&reader, _X(ns), _X("Relationships")) {
                 mce_skip_attributes(&reader);
@@ -452,8 +452,8 @@ static void opcConstainerParseRels(opcContainer *c, const xmlChar *partName, opc
     }
 }
 
-const xmlChar OPC_SEGMENT_CONTENTTYPES[]={'[', 'C', 'o', 'n', 't', 'e', 'n', 't', '_', 'T', 'y', 'p', 'e', 's', ']', '.', 'x', 'm', 'l', 0};
-const xmlChar OPC_SEGMENT_ROOTRELS[]={0};
+static const xmlChar OPC_SEGMENT_CONTENTTYPES[]={'[', 'C', 'o', 'n', 't', 'e', 'n', 't', '_', 'T', 'y', 'p', 'e', 's', ']', '.', 'x', 'm', 'l', 0};
+static const xmlChar OPC_SEGMENT_ROOTRELS[]={0};
 
 static opc_error_t opcContainerFree(opcContainer *c) {
     if (NULL!=c) {
@@ -929,7 +929,7 @@ static opcContainer *opcContainerLoadFromZip(opcContainer *c) {
             if (-1!=c->content_types_segment_id) {
                 mceTextReader_t reader;
                 if (OPC_ERROR_NONE==opcXmlReaderOpenEx(c, &reader, OPC_SEGMENT_CONTENTTYPES, OPC_FALSE, NULL, NULL, 0)) {
-                    static char ns[]="http://schemas.openxmlformats.org/package/2006/content-types";
+                    static const char ns[]="http://schemas.openxmlformats.org/package/2006/content-types";
                     mce_start_document(&reader) {
                         mce_start_element(&reader, _X(ns), _X("Types")) {
                             mce_skip_attributes(&reader);

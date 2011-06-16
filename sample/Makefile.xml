@@ -109,4 +109,14 @@
             <file path="mce_extract.c"/>
         </source>
     </tool>
+    <tool name="opc_changes" dep="opc" mode="c99">
+        <source root=".">
+            <file path="opc_changes.c"/>
+        </source>
+    </tool>
+    <tool name="mce_schema" dep="opc" mode="c99">
+        <source root=".">
+            <file path="mce_schema.c"/>
+        </source>
+    </tool>
 </project>

@@ -48,7 +48,7 @@ int main( int argc, const char* argv[] )
     const char *fileName=NULL;
     for(int i=1;i<argc;i++) {
         if ((0==xmlStrcmp(_X("--understands"), _X(argv[i])) || 0==xmlStrcmp(_X("-u"), _X(argv[i]))) && i+1<argc) {
-	    i++; // skip namespace, registered later when parser was created.
+            i++; // skip namespace, registered later when parser was created.
         } else if ((0==xmlStrcmp(_X("--out"), _X(argv[i])) || 0==xmlStrcmp(_X("--out"), _X(argv[i]))) && i+1<argc && NULL==file) {
             const char *filename=argv[++i];
             file=fopen(filename, "w");
@@ -71,6 +71,7 @@ int main( int argc, const char* argv[] )
         xmlTextWriterSetIndent(writer, writer_indent);
         mceTextReader_t mceTextReader;
         mceTextReaderInit(&mceTextReader, ('-'==fileName[0] && 0==fileName[1]?xmlReaderForFd(0, NULL, NULL, 0):xmlReaderForFile(fileName, NULL, 0)));
+        mceTextReaderDisableMCE(&mceTextReader, !reader_mce);
         for(int i=1;i<argc;i++) {
             if ((0==xmlStrcmp(_X("--understands"), _X(argv[i])) || 0==xmlStrcmp(_X("-u"), _X(argv[i]))) && i+1<argc) {
                 const xmlChar *ns=_X(argv[++i]);

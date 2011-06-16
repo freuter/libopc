@@ -54,6 +54,10 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "mce_write", "mce_write\mce_
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "mce_extract", "mce_extract\mce_extract.vcxproj", "{4E990707-F70A-5BC2-B10B-B8A477A40A69}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "opc_changes", "opc_changes\opc_changes.vcxproj", "{33F25156-58F6-5129-99FB-13BFE2075A99}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "mce_schema", "mce_schema\mce_schema.vcxproj", "{9554C82F-1ECB-59F1-B128-21B3AC7E99AD}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
@@ -168,6 +172,14 @@ Global
 		{4E990707-F70A-5BC2-B10B-B8A477A40A69}.Debug|Win32.Build.0 = Debug|Win32
 		{4E990707-F70A-5BC2-B10B-B8A477A40A69}.Release|Win32.ActiveCfg = Release|Win32
 		{4E990707-F70A-5BC2-B10B-B8A477A40A69}.Release|Win32.Build.0 = Release|Win32
+		{33F25156-58F6-5129-99FB-13BFE2075A99}.Debug|Win32.ActiveCfg = Debug|Win32
+		{33F25156-58F6-5129-99FB-13BFE2075A99}.Debug|Win32.Build.0 = Debug|Win32
+		{33F25156-58F6-5129-99FB-13BFE2075A99}.Release|Win32.ActiveCfg = Release|Win32
+		{33F25156-58F6-5129-99FB-13BFE2075A99}.Release|Win32.Build.0 = Release|Win32
+		{9554C82F-1ECB-59F1-B128-21B3AC7E99AD}.Debug|Win32.ActiveCfg = Debug|Win32
+		{9554C82F-1ECB-59F1-B128-21B3AC7E99AD}.Debug|Win32.Build.0 = Debug|Win32
+		{9554C82F-1ECB-59F1-B128-21B3AC7E99AD}.Release|Win32.ActiveCfg = Release|Win32
+		{9554C82F-1ECB-59F1-B128-21B3AC7E99AD}.Release|Win32.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
