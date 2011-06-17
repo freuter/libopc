@@ -41,11 +41,27 @@
 #ifdef __cplusplus
 extern "C" {
 #endif    
-
+    /**
+      Internal type which represents a binary output stream.
+      */
     typedef struct OPC_CONTAINER_OUTPUTSTREAM_STRUCT opcContainerOutputStream;
 
+    /** 
+      Open the part \c name or writing in \c container with compression \c compression_option.
+      \note Make sure the part exists! 
+      \see opcPartCreate.
+      */
     opcContainerOutputStream* opcContainerCreateOutputStream(opcContainer *container, const xmlChar *name, opcCompressionOption_t compression_option);
+
+    /**
+      Write \c buffer_len bytes from \c buffer to \c stream. 
+      \return Returns the number of bytes written.
+      */
     opc_uint32_t opcContainerWriteOutputStream(opcContainerOutputStream* stream, const opc_uint8_t *buffer, opc_uint32_t buffer_len);
+
+    /**
+      Close the \c stream and free all associated resources.
+      */
     opc_error_t opcContainerCloseOutputStream(opcContainerOutputStream* stream);
         
 #ifdef __cplusplus

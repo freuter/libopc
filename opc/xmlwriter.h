@@ -43,6 +43,11 @@
 extern "C" {
 #endif    
 
+    /**
+      Create an MCE text writer for \c part in \c container with compression \c compression_option.
+      \note Make sure the part exists.
+      \see opcPartFind
+      */
     mceTextWriter *mceTextWriterOpen(opcContainer *c, opcPart part, opcCompressionOption_t compression_option);
 
 #ifdef __cplusplus

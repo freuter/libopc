@@ -46,28 +46,69 @@ extern "C" {
      \see opcPartOpen.
      */
     typedef xmlChar* opcPart;
+
+/**
+  Represents an invalid (resp. NULL) part.
+  In releations OPC_PART_INVALID also represents the root part.
+  \hideinitializer
+  */
 #define OPC_PART_INVALID NULL
 
-#define OPC_PART_CREATE 0x1
-#define OPC_PART_COMPRESSED 0x2    
-    
-    opcPart opcPartOpen(opcContainer *container, 
+    /**
+     Find a part in a \ container by \c absolutePath and/or \c type.
+     Currently no flags are supported.
+     */
+    opcPart opcPartFind(opcContainer *container, 
                         const xmlChar *absolutePath, 
                         const xmlChar *type,
                         int flags);
+
+    /**
+     Creates a part in a \ container with \c absolutePath and \c type.
+     Currently no flags are supported.
+     */
     opcPart opcPartCreate(opcContainer *container, 
                           const xmlChar *absolutePath, 
                           const xmlChar *type,
                           int flags);
-    
+
+    /**
+      Returns the type of the container.
+      The string is interned and must not be freed.
+      */
     const xmlChar *opcPartGetType(opcContainer *c, opcPart part);
+
+    /**
+      Returns the type of the container. 
+      If \c override_only then the return value will be NULL for parts not having an override type.
+      The string is interned and must not be freed.
+      */
     const xmlChar *opcPartGetTypeEx(opcContainer *c, opcPart part, opc_bool_t override_only);
 
+    /**
+     Deleted that part \c absolutePath in the \c container.
+     */
     opc_error_t opcPartDelete(opcContainer *container, const xmlChar *absolutePath);
 
+    /**
+      Get the first part.
+      \code
+      for(opcPart part=opcPartGetFirst(c);OPC_PART_INVALID!=part;part=opcPartGetNext(c, part)) {
+        printf("%s; \n", part, opcPartGetType(c, part));
+      }
+      \endcode 
+      */
     opcPart opcPartGetFirst(opcContainer *container);
+
+    /**
+     Get the next part.
+     \see opcPartGetFirst
+      */
     opcPart opcPartGetNext(opcContainer *container, opcPart part);
 
+    /**
+      Returns the size in bytes of the \c part.
+      */
     opc_ofs_t opcPartGetSize(opcContainer *c, opcPart part);
 
 #ifdef __cplusplus

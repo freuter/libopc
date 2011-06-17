@@ -43,11 +43,17 @@
 extern "C" {
 #endif    
 
+    /** 
+      Represents a simple Dublin Core type.
+      */
     typedef struct OPC_DC_SIMPLE_TYPE {
         xmlChar *str;
         xmlChar *lang;
     } opcDCSimpleType_t;
 
+    /** 
+      Represents the core properties of an OPC container.
+      */
     typedef struct OPC_PROPERTIES_STRUCT {
         xmlChar *category;                /* xsd:string     */
         xmlChar *contentStatus;           /* xsd:string     */
@@ -67,13 +73,45 @@ extern "C" {
         xmlChar *version;                 /* xsd:string     */
     } opcProperties_t;
 
+    /**
+      Initialize the core properties \c cp.
+      \see opcCorePropertiesSetString
+      */
     opc_error_t opcCorePropertiesInit(opcProperties_t *cp);
+
+    /**
+      Cleanup the core properties \c cp, i.e. release all resources.
+      \see opcCorePropertiesSetString
+      */
     opc_error_t opcCorePropertiesCleanup(opcProperties_t *cp);
 
+    /**
+      Rease the core properties \c cp from the container \c.
+      */
     opc_error_t opcCorePropertiesRead(opcProperties_t *cp, opcContainer *c);
+
+
+    /**
+      Write/Update the core properties \c cp in the container \c.
+      */
     opc_error_t opcCorePropertiesWrite(opcProperties_t *cp, opcContainer *c);
 
+    /**
+      Update a string in the core properties the right way.
+      \code
+      opcProperties_t cp;
+      opcCorePropertiesInit(&cp);
+      opcCorePropertiesSetString(&cp.revision, "1");
+      opcCorePropertiesSetStringLang(&cp.creator, "Florian Reuter", NULL);
+      opcCorePropertiesCleanup(&cp);
+      \endcode
+      */
     opc_error_t opcCorePropertiesSetString(xmlChar **prop, const xmlChar *str);
+
+    /** 
+      Update a core properties the right way.
+      \see opcCorePropertiesSetString
+      */
     opc_error_t opcCorePropertiesSetStringLang(opcDCSimpleType_t *prop, const xmlChar *str, const xmlChar *lang);
 
 #ifdef __cplusplus

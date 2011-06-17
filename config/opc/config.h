@@ -42,39 +42,109 @@
 extern "C" {
 #endif   
 
-/**
- Converts an ASCII string to a xmlChar string. This only works for ASCII strings.
- */
-#ifndef _X
-#define _X(s) BAD_CAST(s) 
-#endif
-#ifndef _X2C
-#define _X2C(s) ((char*)(s))
-#endif
 
+/**
+  Assert expression e is true. Will be removed entirely in release mode.
+  \hideinitializer
+ */
 #define OPC_ASSERT(e) assert(e)
+
+/**
+  Assert expression e is true. Expression will be executed in release mode too.
+  \hideinitializer
+ */
 #ifdef NDEBUG
 #define OPC_ENSURE(e) (void)(e)
 #else
 #define OPC_ENSURE(e) assert(e)
 #endif
+
+
+/**
+  Constant for boolean true.
+  \hideinitializer
+ */
 #define OPC_TRUE (0==0)
+
+/**
+  Constant for boolean false.
+  \hideinitializer
+ */
 #define OPC_FALSE (0==1)
 
+    /** 
+      Boolean type.
+      \hideinitializer
+      */
     typedef pbool_t opc_bool_t;
+
+    /** 
+      Type which represents an offset in e.g. a file.
+      \hideinitializer
+      */
     typedef pofs_t opc_ofs_t;
+
+    /** 
+      8-bit unsigned integer.
+      \hideinitializer
+      */
     typedef puint8_t opc_uint8_t;
+
+    /** 
+      16-bit unsigned integer.
+      \hideinitializer
+      */
     typedef puint16_t opc_uint16_t;
+
+    /** 
+      32-bit unsigned integer.
+      \hideinitializer
+      */
     typedef puint32_t opc_uint32_t;
+
+    /** 
+      64-bit unsigned integer.
+      \hideinitializer
+      */
     typedef puint64_t opc_uint64_t;
+
+    /** 
+      8-bit signed integer.
+      \hideinitializer
+      */
     typedef pint8_t opc_int8_t;
+
+    /** 
+      16-bit signed integer.
+      \hideinitializer
+      */
     typedef pint16_t opc_int16_t;
+
+    /** 
+      32-bit signed integer.
+      \hideinitializer
+      */
     typedef pint32_t opc_int32_t;
+
+    /** 
+      64-bit signed integer.
+      \hideinitializer
+      */
     typedef pint64_t opc_int64_t;
 
+/**
+  Default size fo the deflate buffer used by zlib.
+  */
 #define OPC_DEFLATE_BUFFER_SIZE 4096
+
+/**
+  Max system path len.
+  */
 #define OPC_MAX_PATH 512
 
+    /**
+      Error codes for the OPC module.
+      */
     typedef enum OPC_ERROR_ENUM {
         OPC_ERROR_NONE,
         OPC_ERROR_STREAM,
@@ -88,6 +158,9 @@ extern "C" {
         OPC_ERROR_USER // user triggered an abort
     } opc_error_t;
     
+    /**
+      Compression options for OPC streams.
+      */
     typedef enum OPC_COMPRESSIONOPTION_ENUM {
         OPC_COMPRESSIONOPTION_NONE,
         OPC_COMPRESSIONOPTION_NORMAL,
@@ -97,7 +170,16 @@ extern "C" {
     } opcCompressionOption_t;
 
 
+/**
+  Helper for debug logs.
+  \hideinitializer
+  */
 #define opc_logf printf
+
+/**
+  Abstraction for memset(m, 0, s).
+  \hideinitializer
+ */
 #define opc_bzero_mem(m,s) memset(m, 0, s)
 
 #ifdef __cplusplus

@@ -39,7 +39,7 @@ static opcPart create_ppt_theme_theme1_xml(opcContainer *c);
 static opcPart create_ppt_viewProps_xml(opcContainer *c);
 
 static opcPart create_docProps_app_xml(opcContainer *c) {
-     opcPart ret=opcPartOpen(c, _X("docProps/app.xml"), _X("application/vnd.openxmlformats-officedocument.extended-properties+xml"), 0);
+     opcPart ret=opcPartFind(c, _X("docProps/app.xml"), _X("application/vnd.openxmlformats-officedocument.extended-properties+xml"), 0);
      if (OPC_PART_INVALID==ret && OPC_PART_INVALID!=(ret=opcPartCreate(c, _X("docProps/app.xml"), _X("application/vnd.openxmlformats-officedocument.extended-properties+xml"), 0))) {
          //adding content
           opcContainerOutputStream *out=opcContainerCreateOutputStream(c, ret, OPC_COMPRESSIONOPTION_NORMAL);
@@ -91,7 +91,7 @@ static opcPart create_docProps_app_xml(opcContainer *c) {
 }
 
 static opcPart create_docProps_core_xml(opcContainer *c) {
-     opcPart ret=opcPartOpen(c, _X("docProps/core.xml"), _X("application/vnd.openxmlformats-package.core-properties+xml"), 0);
+     opcPart ret=opcPartFind(c, _X("docProps/core.xml"), _X("application/vnd.openxmlformats-package.core-properties+xml"), 0);
      if (OPC_PART_INVALID==ret && OPC_PART_INVALID!=(ret=opcPartCreate(c, _X("docProps/core.xml"), _X("application/vnd.openxmlformats-package.core-properties+xml"), 0))) {
          //adding content
           opcContainerOutputStream *out=opcContainerCreateOutputStream(c, ret, OPC_COMPRESSIONOPTION_NORMAL);
@@ -113,7 +113,7 @@ static opcPart create_docProps_core_xml(opcContainer *c) {
 }
 
 static opcPart create_docProps_thumbnail_jpeg(opcContainer *c) {
-     opcPart ret=opcPartOpen(c, _X("docProps/thumbnail.jpeg"), NULL, 0);
+     opcPart ret=opcPartFind(c, _X("docProps/thumbnail.jpeg"), NULL, 0);
      if (OPC_PART_INVALID==ret && OPC_PART_INVALID!=(ret=opcPartCreate(c, _X("docProps/thumbnail.jpeg"), NULL, 0))) {
          //adding content
           opcContainerOutputStream *out=opcContainerCreateOutputStream(c, ret, OPC_COMPRESSIONOPTION_NORMAL);
@@ -181,7 +181,7 @@ static opcPart create_docProps_thumbnail_jpeg(opcContainer *c) {
 }
 
 static opcPart create_ppt_presProps_xml(opcContainer *c) {
-     opcPart ret=opcPartOpen(c, _X("ppt/presProps.xml"), _X("application/vnd.openxmlformats-officedocument.presentationml.presProps+xml"), 0);
+     opcPart ret=opcPartFind(c, _X("ppt/presProps.xml"), _X("application/vnd.openxmlformats-officedocument.presentationml.presProps+xml"), 0);
      if (OPC_PART_INVALID==ret && OPC_PART_INVALID!=(ret=opcPartCreate(c, _X("ppt/presProps.xml"), _X("application/vnd.openxmlformats-officedocument.presentationml.presProps+xml"), 0))) {
          //adding content
           opcContainerOutputStream *out=opcContainerCreateOutputStream(c, ret, OPC_COMPRESSIONOPTION_NORMAL);
@@ -196,7 +196,7 @@ static opcPart create_ppt_presProps_xml(opcContainer *c) {
 }
 
 static opcPart create_ppt_presentation_xml(opcContainer *c) {
-     opcPart ret=opcPartOpen(c, _X("ppt/presentation.xml"), _X("application/vnd.openxmlformats-officedocument.presentationml.presentation.main+xml"), 0);
+     opcPart ret=opcPartFind(c, _X("ppt/presentation.xml"), _X("application/vnd.openxmlformats-officedocument.presentationml.presentation.main+xml"), 0);
      if (OPC_PART_INVALID==ret && OPC_PART_INVALID!=(ret=opcPartCreate(c, _X("ppt/presentation.xml"), _X("application/vnd.openxmlformats-officedocument.presentationml.presentation.main+xml"), 0))) {
          //adding content
           opcContainerOutputStream *out=opcContainerCreateOutputStream(c, ret, OPC_COMPRESSIONOPTION_NORMAL);
@@ -321,7 +321,7 @@ static opcPart create_ppt_presentation_xml(opcContainer *c) {
 }
 
 static opcPart create_ppt_slideLayouts_slideLayout1_xml(opcContainer *c) {
-     opcPart ret=opcPartOpen(c, _X("ppt/slideLayouts/slideLayout1.xml"), _X("application/vnd.openxmlformats-officedocument.presentationml.slideLayout+xml"), 0);
+     opcPart ret=opcPartFind(c, _X("ppt/slideLayouts/slideLayout1.xml"), _X("application/vnd.openxmlformats-officedocument.presentationml.slideLayout+xml"), 0);
      if (OPC_PART_INVALID==ret && OPC_PART_INVALID!=(ret=opcPartCreate(c, _X("ppt/slideLayouts/slideLayout1.xml"), _X("application/vnd.openxmlformats-officedocument.presentationml.slideLayout+xml"), 0))) {
          //adding content
           opcContainerOutputStream *out=opcContainerCreateOutputStream(c, ret, OPC_COMPRESSIONOPTION_NORMAL);
@@ -570,7 +570,7 @@ static opcPart create_ppt_slideLayouts_slideLayout1_xml(opcContainer *c) {
 }
 
 static opcPart create_ppt_slideLayouts_slideLayout10_xml(opcContainer *c) {
-     opcPart ret=opcPartOpen(c, _X("ppt/slideLayouts/slideLayout10.xml"), _X("application/vnd.openxmlformats-officedocument.presentationml.slideLayout+xml"), 0);
+     opcPart ret=opcPartFind(c, _X("ppt/slideLayouts/slideLayout10.xml"), _X("application/vnd.openxmlformats-officedocument.presentationml.slideLayout+xml"), 0);
      if (OPC_PART_INVALID==ret && OPC_PART_INVALID!=(ret=opcPartCreate(c, _X("ppt/slideLayouts/slideLayout10.xml"), _X("application/vnd.openxmlformats-officedocument.presentationml.slideLayout+xml"), 0))) {
          //adding content
           opcContainerOutputStream *out=opcContainerCreateOutputStream(c, ret, OPC_COMPRESSIONOPTION_NORMAL);
@@ -747,7 +747,7 @@ static opcPart create_ppt_slideLayouts_slideLayout10_xml(opcContainer *c) {
 }
 
 static opcPart create_ppt_slideLayouts_slideLayout11_xml(opcContainer *c) {
-     opcPart ret=opcPartOpen(c, _X("ppt/slideLayouts/slideLayout11.xml"), _X("application/vnd.openxmlformats-officedocument.presentationml.slideLayout+xml"), 0);
+     opcPart ret=opcPartFind(c, _X("ppt/slideLayouts/slideLayout11.xml"), _X("application/vnd.openxmlformats-officedocument.presentationml.slideLayout+xml"), 0);
      if (OPC_PART_INVALID==ret && OPC_PART_INVALID!=(ret=opcPartCreate(c, _X("ppt/slideLayouts/slideLayout11.xml"), _X("application/vnd.openxmlformats-officedocument.presentationml.slideLayout+xml"), 0))) {
          //adding content
           opcContainerOutputStream *out=opcContainerCreateOutputStream(c, ret, OPC_COMPRESSIONOPTION_NORMAL);
@@ -934,7 +934,7 @@ static opcPart create_ppt_slideLayouts_slideLayout11_xml(opcContainer *c) {
 }
 
 static opcPart create_ppt_slideLayouts_slideLayout2_xml(opcContainer *c) {
-     opcPart ret=opcPartOpen(c, _X("ppt/slideLayouts/slideLayout2.xml"), _X("application/vnd.openxmlformats-officedocument.presentationml.slideLayout+xml"), 0);
+     opcPart ret=opcPartFind(c, _X("ppt/slideLayouts/slideLayout2.xml"), _X("application/vnd.openxmlformats-officedocument.presentationml.slideLayout+xml"), 0);
      if (OPC_PART_INVALID==ret && OPC_PART_INVALID!=(ret=opcPartCreate(c, _X("ppt/slideLayouts/slideLayout2.xml"), _X("application/vnd.openxmlformats-officedocument.presentationml.slideLayout+xml"), 0))) {
          //adding content
           opcContainerOutputStream *out=opcContainerCreateOutputStream(c, ret, OPC_COMPRESSIONOPTION_NORMAL);
@@ -1111,7 +1111,7 @@ static opcPart create_ppt_slideLayouts_slideLayout2_xml(opcContainer *c) {
 }
 
 static opcPart create_ppt_slideLayouts_slideLayout3_xml(opcContainer *c) {
-     opcPart ret=opcPartOpen(c, _X("ppt/slideLayouts/slideLayout3.xml"), _X("application/vnd.openxmlformats-officedocument.presentationml.slideLayout+xml"), 0);
+     opcPart ret=opcPartFind(c, _X("ppt/slideLayouts/slideLayout3.xml"), _X("application/vnd.openxmlformats-officedocument.presentationml.slideLayout+xml"), 0);
      if (OPC_PART_INVALID==ret && OPC_PART_INVALID!=(ret=opcPartCreate(c, _X("ppt/slideLayouts/slideLayout3.xml"), _X("application/vnd.openxmlformats-officedocument.presentationml.slideLayout+xml"), 0))) {
          //adding content
           opcContainerOutputStream *out=opcContainerCreateOutputStream(c, ret, OPC_COMPRESSIONOPTION_NORMAL);
@@ -1364,7 +1364,7 @@ static opcPart create_ppt_slideLayouts_slideLayout3_xml(opcContainer *c) {
 }
 
 static opcPart create_ppt_slideLayouts_slideLayout4_xml(opcContainer *c) {
-     opcPart ret=opcPartOpen(c, _X("ppt/slideLayouts/slideLayout4.xml"), _X("application/vnd.openxmlformats-officedocument.presentationml.slideLayout+xml"), 0);
+     opcPart ret=opcPartFind(c, _X("ppt/slideLayouts/slideLayout4.xml"), _X("application/vnd.openxmlformats-officedocument.presentationml.slideLayout+xml"), 0);
      if (OPC_PART_INVALID==ret && OPC_PART_INVALID!=(ret=opcPartCreate(c, _X("ppt/slideLayouts/slideLayout4.xml"), _X("application/vnd.openxmlformats-officedocument.presentationml.slideLayout+xml"), 0))) {
          //adding content
           opcContainerOutputStream *out=opcContainerCreateOutputStream(c, ret, OPC_COMPRESSIONOPTION_NORMAL);
@@ -1659,7 +1659,7 @@ static opcPart create_ppt_slideLayouts_slideLayout4_xml(opcContainer *c) {
 }
 
 static opcPart create_ppt_slideLayouts_slideLayout5_xml(opcContainer *c) {
-     opcPart ret=opcPartOpen(c, _X("ppt/slideLayouts/slideLayout5.xml"), _X("application/vnd.openxmlformats-officedocument.presentationml.slideLayout+xml"), 0);
+     opcPart ret=opcPartFind(c, _X("ppt/slideLayouts/slideLayout5.xml"), _X("application/vnd.openxmlformats-officedocument.presentationml.slideLayout+xml"), 0);
      if (OPC_PART_INVALID==ret && OPC_PART_INVALID!=(ret=opcPartCreate(c, _X("ppt/slideLayouts/slideLayout5.xml"), _X("application/vnd.openxmlformats-officedocument.presentationml.slideLayout+xml"), 0))) {
          //adding content
           opcContainerOutputStream *out=opcContainerCreateOutputStream(c, ret, OPC_COMPRESSIONOPTION_NORMAL);
@@ -2088,7 +2088,7 @@ static opcPart create_ppt_slideLayouts_slideLayout5_xml(opcContainer *c) {
 }
 
 static opcPart create_ppt_slideLayouts_slideLayout6_xml(opcContainer *c) {
-     opcPart ret=opcPartOpen(c, _X("ppt/slideLayouts/slideLayout6.xml"), _X("application/vnd.openxmlformats-officedocument.presentationml.slideLayout+xml"), 0);
+     opcPart ret=opcPartFind(c, _X("ppt/slideLayouts/slideLayout6.xml"), _X("application/vnd.openxmlformats-officedocument.presentationml.slideLayout+xml"), 0);
      if (OPC_PART_INVALID==ret && OPC_PART_INVALID!=(ret=opcPartCreate(c, _X("ppt/slideLayouts/slideLayout6.xml"), _X("application/vnd.openxmlformats-officedocument.presentationml.slideLayout+xml"), 0))) {
          //adding content
           opcContainerOutputStream *out=opcContainerCreateOutputStream(c, ret, OPC_COMPRESSIONOPTION_NORMAL);
@@ -2213,7 +2213,7 @@ static opcPart create_ppt_slideLayouts_slideLayout6_xml(opcContainer *c) {
 }
 
 static opcPart create_ppt_slideLayouts_slideLayout7_xml(opcContainer *c) {
-     opcPart ret=opcPartOpen(c, _X("ppt/slideLayouts/slideLayout7.xml"), _X("application/vnd.openxmlformats-officedocument.presentationml.slideLayout+xml"), 0);
+     opcPart ret=opcPartFind(c, _X("ppt/slideLayouts/slideLayout7.xml"), _X("application/vnd.openxmlformats-officedocument.presentationml.slideLayout+xml"), 0);
      if (OPC_PART_INVALID==ret && OPC_PART_INVALID!=(ret=opcPartCreate(c, _X("ppt/slideLayouts/slideLayout7.xml"), _X("application/vnd.openxmlformats-officedocument.presentationml.slideLayout+xml"), 0))) {
          //adding content
           opcContainerOutputStream *out=opcContainerCreateOutputStream(c, ret, OPC_COMPRESSIONOPTION_NORMAL);
@@ -2315,7 +2315,7 @@ static opcPart create_ppt_slideLayouts_slideLayout7_xml(opcContainer *c) {
 }
 
 static opcPart create_ppt_slideLayouts_slideLayout8_xml(opcContainer *c) {
-     opcPart ret=opcPartOpen(c, _X("ppt/slideLayouts/slideLayout8.xml"), _X("application/vnd.openxmlformats-officedocument.presentationml.slideLayout+xml"), 0);
+     opcPart ret=opcPartFind(c, _X("ppt/slideLayouts/slideLayout8.xml"), _X("application/vnd.openxmlformats-officedocument.presentationml.slideLayout+xml"), 0);
      if (OPC_PART_INVALID==ret && OPC_PART_INVALID!=(ret=opcPartCreate(c, _X("ppt/slideLayouts/slideLayout8.xml"), _X("application/vnd.openxmlformats-officedocument.presentationml.slideLayout+xml"), 0))) {
          //adding content
           opcContainerOutputStream *out=opcContainerCreateOutputStream(c, ret, OPC_COMPRESSIONOPTION_NORMAL);
@@ -2599,7 +2599,7 @@ static opcPart create_ppt_slideLayouts_slideLayout8_xml(opcContainer *c) {
 }
 
 static opcPart create_ppt_slideLayouts_slideLayout9_xml(opcContainer *c) {
-     opcPart ret=opcPartOpen(c, _X("ppt/slideLayouts/slideLayout9.xml"), _X("application/vnd.openxmlformats-officedocument.presentationml.slideLayout+xml"), 0);
+     opcPart ret=opcPartFind(c, _X("ppt/slideLayouts/slideLayout9.xml"), _X("application/vnd.openxmlformats-officedocument.presentationml.slideLayout+xml"), 0);
      if (OPC_PART_INVALID==ret && OPC_PART_INVALID!=(ret=opcPartCreate(c, _X("ppt/slideLayouts/slideLayout9.xml"), _X("application/vnd.openxmlformats-officedocument.presentationml.slideLayout+xml"), 0))) {
          //adding content
           opcContainerOutputStream *out=opcContainerCreateOutputStream(c, ret, OPC_COMPRESSIONOPTION_NORMAL);
@@ -2859,7 +2859,7 @@ static opcPart create_ppt_slideLayouts_slideLayout9_xml(opcContainer *c) {
 }
 
 static opcPart create_ppt_slideMasters_slideMaster1_xml(opcContainer *c) {
-     opcPart ret=opcPartOpen(c, _X("ppt/slideMasters/slideMaster1.xml"), _X("application/vnd.openxmlformats-officedocument.presentationml.slideMaster+xml"), 0);
+     opcPart ret=opcPartFind(c, _X("ppt/slideMasters/slideMaster1.xml"), _X("application/vnd.openxmlformats-officedocument.presentationml.slideMaster+xml"), 0);
      if (OPC_PART_INVALID==ret && OPC_PART_INVALID!=(ret=opcPartCreate(c, _X("ppt/slideMasters/slideMaster1.xml"), _X("application/vnd.openxmlformats-officedocument.presentationml.slideMaster+xml"), 0))) {
          //adding content
           opcContainerOutputStream *out=opcContainerCreateOutputStream(c, ret, OPC_COMPRESSIONOPTION_NORMAL);
@@ -3387,7 +3387,7 @@ static opcPart create_ppt_slideMasters_slideMaster1_xml(opcContainer *c) {
 }
 
 static opcPart create_ppt_slides_slide1_xml(opcContainer *c) {
-     opcPart ret=opcPartOpen(c, _X("ppt/slides/slide1.xml"), _X("application/vnd.openxmlformats-officedocument.presentationml.slide+xml"), 0);
+     opcPart ret=opcPartFind(c, _X("ppt/slides/slide1.xml"), _X("application/vnd.openxmlformats-officedocument.presentationml.slide+xml"), 0);
      if (OPC_PART_INVALID==ret && OPC_PART_INVALID!=(ret=opcPartCreate(c, _X("ppt/slides/slide1.xml"), _X("application/vnd.openxmlformats-officedocument.presentationml.slide+xml"), 0))) {
          //adding content
           opcContainerOutputStream *out=opcContainerCreateOutputStream(c, ret, OPC_COMPRESSIONOPTION_NORMAL);
@@ -3470,7 +3470,7 @@ static opcPart create_ppt_slides_slide1_xml(opcContainer *c) {
 }
 
 static opcPart create_ppt_tableStyles_xml(opcContainer *c) {
-     opcPart ret=opcPartOpen(c, _X("ppt/tableStyles.xml"), _X("application/vnd.openxmlformats-officedocument.presentationml.tableStyles+xml"), 0);
+     opcPart ret=opcPartFind(c, _X("ppt/tableStyles.xml"), _X("application/vnd.openxmlformats-officedocument.presentationml.tableStyles+xml"), 0);
      if (OPC_PART_INVALID==ret && OPC_PART_INVALID!=(ret=opcPartCreate(c, _X("ppt/tableStyles.xml"), _X("application/vnd.openxmlformats-officedocument.presentationml.tableStyles+xml"), 0))) {
          //adding content
           opcContainerOutputStream *out=opcContainerCreateOutputStream(c, ret, OPC_COMPRESSIONOPTION_NORMAL);
@@ -3485,7 +3485,7 @@ static opcPart create_ppt_tableStyles_xml(opcContainer *c) {
 }
 
 static opcPart create_ppt_theme_theme1_xml(opcContainer *c) {
-     opcPart ret=opcPartOpen(c, _X("ppt/theme/theme1.xml"), _X("application/vnd.openxmlformats-officedocument.theme+xml"), 0);
+     opcPart ret=opcPartFind(c, _X("ppt/theme/theme1.xml"), _X("application/vnd.openxmlformats-officedocument.theme+xml"), 0);
      if (OPC_PART_INVALID==ret && OPC_PART_INVALID!=(ret=opcPartCreate(c, _X("ppt/theme/theme1.xml"), _X("application/vnd.openxmlformats-officedocument.theme+xml"), 0))) {
          //adding content
           opcContainerOutputStream *out=opcContainerCreateOutputStream(c, ret, OPC_COMPRESSIONOPTION_NORMAL);
@@ -3779,7 +3779,7 @@ static opcPart create_ppt_theme_theme1_xml(opcContainer *c) {
 }
 
 static opcPart create_ppt_viewProps_xml(opcContainer *c) {
-     opcPart ret=opcPartOpen(c, _X("ppt/viewProps.xml"), _X("application/vnd.openxmlformats-officedocument.presentationml.viewProps+xml"), 0);
+     opcPart ret=opcPartFind(c, _X("ppt/viewProps.xml"), _X("application/vnd.openxmlformats-officedocument.presentationml.viewProps+xml"), 0);
      if (OPC_PART_INVALID==ret && OPC_PART_INVALID!=(ret=opcPartCreate(c, _X("ppt/viewProps.xml"), _X("application/vnd.openxmlformats-officedocument.presentationml.viewProps+xml"), 0))) {
          //adding content
           opcContainerOutputStream *out=opcContainerCreateOutputStream(c, ret, OPC_COMPRESSIONOPTION_NORMAL);

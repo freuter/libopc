@@ -65,7 +65,7 @@ int main( int argc, const char* argv[] )
         if (2==argc) {
             opcContainer *c=opcContainerOpen(_X(argv[1]), OPC_OPEN_WRITE_ONLY, NULL, NULL);
             opcExtensionRegister(c, _X("xml"), _X("text/xml"));
-            opcPart part=opcPartCreate(c, _X("sample.xml"), NULL, OPC_PART_CREATE | OPC_PART_COMPRESSED);
+            opcPart part=opcPartCreate(c, _X("sample.xml"), NULL, 0);
             mceTextWriter *w=mceTextWriterOpen(c, part, OPC_COMPRESSIONOPTION_FAST);
             mceTextWriterStartDocument(w);
             mceTextWriterRegisterNamespace(w, _X(v1_ns), NULL, MCE_DEFAULT);

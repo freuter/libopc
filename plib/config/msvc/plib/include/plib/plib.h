@@ -133,6 +133,30 @@ typedef size_t psize_t;
 #include <sys/types.h>
 #endif
 
+/**
+ Converts an ASCII string to a xmlChar string. This only works for ASCII strings.
+ */
+#ifndef _X
+#define _X(s) BAD_CAST(s) 
+#endif
+
+/**
+ Converts an xmlChar string to an ASCII string. This only works for ASCII charsets.
+ */
+#ifndef _X2C
+#define _X2C(s) ((char*)(s))
+#endif
+
+
+#define PASSERT(e) assert(e)
+#ifdef NDEBUG
+#define PENSURE(e) (void)(e)
+#else
+#define PENSURE(e) assert(e)
+#endif
+#define PTRUE (0==0)
+#define PFALSE (0==1)
+
 
 #ifdef __cplusplus
 } /* extern "C" */

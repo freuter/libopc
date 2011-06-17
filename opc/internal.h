@@ -30,8 +30,9 @@
  OF THE POSSIBILITY OF SUCH DAMAGE.
  
 */
-/** @file opc/internal.h
+/* @file opc/internal.h
  Contains all internally shared datastructures.
+ This file contains non-public definitions and will not be available for users in the SDK.
 */
 
 #ifndef OPC_INTERNAL_H
@@ -46,9 +47,6 @@
 #ifdef __cplusplus
 extern "C" {
 #endif    
-
-    extern const xmlChar OPC_SEGMENT_CONTENTTYPES[];
-    extern const xmlChar OPC_SEGMENT_ROOTRELS[];
 
     typedef struct OPC_FILERAWBUFFER_STRUCT {
         opcFileRawState state;
@@ -227,7 +225,7 @@ extern "C" {
 
     opc_error_t opcQNameLevelAdd(opcQNameLevel_t **list_array, opc_uint32_t *list_items, opcQNameLevel_t *item);
     opcQNameLevel_t* opcQNameLevelLookup(opcQNameLevel_t *list_array, opc_uint32_t list_items, const xmlChar *ns, const xmlChar *ln);
-    opc_error_t opcQNameLevelCleanup(opcQNameLevel_t *list_array, opc_uint32_t *list_items, opc_uint32_t level, int *max_level);
+    opc_error_t opcQNameLevelCleanup(opcQNameLevel_t *list_array, opc_uint32_t *list_items, opc_uint32_t level, opc_uint32_t *max_level);
     opc_error_t opcQNameLevelPush(opcQNameLevel_t **list_array, opc_uint32_t *list_items, opcQNameLevel_t *item);
     opc_bool_t opcQNameLevelPopIfMatch(opcQNameLevel_t *list_array, opc_uint32_t *list_items, const xmlChar *ns, const xmlChar *ln, opc_uint32_t level);
 

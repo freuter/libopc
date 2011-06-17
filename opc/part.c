@@ -49,7 +49,7 @@ static opcPart opcPartOpenEx(opcContainer *container,
     }
 }
 
-opcPart opcPartOpen(opcContainer *container, 
+opcPart opcPartFind(opcContainer *container, 
                     const xmlChar *absolutePath, 
                     const xmlChar *type,
                     int flags) {

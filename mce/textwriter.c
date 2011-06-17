@@ -31,6 +31,15 @@
  */
 #include <mce/textwriter.h>
 
+struct MCE_TEXTWRITER_STRUCT {
+    xmlTextWriterPtr writer;
+    puint32_t level;
+    mceQNameLevelSet_t registered_set;
+    mceQNameLevelSet_t processcontent_set;
+    const xmlChar *ns_mce;
+};
+
+
 mceTextWriter *mceTextWriterCreateIO(xmlOutputWriteCallback iowrite, xmlOutputCloseCallback  ioclose, void *ioctx, xmlCharEncodingHandlerPtr encoder) {
     mceTextWriter *w=(mceTextWriter*)xmlMalloc(sizeof(mceTextWriter));
     if (NULL!=w) {
@@ -278,4 +287,11 @@ xmlTextWriterPtr xmlNewTextWriterFile(FILE *file) {
     return writer;
 }
 
+mceTextWriter *mceNewTextWriterFile(FILE *file) {
+    return mceTextWriterCreateIO(xmlOutputWrite, xmlOutputClose, file, NULL);
+}
+
+xmlTextWriterPtr mceTextWriterIntern(mceTextWriter *w) {
+    return w->writer;
+}
 

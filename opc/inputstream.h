@@ -41,11 +41,30 @@
 #ifdef __cplusplus
 extern "C" {
 #endif    
+    /**
+      Internal type which represents a binary input stream.
+      */
     typedef struct OPC_CONTAINER_INPUTSTREAM_STRUCT opcContainerInputStream;
 
+    /**
+      Opens the part \c name of the \c container for reading.
+      */
     opcContainerInputStream* opcContainerOpenInputStream(opcContainer *container, const xmlChar *name);
+
+    /**
+     Reads maximal \c buffer_len bytes from the input \c stream to \c buffer. 
+     \return The number of byes read or "0" in case of an error or end-of-stream.
+     */
     opc_uint32_t opcContainerReadInputStream(opcContainerInputStream* stream, opc_uint8_t *buffer, opc_uint32_t buffer_len);
+
+    /**
+      Closes the input stream and releases all system resources.
+      */
     opc_error_t opcContainerCloseInputStream(opcContainerInputStream* stream);
+
+    /**
+      Returns the type of compression used for the stream.
+      */
     opcCompressionOption_t opcContainerGetInputStreamCompressionOption(opcContainerInputStream* stream);
 
 #ifdef __cplusplus

@@ -79,7 +79,7 @@ int main( int argc, const char* argv[] )
                 printf("type=%s\n", type);
             }
         } else if (4==argc) {
-            opcPart part=opcPartOpen(c, _X(argv[2]), NULL, 0);
+            opcPart part=opcPartFind(c, _X(argv[2]), NULL, 0);
             if (OPC_PART_INVALID!=part) {
                 opcRelation rel=opcRelationFind(c, part, _X(argv[3]), NULL);
                 if (OPC_RELATION_INVALID!=rel) {

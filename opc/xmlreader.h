@@ -46,7 +46,20 @@
 extern "C" {
 #endif    
 
+    /** 
+      Open an MCE reader for \c partName. Parameters \c URL, \c encoding and \c options will be passed unmodified to 
+      http://xmlsoft.org/html/libxml-xmlreader.html#xmlReaderForIO and they can we NULL, NULL, 0.
+      \note Make sure the part exists.
+      \see opcPartFind
+      */
     opc_error_t opcXmlReaderOpen(opcContainer *container, mceTextReader_t *mceTextReader, const xmlChar *partName, const char * URL, const char * encoding, int options);
+
+    /**
+      Returns an libxml DOM document. Parameters \c URL, \c encoding and \c options will be passed unmodified to 
+      http://xmlsoft.org/html/libxml-parser.html#xmlReadIO and they can we NULL, NULL, 0.
+      \note Make sure the part exists.
+      \see opcPartFind
+      */
     xmlDocPtr opcXmlReaderReadDoc(opcContainer *container, const xmlChar *partName, const char * URL, const char * encoding, int options);
 
 #ifdef __cplusplus

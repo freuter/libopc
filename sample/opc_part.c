@@ -49,7 +49,7 @@ int main( int argc, const char* argv[] )
     opcInitLibrary();
     opcContainer *c=opcContainerOpen(_X(argv[1]), OPC_OPEN_READ_ONLY, NULL, NULL);
     if (NULL!=c) {
-        opcPart part=opcPartOpen(c, _X(argv[2]), NULL, 0);
+        opcPart part=opcPartFind(c, _X(argv[2]), NULL, 0);
         if (OPC_PART_INVALID!=part) {
             const xmlChar *type=opcPartGetType(c, part);
             opc_uint32_t type_len=xmlStrlen(type);
