@@ -47,10 +47,10 @@
 static opc_error_t loadSegment(void *iocontext, 
                                void *userctx, 
                                opcZipSegmentInfo_t *info,
-                               opcFileOpenCallback *open, 
-                               opcFileReadCallback *read, 
-                               opcFileCloseCallback *close, 
-                               opcFileSkipCallback *skip) {
+                               opcZipLoaderOpenCallback *open, 
+                               opcZipLoaderReadCallback *read, 
+                               opcZipLoaderCloseCallback *close, 
+                               opcZipLoaderSkipCallback *skip) {
     opcZip *zip=(opcZip*)userctx;
 //    OPC_ENSURE(0==skip(iocontext));
     OPC_ENSURE(0==open(iocontext));

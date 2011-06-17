@@ -130,7 +130,7 @@ def usage():
 
 if __name__ == "__main__":
 	target_mode=None
-	target_type=None
+	target_type="static"
 	generate_path=None
 	generate_skip=False
 	try:

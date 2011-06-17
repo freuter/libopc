@@ -52,35 +52,35 @@ int main( int argc, const char* argv[] )
 #ifdef WIN32
     _setmode( _fileno( stdout ), _O_BINARY ); // make sure LF are not translated to CR LF on windows...
 #endif
-	if (OPC_ERROR_NONE==opcInitLibrary() && 3==argc) {
-		opcContainer *c=NULL;
-		if (NULL!=(c=opcContainerOpen(_X(argv[1]), OPC_OPEN_READ_ONLY, NULL, NULL))) {
-			opcPart part=OPC_PART_INVALID;
-			if ((part=opcPartOpen(c, _X(argv[2]), NULL, 0))!=OPC_PART_INVALID) {
+    if (OPC_ERROR_NONE==opcInitLibrary() && 3==argc) {
+        opcContainer *c=NULL;
+        if (NULL!=(c=opcContainerOpen(_X(argv[1]), OPC_OPEN_READ_ONLY, NULL, NULL))) {
+            opcPart part=OPC_PART_INVALID;
+            if ((part=opcPartFind(c, _X(argv[2]), NULL, 0))!=OPC_PART_INVALID) {
                 opcContainerInputStream *stream=NULL;
                 if ((stream=opcContainerOpenInputStream(c, part))!=NULL){
                     opc_uint8_t buf[100];
                     opc_uint32_t len=0;
                     while((len=opcContainerReadInputStream(stream, buf, sizeof(buf)))>0) {
                         fwrite(buf, sizeof(opc_uint8_t), len, stdout);
-					}
+                    }
                     opcContainerCloseInputStream(stream);
-				} else {
-					fprintf(stderr, "ERROR: part \"%s\" could not be opened for reading.\n", argv[2]);
-				}
-			} else {
-				fprintf(stderr, "ERROR: part \"%s\" could not be opened in \"%s\".\n", argv[2], argv[1]);
-			}
-			opcContainerClose(c, OPC_CLOSE_NOW);
-		} else {
-			fprintf(stderr, "ERROR: file \"%s\" could not be opened.\n", argv[1]);
-		}
-		opcFreeLibrary();
-	} else if (2==argc) {
-		fprintf(stderr, "ERROR: initialization of libopc failed.\n");	
-	} else {
-		fprintf(stderr, "opc_extract FILENAME PART\n\n");
-		fprintf(stderr, "Sample: opc_extract test.docx word/document.xml\n");
-	}
-	return 0;
+                } else {
+                    fprintf(stderr, "ERROR: part \"%s\" could not be opened for reading.\n", argv[2]);
+                }
+            } else {
+                fprintf(stderr, "ERROR: part \"%s\" could not be opened in \"%s\".\n", argv[2], argv[1]);
+            }
+            opcContainerClose(c, OPC_CLOSE_NOW);
+        } else {
+            fprintf(stderr, "ERROR: file \"%s\" could not be opened.\n", argv[1]);
+        }
+        opcFreeLibrary();
+    } else if (2==argc) {
+        fprintf(stderr, "ERROR: initialization of libopc failed.\n");    
+    } else {
+        fprintf(stderr, "opc_extract FILENAME PART\n\n");
+        fprintf(stderr, "Sample: opc_extract test.docx word/document.xml\n");
+    }
+    return 0;
 }

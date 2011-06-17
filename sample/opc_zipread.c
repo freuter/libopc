@@ -57,10 +57,10 @@ static opc_bool_t verify_crc = OPC_FALSE;
 opc_error_t loadSegment(void *iocontext, 
                         void *userctx, 
                         opcZipSegmentInfo_t *info,
-                        opcFileOpenCallback *open, 
-                        opcFileReadCallback *read, 
-                        opcFileCloseCallback *close, 
-                        opcFileSkipCallback *skip) {
+                        opcZipLoaderOpenCallback *open, 
+                        opcZipLoaderReadCallback *read, 
+                        opcZipLoaderCloseCallback *close, 
+                        opcZipLoaderSkipCallback *skip) {
     printf("%i: %s%s(%i%s) %i/%i %i/%i...", (int)info->stream_ofs, 
                               info->name, 
                               (info->rels_segment?"(.rels)":""),

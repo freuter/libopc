@@ -722,10 +722,10 @@ opc_error_t opcContainerDump(opcContainer *c, FILE *out) {
 static opc_error_t opcContainerZipLoaderLoadSegment(void *iocontext, 
                               void *userctx, 
                               opcZipSegmentInfo_t *info, 
-                              opcFileOpenCallback *open, 
-                              opcFileReadCallback *read, 
-                              opcFileCloseCallback *close, 
-                              opcFileSkipCallback *skip) {
+                              opcZipLoaderOpenCallback *open, 
+                              opcZipLoaderReadCallback *read, 
+                              opcZipLoaderCloseCallback *close, 
+                              opcZipLoaderSkipCallback *skip) {
     opc_error_t err=OPC_ERROR_NONE;
     opcContainer *c=(opcContainer *)userctx;
     OPC_ENSURE(0==skip(iocontext));
@@ -1398,7 +1398,7 @@ opcQNameLevel_t* opcQNameLevelLookup(opcQNameLevel_t *list_array, opc_uint32_t l
     return (ret?list_array+i:NULL);
 }
 
-opc_error_t opcQNameLevelCleanup(opcQNameLevel_t *list_array, opc_uint32_t *list_items, opc_uint32_t level, int *max_level) {
+opc_error_t opcQNameLevelCleanup(opcQNameLevel_t *list_array, opc_uint32_t *list_items, opc_uint32_t level, opc_uint32_t *max_level) {
     opc_uint32_t i=0;
     for(opc_uint32_t j=0;j<*list_items;j++) {
         if (list_array[j].level>=level) {

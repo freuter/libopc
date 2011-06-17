@@ -77,12 +77,10 @@
 
 /** \example mce_read.c
  Demonstrates basic MCE proprocessing.
- \todo MCE functionality is not implemented in this release, so this example is not yet running.
  */
 
 /** \example mce_write.c
  Demonstrates basic MCE proprocessing.
- \todo MCE functionality is not implemented in this release, so this example is not yet running.
 */
 
 /** \example opc_image.c
@@ -122,13 +120,13 @@
 
 int main( int argc, const char* argv[] )
 {
-	if (opcInitLibrary()) {
-		printf("libopc as well as zlib and libxml2 are ready to use.\n");
-		opcFreeLibrary();
-		return 0;
-	}  else  {
-		printf("error initializing libopc.\n ");
-		return 1;
-	}
+    if (OPC_ERROR_NONE==opcInitLibrary()) {
+        printf("libopc as well as zlib and libxml2 are ready to use.\n");
+        opcFreeLibrary();
+        return 0;
+    }  else  {
+        printf("error initializing libopc.\n ");
+        return 1;
+    }
 }
 

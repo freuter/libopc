@@ -31,6 +31,7 @@
  
 */
 /** @file opc/helper.h
+  Contains helper functions for the opc module.
 */
 #include <opc/config.h>
 
@@ -46,7 +47,14 @@ extern "C" {
 } /* extern "C" */
 #endif    
 
+    /**
+      Constructs a segment name.
+      */
     opc_uint16_t opcHelperAssembleSegmentName(char *out, opc_uint16_t out_size, const xmlChar *name, opc_uint32_t segment_number, opc_uint32_t next_segment_id, opc_bool_t rels_segment, opc_uint16_t *out_max);
+
+    /**
+      Splits a filename into the segment informations.
+      */
     opc_error_t opcHelperSplitFilename(opc_uint8_t *filename, opc_uint32_t filename_length, opc_uint32_t *segment_number, opc_bool_t *last_segment, opc_bool_t *rel_segment);
 
 #endif /* OPC_HELPER_H */

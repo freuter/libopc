@@ -54,10 +54,10 @@
 static opc_error_t addSegment(void *iocontext, 
                        void *userctx, 
                        opcZipSegmentInfo_t *info, 
-                       opcFileOpenCallback *open, 
-                       opcFileReadCallback *read, 
-                       opcFileCloseCallback *close, 
-                       opcFileSkipCallback *skip) {
+                       opcZipLoaderOpenCallback *open, 
+                       opcZipLoaderReadCallback *read, 
+                       opcZipLoaderCloseCallback *close, 
+                       opcZipLoaderSkipCallback *skip) {
     opcZip *zip=(opcZip *)userctx;
     OPC_ENSURE(0==skip(iocontext));
     OPC_ENSURE(-1!=opcZipLoadSegment(zip, xmlStrdup(info->name), info->rels_segment, info));

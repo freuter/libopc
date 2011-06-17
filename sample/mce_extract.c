@@ -119,7 +119,7 @@ int main( int argc, const char* argv[] )
                 dumpPartsAsJSON(c, writer_indent);
             } else {
                 opcPart part=OPC_PART_INVALID;
-                if ((part=opcPartOpen(c, partName8, NULL, 0))!=OPC_PART_INVALID) {
+                if ((part=opcPartFind(c, partName8, NULL, 0))!=OPC_PART_INVALID) {
                     mceTextReader_t reader;
                     if (OPC_ERROR_NONE==opcXmlReaderOpen(c, &reader, part, NULL, NULL, 0)) {
                         mceTextReaderDisableMCE(&reader, !reader_mce);

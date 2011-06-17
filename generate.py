@@ -429,7 +429,7 @@ def generateVCXPROJ(conf, ctx, lib, type):
 						cpp_defs=cpp_defs+define+";"
 					else:
 						cpp_defs=cpp_defs+define+"="+dep_lib["defines"][define]+";"
-	cpp_defs=cpp_defs+"%(PreprocessorDefinitions)"
+	cpp_defs=cpp_defs+"_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)"
 	out.write("<PreprocessorDefinitions>"+cpp_defs+"</PreprocessorDefinitions>\n" )
 	AdditionalIncludeDirectories=""
 	for dir in lib["header"]["includes"]:
@@ -465,6 +465,7 @@ def generateVCXPROJ(conf, ctx, lib, type):
 	out.write("<ClCompile>\n");
 	out.write("<WarningLevel>Level3</WarningLevel>\n")
 	out.write("<Optimization>Disabled</Optimization>\n")
+	out.write("<DisableSpecificWarnings>4996</DisableSpecificWarnings>\n")
 	out.write("</ClCompile>\n");
 	if "Application"==type:
 		out.write("<Link>\n");
@@ -475,6 +476,7 @@ def generateVCXPROJ(conf, ctx, lib, type):
 	out.write("<ItemDefinitionGroup Condition=\"'$(Configuration)|$(Platform)'=='Release|Win32'\">\n")
 	out.write("<ClCompile>\n")
 	out.write("<Optimization>MaxSpeed</Optimization>\n")
+	out.write("<DisableSpecificWarnings>4996</DisableSpecificWarnings>\n")
 	out.write("<FunctionLevelLinking>true</FunctionLevelLinking> \n")
 	out.write("<IntrinsicFunctions>true</IntrinsicFunctions> \n")
 	out.write("</ClCompile>\n");

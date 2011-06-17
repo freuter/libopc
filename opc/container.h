@@ -37,7 +37,7 @@
  OPC container can be opened in READ-ONLY mode, WRITE-ONLY mode, READ/WRITE mode, TEMPLATE mode and TRANSITION mode. 
  The most notable mode is the READ/WRITE mode, which gives you concurrent stream-based READ and WRITE access to a 
  single ZIP-based OPC container. This is achieved without the use of temporary files by taking advantage of the 
- OPC specific “interleave” mode. \todo{REF TO ISO}
+ OPC specific “interleave” mode. \see http://standards.iso.org/ittf/PubliclyAvailableStandards/c051459_ISOIEC_29500-2_2008(E).zip
  
  The TEMPLATE mode allows very fast customized "cloning" of ZIP-based OPC container by using "RAW access" to the ZIP streams. 
  The TRANSITION mode is a special version of the TEMPLATE mode, which allows transition-based READ/WRITE access to the 

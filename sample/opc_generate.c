@@ -199,9 +199,9 @@ static void generate_parts(opcContainer *c, FILE *out) {
             const xmlChar *override_type=opcPartGetTypeEx(c, part, OPC_TRUE);
             fprintf(out, "static opcPart create_%s(opcContainer *c) {\n", norm_part);
             if (NULL!=override_type) {
-                fprintf(out, "     opcPart ret=opcPartOpen(c, _X(\"%s\"), _X(\"%s\"), 0);\n", part, override_type);
+                fprintf(out, "     opcPart ret=opcPartFind(c, _X(\"%s\"), _X(\"%s\"), 0);\n", part, override_type);
             } else {
-                fprintf(out, "     opcPart ret=opcPartOpen(c, _X(\"%s\"), NULL, 0);\n", part);
+                fprintf(out, "     opcPart ret=opcPartFind(c, _X(\"%s\"), NULL, 0);\n", part);
             }
             if (NULL!=override_type) {
                 fprintf(out, "     if (OPC_PART_INVALID==ret && OPC_PART_INVALID!=(ret=opcPartCreate(c, _X(\"%s\"), _X(\"%s\"), 0))) {\n", part, override_type);

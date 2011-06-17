@@ -33,7 +33,7 @@
 <PropertyGroup />
 <ItemDefinitionGroup>
 <ClCompile>
-<PreprocessorDefinitions>WIN32;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+<PreprocessorDefinitions>WIN32;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
 <AdditionalIncludeDirectories>..\..\config\win32-msvc\zlib-1.2.5;..\..\third_party\zlib-1.2.5;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
 </ClCompile>
 </ItemDefinitionGroup>
@@ -41,11 +41,13 @@
 <ClCompile>
 <WarningLevel>Level3</WarningLevel>
 <Optimization>Disabled</Optimization>
+<DisableSpecificWarnings>4996</DisableSpecificWarnings>
 </ClCompile>
 </ItemDefinitionGroup>
 <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
 <ClCompile>
 <Optimization>MaxSpeed</Optimization>
+<DisableSpecificWarnings>4996</DisableSpecificWarnings>
 <FunctionLevelLinking>true</FunctionLevelLinking> 
 <IntrinsicFunctions>true</IntrinsicFunctions> 
 </ClCompile>
