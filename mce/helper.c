@@ -101,6 +101,7 @@ pbool_t mceSkipStackSkip(mceSkipStack_t *skip_stack, puint32_t level) {
 
 pbool_t mceCtxInit(mceCtx_t *ctx) {
     memset(ctx, 0, sizeof(*ctx));
+    mceCtxSuspendProcessing(ctx, _X("http://schemas.openxmlformats.org/presentationml/2006/main"), _X("extLst"));
     return PTRUE;
 }
 
@@ -113,11 +114,13 @@ pbool_t mceCtxCleanup(mceCtx_t *ctx) {
     while (NULL!=mceSkipStackTop(&ctx->skip_stack)) mceSkipStackPop(&ctx->skip_stack);
     PASSERT(ctx->error!=MCE_ERROR_NONE || 0==ctx->processcontent_set.list_items);
     PENSURE(mceQNameLevelCleanup(&ctx->processcontent_set, 0));
-
+    PENSURE(mceQNameLevelCleanup(&ctx->suspended_set, 0));
+    PASSERT(ctx->error!=MCE_ERROR_NONE || 0==ctx->suspended_level);        
     if (NULL!=ctx->ignorable_set.list_array) xmlFree(ctx->ignorable_set.list_array);
     if (NULL!=ctx->understands_set.list_array) xmlFree(ctx->understands_set.list_array);
     if (NULL!=ctx->skip_stack.stack_array) xmlFree(ctx->skip_stack.stack_array);
     if (NULL!=ctx->processcontent_set.list_array) xmlFree(ctx->processcontent_set.list_array);
+    if (NULL!=ctx->suspended_set.list_array) xmlFree(ctx->suspended_set.list_array);
 
     return PTRUE;
 }
@@ -126,3 +129,6 @@ pbool_t mceCtxUnderstandsNamespace(mceCtx_t *ctx, const xmlChar *ns) {
     return mceQNameLevelAdd(&ctx->understands_set, ns, NULL, 0);
 }
 
+pbool_t mceCtxSuspendProcessing(mceCtx_t *ctx, const xmlChar *ns, const char *ln) {
+    return mceQNameLevelAdd(&ctx->suspended_set, ns, ln, 0);    
+}
