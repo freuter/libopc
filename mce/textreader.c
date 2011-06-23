@@ -219,15 +219,33 @@ static pbool_t mceTextReaderProcessEndElement(xmlTextReader *reader, mceCtx_t *c
         mceQNameLevelCleanup(&ctx->ignorable_set, level);
         mceQNameLevelCleanup(&ctx->processcontent_set, level);
         mceQNameLevelCleanup(&ctx->understands_set, level);
+        mceQNameLevelCleanup(&ctx->suspended_set, level); 
         return PFALSE;
     }
 }
 
 int mceTextReaderPostprocess(xmlTextReader *reader, mceCtx_t *ctx, int ret) {
-    pbool_t skip=!ctx->mce_disabled;
+    pbool_t suspend=ctx->mce_disabled;
     if (MCE_ERROR_NONE!=ctx->error) {
         ret=-1;
+    } else {
+        if (XML_READER_TYPE_ELEMENT==xmlTextReaderNodeType(reader)) {
+            const xmlChar *ns=xmlTextReaderNamespaceUri(reader);
+            const xmlChar *ln=xmlTextReaderLocalName(reader);
+            if (ctx->suspended_level>0 || NULL!=mceQNameLevelLookup(&ctx->suspended_set, ns, ln, PFALSE)) {
+                suspend=PTRUE;
+                if (!xmlTextReaderIsEmptyElement(reader)) {
+                    ctx->suspended_level++;
+                }
+            }
+        } else if (ctx->suspended_level>0) {
+            suspend=PTRUE;
+            if (XML_READER_TYPE_END_ELEMENT==xmlTextReaderNodeType(reader)) {
+                ctx->suspended_level--;
+            }
+        }
     }
+    pbool_t skip=!suspend;
     while(1==ret && skip) {
         if (XML_READER_TYPE_ELEMENT==xmlTextReaderNodeType(reader)) {
             skip=mceTextReaderProcessStartElement(reader, ctx, xmlTextReaderDepth(reader));
@@ -326,7 +344,9 @@ int mceTextReaderDump(mceTextReader_t *mceTextReader, xmlTextWriter *writer, pbo
             if (!fragment) xmlTextWriterEndDocument(writer);
         }
     } else {
-        ret=mceTextReaderNext(mceTextReader); // skip element
+        if (1==(ret=mceTextReaderNext(mceTextReader))) { // skip element
+            ret=mceTextReaderDump(mceTextReader, writer, fragment);
+        }
     }
     return ret;
 }
@@ -336,7 +356,7 @@ int mceTextReaderUnderstandsNamespace(mceTextReader_t *mceTextReader, const xmlC
 }
 
 pbool_t mceTextReaderDisableMCE(mceTextReader_t *mceTextReader, pbool_t flag) {
-    pbool_t ret=mceTextReader->mceCtx.mce_disabled;
+    pbool_t ret=mceTextReader->mceCtx.mce_disabled>0;
     mceTextReader->mceCtx.mce_disabled=flag;
     return ret;
 }

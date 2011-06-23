@@ -105,9 +105,11 @@ extern "C" {
         mceQNameLevelSet_t ignorable_set;
         mceQNameLevelSet_t understands_set;
         mceQNameLevelSet_t processcontent_set;
+        mceQNameLevelSet_t suspended_set;
         mceSkipStack_t skip_stack;
         mceError_t error;
-        pbool_t mce_disabled;
+        pbool_t mce_disabled;        
+        puint32_t suspended_level;
     } mceCtx_t;
 
     /**
@@ -160,6 +162,12 @@ extern "C" {
     */
     pbool_t mceCtxUnderstandsNamespace(mceCtx_t *ctx, const xmlChar *ns);
 
+    /**
+     Register the namespace \ns in \c ctx.
+     */
+    pbool_t mceCtxSuspendProcessing(mceCtx_t *ctx, const xmlChar *ns, const char *ln);
+    
+    
 #ifdef __cplusplus
 } /* extern "C" */
 #endif
