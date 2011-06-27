@@ -42,7 +42,9 @@
 
 #ifdef __cplusplus
 extern "C" {
-#endif   
+#endif
+
+#define MCE_NAMESPACE_SUBSUMPTION_ENABLED 0
 
 #ifdef __cplusplus
 } /* extern "C" */

@@ -1045,7 +1045,8 @@ if __name__ == "__main__":
 		opts, args = getopt.getopt(sys.argv[1:], "h", ["help", "include=", "config-dir=", "print-env=", 
 			"package=", "install=", 
 			"with-zlib-cppflags=", "with-zlib-ldflags=", "with-zlib=",
-			"with-libxml-cppflags=", "with-libxml-ldflags=", "with-libxml="])
+			"with-libxml-cppflags=", "with-libxml-ldflags=", "with-libxml=",
+			"type="])
 	except getopt.GetoptError, err:
 		# print help information and exit:
 		print str(err) # will print something like "option -a not recognized"
@@ -1056,6 +1057,7 @@ if __name__ == "__main__":
 	includes=[]
 	dump_env=[]
 	install_zip=None
+	target_type="static"
 	for o, a in opts:
 		if o in ("-h", "--help"):
 			usage()
@@ -1083,13 +1085,15 @@ if __name__ == "__main__":
 			set_external_flag(ctx, "xml", "cppflags", a)
 		elif o in ("--with-libxml-ldflags"):
 			set_external_flag(ctx, "xml", "ldflags", a)
+		elif o in ("--type"):
+			target_type=a
 
 	for platform in args:
 		ctx["platforms"].append(platform)
 
 	if 1==len(ctx["platforms"]) and None!=install_zip and 1==len(includes):
 		ctx["root"]=os.path.abspath(os.path.split(includes[0])[0])
-		generateZipPackage(ctx, includes[0], install_zip)
+		generateZipPackage(ctx, includes[0], target_type, install_zip)
 	elif 1==len(ctx["platforms"]) and platformSubseteqTest(ctx["platforms"][0], "win32-*-msvc-*") and 1==len(includes):
 		ctx["root"]=os.path.abspath(os.path.split(includes[0])[0])
 		generateWin32(ctx, includes[0])

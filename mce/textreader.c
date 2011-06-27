@@ -77,7 +77,11 @@ void mceRaiseError(xmlTextReader *reader, mceCtx_t *ctx, mceError_t error, const
     va_end(args);
 }
 
+
 static char ns_mce[]="http://schemas.openxmlformats.org/markup-compatibility/2006";
+static const char ns_xml[]="http://www.w3.org/2000/xmlns/";
+static const char _xmlns[]="xmlns";
+
 static void mceTextReaderProcessAttributes(xmlTextReader *reader, mceCtx_t *ctx, puint32_t level) {
     if (1==xmlTextReaderHasAttributes(reader)) {
         if (1==xmlTextReaderMoveToFirstAttribute(reader)) {
@@ -93,7 +97,7 @@ static void mceTextReaderProcessAttributes(xmlTextReader *reader, mceCtx_t *ctx,
                         }
                         xmlFree(v);
                 } else if (0==xmlStrcmp(_X("ProcessContent"), xmlTextReaderConstLocalName(reader)) &&
-                    0==xmlStrcmp(_X(ns_mce), xmlTextReaderConstNamespaceUri(reader))) {
+                           0==xmlStrcmp(_X(ns_mce), xmlTextReaderConstNamespaceUri(reader))) {
                         xmlChar *v=xmlStrDupArray(xmlTextReaderConstValue(reader));
                         xmlChar *qname=v;
                         for(int qname_len=0;(qname_len=xmlStrlen(qname))>0;qname+=qname_len+1) {
@@ -112,7 +116,7 @@ static void mceTextReaderProcessAttributes(xmlTextReader *reader, mceCtx_t *ctx,
                         }
                         xmlFree(v);
                 } else if (0==xmlStrcmp(_X("MustUnderstand"), xmlTextReaderConstLocalName(reader)) &&
-                    0==xmlStrcmp(_X(ns_mce), xmlTextReaderConstNamespaceUri(reader))) {
+                           0==xmlStrcmp(_X(ns_mce), xmlTextReaderConstNamespaceUri(reader))) {
                         xmlChar *v=xmlStrDupArray(xmlTextReaderConstValue(reader));
                         for(xmlChar *prefix=v;*prefix!=0;prefix+=1+xmlStrlen(prefix)) {
                             xmlChar *ns_=xmlTextReaderLookupNamespace(reader, prefix);
@@ -121,9 +125,25 @@ static void mceTextReaderProcessAttributes(xmlTextReader *reader, mceCtx_t *ctx,
                             }
                         }
                         xmlFree(v);
+#if (MCE_NAMESPACE_SUBSUMPTION_ENABLED)
+                } else if (0==xmlStrcmp(_X(ns_xml), xmlTextReaderConstNamespaceUri(reader))) {
+                    mceQNameLevel_t *qnl=mceQNameLevelLookup(&ctx->subsume_prefix_set, xmlTextReaderConstValue(reader), NULL, PTRUE);
+                    if (NULL!=qnl) {
+                        const xmlChar *prefix=xmlTextReaderConstLocalName(reader);
+                        if (0!=xmlStrcmp(prefix, qnl->ln)) {
+                            // different binding!
+                            printf("prefix=%s\n", prefix);
+                            PASSERT(0); //@TODO add store prefix for subsumption namespaces...
+                        }
+                    }
+                } else {
+                    const xmlChar *ns_orig=xmlTextReaderConstNamespaceUri(reader);
+                    const xmlChar *ns=mceTextReaderSubsumeNS(ctx, ns_orig, xmlTextReaderConstLocalName(reader));
+                    if (ns_orig!=ns) {
+                        // namespace needs to be subsumed...
+                    }
+#endif
                 }
-
-
             } while (1==xmlTextReaderMoveToNextAttribute(reader));
         }
         xmlAttrPtr remove=NULL;
@@ -153,11 +173,9 @@ static void mceTextReaderProcessAttributes(xmlTextReader *reader, mceCtx_t *ctx,
     }
 }
 
-static pbool_t mceTextReaderProcessStartElement(xmlTextReader *reader, mceCtx_t *ctx, puint32_t level) {
+static pbool_t mceTextReaderProcessStartElement(xmlTextReader *reader, mceCtx_t *ctx, puint32_t level, const xmlChar *ns, const xmlChar *ln) {
     if (!mceSkipStackSkip(&ctx->skip_stack, level)) {
         mceTextReaderProcessAttributes(reader, ctx, level);
-        const xmlChar *ns=xmlTextReaderNamespaceUri(reader);
-        const xmlChar *ln=xmlTextReaderLocalName(reader);
         if (0==xmlStrcmp(_X(ns_mce), ns) && 0==xmlStrcmp(_X("AlternateContent"), ln)) {
             mceSkipStackPush(&ctx->skip_stack, level, level+1, MCE_SKIP_STATE_ALTERNATE_CONTENT);
         } else if (0==xmlStrcmp(_X(ns_mce), ns) && 0==xmlStrcmp(_X("Choice"), ln)) {
@@ -206,7 +224,7 @@ static pbool_t mceTextReaderProcessStartElement(xmlTextReader *reader, mceCtx_t 
     return mceSkipStackSkip(&ctx->skip_stack, level);
 }
 
-static pbool_t mceTextReaderProcessEndElement(xmlTextReader *reader, mceCtx_t *ctx, puint32_t level) {
+static pbool_t mceTextReaderProcessEndElement(xmlTextReader *reader, mceCtx_t *ctx, puint32_t level, const xmlChar *ns, const xmlChar *ln) {
     if (mceSkipStackSkip(&ctx->skip_stack, level)) {
         if (mceSkipStackTop(&ctx->skip_stack)->level_start==level) {
             mceSkipStackPop(&ctx->skip_stack);
@@ -226,12 +244,14 @@ static pbool_t mceTextReaderProcessEndElement(xmlTextReader *reader, mceCtx_t *c
 
 int mceTextReaderPostprocess(xmlTextReader *reader, mceCtx_t *ctx, int ret) {
     pbool_t suspend=ctx->mce_disabled;
+    const xmlChar *ns=NULL;
+    const xmlChar *ln=NULL;
     if (MCE_ERROR_NONE!=ctx->error) {
         ret=-1;
     } else {
+        ns=xmlTextReaderNamespaceUri(reader);
+        ln=xmlTextReaderLocalName(reader);
         if (XML_READER_TYPE_ELEMENT==xmlTextReaderNodeType(reader)) {
-            const xmlChar *ns=xmlTextReaderNamespaceUri(reader);
-            const xmlChar *ln=xmlTextReaderLocalName(reader);
             if (ctx->suspended_level>0 || NULL!=mceQNameLevelLookup(&ctx->suspended_set, ns, ln, PFALSE)) {
                 suspend=PTRUE;
                 if (!xmlTextReaderIsEmptyElement(reader)) {
@@ -248,17 +268,20 @@ int mceTextReaderPostprocess(xmlTextReader *reader, mceCtx_t *ctx, int ret) {
     pbool_t skip=!suspend;
     while(1==ret && skip) {
         if (XML_READER_TYPE_ELEMENT==xmlTextReaderNodeType(reader)) {
-            skip=mceTextReaderProcessStartElement(reader, ctx, xmlTextReaderDepth(reader));
+            skip=mceTextReaderProcessStartElement(reader, ctx, xmlTextReaderDepth(reader), ns, ln);
             if (xmlTextReaderIsEmptyElement(reader)) {
-                PENSURE(mceTextReaderProcessEndElement(reader, ctx, xmlTextReaderDepth(reader))==skip);
+                PENSURE(mceTextReaderProcessEndElement(reader, ctx, xmlTextReaderDepth(reader), ns, ln)==skip);
             }
         } else if (XML_READER_TYPE_END_ELEMENT==xmlTextReaderNodeType(reader)) {
-            skip=mceTextReaderProcessEndElement(reader, ctx, xmlTextReaderDepth(reader));
+            skip=mceTextReaderProcessEndElement(reader, ctx, xmlTextReaderDepth(reader), ns, ln);
         } else {
             skip=mceSkipStackSkip(&ctx->skip_stack, xmlTextReaderDepth(reader));
         }
         if (skip) {
-            PENSURE(-1!=(ret=xmlTextReaderRead(reader))); // skip element
+            if (-1!=(ret=xmlTextReaderRead(reader))) { // skip element
+                ns=xmlTextReaderNamespaceUri(reader); // get next ns
+                ln=xmlTextReaderLocalName(reader);  // get net local name
+            }
         }
         if (MCE_ERROR_NONE!=ctx->error) {
             ret=-1;
@@ -297,8 +320,6 @@ int mceTextReaderDump(mceTextReader_t *mceTextReader, xmlTextWriter *writer, pbo
         if (xmlTextReaderHasAttributes(mceTextReader->reader)) {
             if (1==xmlTextReaderMoveToFirstAttribute(mceTextReader->reader)) {
                 do {
-                    static const char ns_xml[]="http://www.w3.org/2000/xmlns/";
-                    static const char _xmlns[]="xmlns";
                     const xmlChar *attr_ns=xmlTextReaderConstNamespaceUri(mceTextReader->reader);
                     const xmlChar *attr_ln=xmlTextReaderConstLocalName(mceTextReader->reader);
                     const xmlChar *attr_val=xmlTextReaderConstValue(mceTextReader->reader);

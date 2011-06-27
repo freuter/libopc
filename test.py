@@ -112,6 +112,11 @@ def mce_write_test(path):
     test.call(test.build("mce_extract"), [], [test.tmp(path), "--understands", "http://schemas.openxmlformats.org/Circles/v2", "sample.xml"], test.tmp(path+".mce_write.v2.mce_extract"), [], {})
     test.regr(test.docs(path+".mce_write.v2.mce_extract"), test.tmp(path+".mce_write.v2.mce_extract"), False)
 
+def mcepp_test(path):
+    test.rm(test.tmp(path))
+    test.call(test.build("mcepp"), [], [test.docs(path)], test.tmp(path+".mcepp"), [], {})
+    test.regr(test.docs(path+".mcepp"), test.tmp(path+".mcepp"), True)
+
 
 def opc_generate_test(basepath, path):
 	dest=os.path.join(os.path.split(path)[0], os.path.splitext(os.path.split(path)[1])[0]+".c")
@@ -164,7 +169,6 @@ if __name__ == "__main__":
 #	sys.exit(0)
 
 	if None==generate_path:
-
 #		sys.exit(0)
 
 		opc_zipread_test("stream.zip") # fails --- streaming mode is not yet implemented.
@@ -233,6 +237,8 @@ if __name__ == "__main__":
 		mce_extract_test("mce.zip", "circles-mustunderstand.xml", [["v2", "http://schemas.openxmlformats.org/Circles/v2"]], 0)
 
 		mce_write_test("mce_write.zip")
+
+		mcepp_test("extLst.xml")
 
 	else:
 		ignore_list = {  }

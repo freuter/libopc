@@ -106,6 +106,11 @@ extern "C" {
         mceQNameLevelSet_t understands_set;
         mceQNameLevelSet_t processcontent_set;
         mceQNameLevelSet_t suspended_set;
+#if (MCE_NAMESPACE_SUBSUMPTION_ENABLED)
+        mceQNameLevelSet_t subsume_namespace_set;
+        mceQNameLevelSet_t subsume_exclude_set;
+        mceQNameLevelSet_t subsume_prefix_set;
+#endif
         mceSkipStack_t skip_stack;
         mceError_t error;
         pbool_t mce_disabled;        
@@ -114,6 +119,7 @@ extern "C" {
 
     /**
       Add a new tiple (ns, ln, level) to the triple set \c qname_level_set.
+      The \c ns_sub string is optional and will not be touched.
     */
     pbool_t mceQNameLevelAdd(mceQNameLevelSet_t *qname_level_set, const xmlChar *ns, const xmlChar *ln, puint32_t level);
 
@@ -165,9 +171,17 @@ extern "C" {
     /**
      Register the namespace \ns in \c ctx.
      */
-    pbool_t mceCtxSuspendProcessing(mceCtx_t *ctx, const xmlChar *ns, const char *ln);
+    pbool_t mceCtxSuspendProcessing(mceCtx_t *ctx, const xmlChar *ns, const xmlChar *ln);
     
-    
+
+
+#if (MCE_NAMESPACE_SUBSUMPTION_ENABLED)
+    /**
+    Subsume namespace \c ns_new with \c ns_old.
+     */
+    pbool_t mceCtxSubsumeNamespace(mceCtx_t *ctx, const xmlChar *prefix_new, const xmlChar *ns_new, const xmlChar *ns_old);
+#endif
+
 #ifdef __cplusplus
 } /* extern "C" */
 #endif
