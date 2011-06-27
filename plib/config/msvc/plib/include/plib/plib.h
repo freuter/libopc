@@ -140,6 +140,7 @@ typedef size_t psize_t;
 #define _X(s) BAD_CAST(s) 
 #endif
 
+
 /**
  Converts an xmlChar string to an ASCII string. This only works for ASCII charsets.
  */

@@ -115,13 +115,23 @@ pbool_t mceCtxCleanup(mceCtx_t *ctx) {
     PASSERT(ctx->error!=MCE_ERROR_NONE || 0==ctx->processcontent_set.list_items);
     PENSURE(mceQNameLevelCleanup(&ctx->processcontent_set, 0));
     PENSURE(mceQNameLevelCleanup(&ctx->suspended_set, 0));
-    PASSERT(ctx->error!=MCE_ERROR_NONE || 0==ctx->suspended_level);        
+    PASSERT(ctx->error!=MCE_ERROR_NONE || 0==ctx->suspended_level);
+#if (MCE_NAMESPACE_SUBSUMPTION_ENABLED)
+    PENSURE(mceQNameLevelCleanup(&ctx->subsume_namespace_set, 0));
+    PENSURE(mceQNameLevelCleanup(&ctx->subsume_exclude_set, 0));
+    PENSURE(mceQNameLevelCleanup(&ctx->subsume_prefix_set, 0));
+#endif
+    
     if (NULL!=ctx->ignorable_set.list_array) xmlFree(ctx->ignorable_set.list_array);
     if (NULL!=ctx->understands_set.list_array) xmlFree(ctx->understands_set.list_array);
     if (NULL!=ctx->skip_stack.stack_array) xmlFree(ctx->skip_stack.stack_array);
     if (NULL!=ctx->processcontent_set.list_array) xmlFree(ctx->processcontent_set.list_array);
     if (NULL!=ctx->suspended_set.list_array) xmlFree(ctx->suspended_set.list_array);
-
+#if (MCE_NAMESPACE_SUBSUMPTION_ENABLED)
+    if (NULL!=ctx->subsume_namespace_set.list_array) xmlFree(ctx->subsume_namespace_set.list_array);
+    if (NULL!=ctx->subsume_exclude_set.list_array) xmlFree(ctx->subsume_exclude_set.list_array);
+    if (NULL!=ctx->subsume_prefix_set.list_array) xmlFree(ctx->subsume_prefix_set.list_array);
+#endif
     return PTRUE;
 }
 
@@ -129,6 +139,15 @@ pbool_t mceCtxUnderstandsNamespace(mceCtx_t *ctx, const xmlChar *ns) {
     return mceQNameLevelAdd(&ctx->understands_set, ns, NULL, 0);
 }
 
-pbool_t mceCtxSuspendProcessing(mceCtx_t *ctx, const xmlChar *ns, const char *ln) {
-    return mceQNameLevelAdd(&ctx->suspended_set, ns, ln, 0);    
+pbool_t mceCtxSuspendProcessing(mceCtx_t *ctx, const xmlChar *ns, const xmlChar *ln) {
+    return mceQNameLevelAdd(&ctx->suspended_set, ns, ln, 0);
 }
+
+
+#if (MCE_NAMESPACE_SUBSUMPTION_ENABLED)
+pbool_t mceCtxSubsumeNamespace(mceCtx_t *ctx, const xmlChar *prefix_new, const xmlChar *ns_new, const xmlChar *ns_old) {
+    return mceQNameLevelAdd(&ctx->subsume_namespace_set, ns_old, ns_new, 0)
+        && mceQNameLevelAdd(&ctx->subsume_prefix_set, ns_new, prefix_new, 0);
+}
+#endif
+

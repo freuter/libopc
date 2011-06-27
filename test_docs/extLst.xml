@@ -1,0 +1,64 @@
+<?xml version="1.0"?>
+<!-- 
+    http://msdn.microsoft.com/en-us/library/dd926951%28v=office.12%29.aspx 
+-->
+<p:sld xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main" xmlns:p14="http://schemas.microsoft.com/office/powerpoint/2010/main"
+xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+mc:Ignorable="p14">
+  <p:cSld>
+    <p:spTree>
+      <p:pic>
+        <p:nvPicPr>
+          <p:cNvPr id="4" name="video1.wmv">
+            <a:hlinkClick r:id="" action="ppaction://media"/>
+          </p:cNvPr>
+          <p:cNvPicPr>
+            <a:picLocks noChangeAspect="1"/>
+          </p:cNvPicPr>
+          <p:nvPr>
+            <a:videoFile r:link="rId2"/>
+            <p:extLst>
+              <p:ext uri="{DAA4B4D4-6D71-4841-9C94-3DE7FCFB9230}">
+                <p14:media r:embed="rId1">
+                  <p14:bmkLst/>
+                </p14:media>
+              </p:ext>
+            </p:extLst>
+          </p:nvPr>
+        </p:nvPicPr>
+      </p:pic>
+      <p:sp>
+        <p:nvSpPr>
+          <p:cNvPr id="6" name="Rectangle 5"/>
+          <p:cNvSpPr/>
+          <p:nvPr/>
+        </p:nvSpPr>
+      </p:sp>
+    </p:spTree>
+  </p:cSld>
+  <p:extLst>
+    <p:ext uri="{3A86A75C-4F4B-4683-9AE1-C65F6400EC91}">
+      <p14:laserTraceLst>
+        <p14:tracePtLst>
+          <p14:tracePt t="48796" x="6062662" y="3259137"/>
+          <p14:tracePt t="49796" x="6438900" y="3179762"/>
+          <p14:tracePt t="50296" x="0" y="0"/>
+        </p14:tracePtLst>
+        <p14:tracePtLst>
+          <p14:tracePt t="52000" x="1196975" y="2982912"/>
+          <p14:tracePt t="55000" x="0" y="0"/>
+        </p14:tracePtLst>
+      </p14:laserTraceLst>
+    </p:ext>
+    <p:ext uri="{E180D4A7-C9FB-4DFB-919C-405C955672EB}">
+      <p14:showEvtLst>
+        <p14:triggerEvt type="onClick" time="6950" objId="6"/>
+        <p14:playEvt time="12722" objId="4"/>
+        <p14:pauseEvt time="38839" objId="4"/>
+        <p14:seekEvt time="38839" objId="4" seek="10379"/>
+        <p14:resumeEvt time="38859" objId="4"/>
+        <p14:stopEvt time="49628" objId="4"/>
+      </p14:showEvtLst>
+    </p:ext>
+  </p:extLst>
+</p:sld>
