@@ -49,6 +49,7 @@ pbool_t mceQNameLevelAdd(mceQNameLevelSet_t *qname_level_set, const xmlChar *ns,
 
 pbool_t mceQNameLevelCleanup(mceQNameLevelSet_t *qname_level_set, puint32_t level) {
     if (qname_level_set->max_level>=level) {
+        qname_level_set->max_level=0;
         puint32_t i=0;
         for(puint32_t j=0;j<qname_level_set->list_items;j++) {
             if (qname_level_set->list_array[j].level>=level) {
