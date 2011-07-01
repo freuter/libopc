@@ -470,6 +470,7 @@ def generateVCXPROJ(conf, ctx, lib, type):
 	if "Application"==type:
 		out.write("<Link>\n");
 		out.write("<GenerateDebugInformation>true</GenerateDebugInformation>\n")
+		out.write("<SubSystem>Console</SubSystem>\n")
 		out.write("</Link>\n");	
         out.write("</ItemDefinitionGroup>\n");
 
@@ -483,6 +484,7 @@ def generateVCXPROJ(conf, ctx, lib, type):
 	if "Application"==type:
 		out.write("<Link>\n");
 		out.write("<GenerateDebugInformation>false</GenerateDebugInformation>\n")
+		out.write("<SubSystem>Console</SubSystem>\n")
 		out.write("<EnableCOMDATFolding>true</EnableCOMDATFolding>\n")
 		out.write("<OptimizeReferences>true</OptimizeReferences>\n")
 		out.write("</Link>\n");	
