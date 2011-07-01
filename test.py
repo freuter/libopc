@@ -239,6 +239,8 @@ if __name__ == "__main__":
 		mce_write_test("mce_write.zip")
 
 		mcepp_test("extLst.xml")
+		mcepp_test("mce-test-1.xml")
+		mcepp_test("mce-test-2.xml")
 
 	else:
 		ignore_list = {  }

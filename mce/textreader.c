@@ -225,6 +225,7 @@ static pbool_t mceTextReaderProcessStartElement(xmlTextReader *reader, mceCtx_t 
 }
 
 static pbool_t mceTextReaderProcessEndElement(xmlTextReader *reader, mceCtx_t *ctx, puint32_t level, const xmlChar *ns, const xmlChar *ln) {
+    pbool_t skiped=PFALSE;
     if (mceSkipStackSkip(&ctx->skip_stack, level)) {
         if (mceSkipStackTop(&ctx->skip_stack)->level_start==level) {
             mceSkipStackPop(&ctx->skip_stack);
@@ -232,14 +233,13 @@ static pbool_t mceTextReaderProcessEndElement(xmlTextReader *reader, mceCtx_t *c
             mceSkipStackTop(&ctx->skip_stack)->level_end--;
             PASSERT(mceSkipStackTop(&ctx->skip_stack)->level_start<mceSkipStackTop(&ctx->skip_stack)->level_end);
         }
-        return PTRUE;
-    } else {
-        mceQNameLevelCleanup(&ctx->ignorable_set, level);
-        mceQNameLevelCleanup(&ctx->processcontent_set, level);
-        mceQNameLevelCleanup(&ctx->understands_set, level);
-        mceQNameLevelCleanup(&ctx->suspended_set, level); 
-        return PFALSE;
+        skiped=PTRUE;
     }
+    mceQNameLevelCleanup(&ctx->ignorable_set, level);
+    mceQNameLevelCleanup(&ctx->processcontent_set, level);
+    mceQNameLevelCleanup(&ctx->understands_set, level);
+    mceQNameLevelCleanup(&ctx->suspended_set, level); 
+    return skiped;
 }
 
 int mceTextReaderPostprocess(xmlTextReader *reader, mceCtx_t *ctx, int ret) {
