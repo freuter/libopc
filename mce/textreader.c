@@ -59,6 +59,24 @@ static xmlChar *xmlStrDupArray(const xmlChar *value) {
     return ret;
 }
 
+static xmlChar *xmlStrArrayFirst(xmlChar *a, int *entry_len) {
+    PASSERT(NULL!=entry_len);
+    *entry_len=xmlStrlen(a);
+    return a;
+}
+
+static pbool_t xmlStrArrayValid(const xmlChar *e) {
+    return NULL!=e && *e!=0;
+}
+
+static xmlChar *xmlStrArrayNext(xmlChar *e, int *entry_len) {
+    PASSERT(NULL!=entry_len);
+    PASSERT(xmlStrArrayValid(e));
+    xmlChar *ret=e+1+*entry_len;
+    *entry_len=xmlStrlen(ret);
+    return ret;
+}
+
 void mceRaiseError(xmlTextReader *reader, mceCtx_t *ctx, mceError_t error, const xmlChar *str, ...) {
     va_list args;
     va_start(args, str);
@@ -89,7 +107,8 @@ static void mceTextReaderProcessAttributes(xmlTextReader *reader, mceCtx_t *ctx,
                 if (0==xmlStrcmp(_X("Ignorable"), xmlTextReaderConstLocalName(reader)) &&
                     0==xmlStrcmp(_X(ns_mce), xmlTextReaderConstNamespaceUri(reader))) {
                         xmlChar *v=xmlStrDupArray(xmlTextReaderConstValue(reader));
-                        for(xmlChar *prefix=v;*prefix!=0;prefix+=1+xmlStrlen(prefix)) {
+                        int prefix_len=0;
+                        for(xmlChar *prefix=xmlStrArrayFirst(v, &prefix_len);xmlStrArrayValid(prefix);prefix=xmlStrArrayNext(prefix, &prefix_len)) {
                             xmlChar *ns_=xmlTextReaderLookupNamespace(reader, prefix);
                             if (NULL!=ns_ && NULL==mceQNameLevelLookup(&ctx->understands_set, ns_, NULL, PFALSE)) {
                                 PENSURE(mceQNameLevelAdd(&ctx->ignorable_set, ns_, NULL, level));
@@ -99,8 +118,8 @@ static void mceTextReaderProcessAttributes(xmlTextReader *reader, mceCtx_t *ctx,
                 } else if (0==xmlStrcmp(_X("ProcessContent"), xmlTextReaderConstLocalName(reader)) &&
                            0==xmlStrcmp(_X(ns_mce), xmlTextReaderConstNamespaceUri(reader))) {
                         xmlChar *v=xmlStrDupArray(xmlTextReaderConstValue(reader));
-                        xmlChar *qname=v;
-                        for(int qname_len=0;(qname_len=xmlStrlen(qname))>0;qname+=qname_len+1) {
+                        int qname_len=0;
+                        for(xmlChar *qname=xmlStrArrayFirst(v, &qname_len);xmlStrArrayValid(qname);qname=xmlStrArrayNext(qname, &qname_len)) {
                             int prefix=0; while(qname[prefix]!=':' && qname[prefix]!=0) prefix++;
                             OPC_ASSERT(prefix<=qname_len);
                             int ln=(prefix<qname_len?prefix+1:0);
@@ -118,7 +137,8 @@ static void mceTextReaderProcessAttributes(xmlTextReader *reader, mceCtx_t *ctx,
                 } else if (0==xmlStrcmp(_X("MustUnderstand"), xmlTextReaderConstLocalName(reader)) &&
                            0==xmlStrcmp(_X(ns_mce), xmlTextReaderConstNamespaceUri(reader))) {
                         xmlChar *v=xmlStrDupArray(xmlTextReaderConstValue(reader));
-                        for(xmlChar *prefix=v;*prefix!=0;prefix+=1+xmlStrlen(prefix)) {
+                        int prefix_len=0;
+                        for(xmlChar *prefix=xmlStrArrayFirst(v, &prefix_len);xmlStrArrayValid(prefix);prefix=xmlStrArrayNext(prefix, &prefix_len)) {
                             xmlChar *ns_=xmlTextReaderLookupNamespace(reader, prefix);
                             if (NULL!=ns_ && NULL==mceQNameLevelLookup(&ctx->understands_set, ns_, NULL, PFALSE)) {
                                 mceRaiseError(reader, ctx, MCE_ERROR_MUST_UNDERSTAND, _X("MustUnderstand namespace \"%s\""), ns_);
