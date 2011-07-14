@@ -978,7 +978,7 @@ def generateZipPackage(ctx, source, lib_type, install_zip):
 	else:
 		obj_dir=os.path.join("build", ctx["platform"], lib_type)
 		tool_ext=""
-		lib_exts=[".a", getSharedExt(conf, ctx)]
+		lib_exts=[".a"]
 		lib_prefix="lib"
 	for lib in conf["libraries"]:
 		if not lib["external"] and not isExcluded(conf, ctx, lib["name"]):
