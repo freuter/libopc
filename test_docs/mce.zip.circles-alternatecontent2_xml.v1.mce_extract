@@ -1,7 +1,7 @@
 <Circles xmlns="http://schemas.openxmlformats.org/Circles/v1" xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006">
   
     
-      <Circle m:Finish="GoldLeaf" Center="100,100" Radius="50"/>
+      <Circle xmlns:m="http://schemas.openxmlformats.org/metallicfinishes/v1" m:Finish="GoldLeaf" Center="100,100" Radius="50"/>
     
     
   

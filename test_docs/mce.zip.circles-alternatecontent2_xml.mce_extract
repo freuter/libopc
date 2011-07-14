@@ -2,7 +2,7 @@
   
     
     
-      <Circle Fill="Gold" Center="100,100" Radius="50"/>
+      <Circle xmlns:m="http://schemas.openxmlformats.org/metallicfinishes/v1" Fill="Gold" Center="100,100" Radius="50"/>
     
   
 </Circles>

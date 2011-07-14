@@ -101,6 +101,24 @@ static const char ns_xml[]="http://www.w3.org/2000/xmlns/";
 static const char _xmlns[]="xmlns";
 
 static void mceTextReaderProcessAttributes(xmlTextReader *reader, mceCtx_t *ctx, puint32_t level) {
+    xmlNodePtr c=xmlTextReaderCurrentNode(reader);
+    if (NULL!=c) { // make sure to inherit any namespace declaration on a parent MCE element
+        for(xmlNodePtr n=c->parent;
+            NULL!=n && XML_ELEMENT_NODE==n->type 
+            && NULL!=n->ns && 0==xmlStrcmp(n->ns->href, _X(ns_mce)) 
+            && NULL!=n->name
+            && (0==xmlStrcmp(_X("AlternateContent"), n->name) 
+                || 0==xmlStrcmp(_X("Choice"), n->name)  
+                || 0==xmlStrcmp(_X("Fallback"), n->name));
+            n=n->parent) {
+            for(xmlNs *nsDef=n->nsDef;NULL!=nsDef;nsDef=nsDef->next) {
+                xmlAttrPtr *a=xmlHasNsProp(c, nsDef->prefix, _X(ns_xml));
+                if (NULL==a) { // only add a namespace if the prefix is not overwritten in the current node                    
+                    xmlNsPtr xmlns_ns=xmlNewNs(c, nsDef->href, nsDef->prefix);
+                }
+            }
+        }
+    }
     if (1==xmlTextReaderHasAttributes(reader)) {
         if (1==xmlTextReaderMoveToFirstAttribute(reader)) {
             do {
