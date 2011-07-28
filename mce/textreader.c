@@ -112,7 +112,7 @@ static void mceTextReaderProcessAttributes(xmlTextReader *reader, mceCtx_t *ctx,
                 || 0==xmlStrcmp(_X("Fallback"), n->name));
             n=n->parent) {
             for(xmlNs *nsDef=n->nsDef;NULL!=nsDef;nsDef=nsDef->next) {
-                xmlAttrPtr *a=xmlHasNsProp(c, nsDef->prefix, _X(ns_xml));
+                xmlAttrPtr a=xmlHasNsProp(c, nsDef->prefix, _X(ns_xml));
                 if (NULL==a) { // only add a namespace if the prefix is not overwritten in the current node                    
                     xmlNsPtr xmlns_ns=xmlNewNs(c, nsDef->href, nsDef->prefix);
                 }
