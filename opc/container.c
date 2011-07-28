@@ -128,6 +128,12 @@ opc_error_t opcContainerDeletePart(opcContainer *container, const xmlChar *name)
     opc_error_t ret=OPC_ERROR_NONE;
     opc_uint32_t i=0;
     if (findItem(container->part_array, container->part_items, name, 0, part_cmp_fct, &i)) {
+        if (-1!=container->part_array[i].first_segment_id) {
+            opcContainerDeletePartEx(container, name, OPC_FALSE);
+        }
+        if (-1!=container->part_array[i].rel_segment_id) {
+            opcContainerDeletePartEx(container, name, OPC_TRUE);
+        }
         deleteItem(container->part_array, container->part_items, i);
     }
     return ret;
