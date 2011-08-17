@@ -38,8 +38,7 @@ static puint32_t opcHelperEncodeFilename(const xmlChar *name, char *buf, int buf
     int rels_ofs=name_len;
     if (rels_segment) {
         while(rels_ofs>0 && name[--rels_ofs]!='/'); // find last "/"
-        OPC_ASSERT(name[rels_ofs]==0 || (name[rels_ofs]=='/' && name[rels_ofs]!=0));
-        if (name[rels_ofs]==0) {
+        if (name[rels_ofs]!='/') {
             buf_ofs+=snprintf(buf+buf_ofs, buf_len-buf_ofs, "_rels/");
         }
     }

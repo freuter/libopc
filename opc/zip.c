@@ -816,7 +816,52 @@ static int opcZipLoaderSkip(void *iocontext) {
             }
         } else {
             OPC_ASSERT(0==helper->info.compression_method);
-            err=OPC_ERROR_UNSUPPORTED_COMPRESSION; // store not supported!
+            opc_uint8_t buf[3*sizeof(opc_uint32_t)];
+            if (sizeof(buf)==opcZipRawReadBuffer(helper->io, &helper->rawBuffer, buf, sizeof(buf))) {
+                opc_uint32_t stream_len=0;
+                opc_uint32_t crc=0;
+                do {
+                    opc_uint32_t v[3];
+                    opc_uint32_t k=0;
+                    for(opc_uint32_t j=0;j<3;j++) {
+                        v[j]=0;
+                        for(opc_uint32_t i=0;i<sizeof(opc_uint32_t);i++) {
+                            v[j]|=(opc_uint32_t)buf[(stream_len+(j*sizeof(v[0]))+i)%sizeof(buf)]<<(i<<3);
+                        }
+                    }
+                    opc_uint32_t skip_len=0;
+                    if (0x08074b50==v[0]) {
+                        // useless data descriptor signature, recalc v0..v3
+                        for(opc_uint32_t i=0;i<2;i++) v[i]=v[i+1];
+                        v[2]=opcZipRawPeekHeaderSignature(helper->io, &helper->rawBuffer);
+                        skip_len=sizeof(opc_uint32_t);
+                    }
+                    if (crc==v[0] && stream_len==v[1] && stream_len==v[2]) {
+                        if (OPC_ERROR_NONE==err && skip_len>0) {
+                            err=opcZipRawSkipFileData(helper->io, &helper->rawBuffer, skip_len);
+                        }
+                        // found valid data descriptor, assume this is the end of the local content
+                        if (OPC_ERROR_NONE==err) {
+                            helper->info.data_crc=v[0];
+                            helper->info.compressed_size=v[1];
+                            helper->info.uncompressed_size=v[2];
+                            helper->info.trailing_bytes=sizeof(buf)+skip_len;
+                        }
+                        break;
+                    } else {
+                        // check next byte
+                        crc=crc32(crc, &buf[stream_len%sizeof(buf)], sizeof(buf[0]));
+                        if (sizeof(buf[0])==opcZipRawReadBuffer(helper->io, &helper->rawBuffer, &buf[stream_len%sizeof(buf)], sizeof(buf[0]))) {
+                            stream_len++;
+                        } else {
+                            err=OPC_ERROR_STREAM;
+                            break;
+                        }
+                    }
+                } while(OPC_ERROR_NONE==helper->rawBuffer.state.err);
+            } else {
+                err=OPC_ERROR_STREAM; // not enough bytes for the trailing data descriptor => error
+            }
         }
     } else {
         err=opcZipRawSkipFileData(helper->io, &helper->rawBuffer, helper->info.compressed_size);
