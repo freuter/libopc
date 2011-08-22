@@ -884,7 +884,7 @@ opcContainerOutputStream* opcContainerCreateOutputStreamEx(opcContainer *contain
                 bit_flag|=3<<1;
                 break;
             }
-            ret->stream=opcZipCreateOutputStream(container->storage, first_segment, name, rels_segment, 0, 0, 8, 6);
+            ret->stream=opcZipCreateOutputStream(container->storage, first_segment, name, rels_segment, 0, 0, compression_method, bit_flag);
             ret->partName=name;
             ret->rels_segment=rels_segment;
             if (NULL==ret->stream) {

@@ -1024,7 +1024,7 @@ opc_uint32_t opcZipCreateSegment(opcZip *zip,
                                  opc_uint16_t compression_method,
                                  opc_uint16_t bit_flag) {
     OPC_ASSERT(0==compression_method || 8==compression_method); // either STORE or DEFLATE
-    OPC_ASSERT(8!=compression_method || bit_flag==6); // WHEN DELFATE set bit_flag to BEST compression
+    OPC_ASSERT(8!=compression_method || (0<<1==bit_flag || 1<<1==bit_flag || 2<<1==bit_flag || 3<<1==bit_flag)); // WHEN DELFATE set bit_flag to NORMAL, MAXIMUM, FAST or SUPERFAST compression
     opc_uint32_t segment_id=-1;
     //@TODO find free segment
     if (-1==segment_id) {
@@ -1243,6 +1243,11 @@ opcZipOutputStream *opcZipCreateOutputStream(opcZip *zip,
     if (NULL!=segment_id) {
         if (-1==*segment_id) {
             *segment_id=opcZipCreateSegment(zip, partName, relsSegment, segment_size, growth_hint, compression_method, bit_flag);
+        } else {
+            OPC_ASSERT(*segment_id>=0 && *segment_id<zip->segment_items);
+            opcZipSegment *segment=&zip->segment_array[*segment_id];
+            segment->bit_flag=bit_flag;
+            segment->compression_method=compression_method;
         }
         ret=opcZipOpenOutputStream(zip, segment_id);
     }
