@@ -1095,7 +1095,7 @@ static opc_bool_t opcZipValidate(opcZip *zip, opc_ofs_t *append_ofs) {
         opc_uint16_t name8_len=opcHelperAssembleSegmentName(name8, sizeof(name8), zip->segment_array[i].partName,  0, -1, zip->segment_array[i].rels_segment, NULL);
         name8[name8_len]=0;
         opc_uint32_t header_size=opcZipCalculateHeaderSize(name8, name8_len, OPC_TRUE, NULL);
-        valid=real_padding==0 || header_size<=zip->segment_array[i].header_size; // check padding>0 needs extra!
+        valid=valid && (real_padding==0 || header_size<=zip->segment_array[i].header_size); // check padding>0 needs extra!
         valid=valid&&(real_padding<65000); //@TODO get real value for max padding!
         if (NULL!=append_ofs) *append_ofs=real_ofs+real_padding+zip->segment_array[i].compressed_size+zip->segment_array[i].header_size;
     } }
