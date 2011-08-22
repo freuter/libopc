@@ -1222,7 +1222,19 @@ opcZipOutputStream *opcZipOpenOutputStream(opcZip *zip, opc_uint32_t *segment_id
             out->stream.zalloc = Z_NULL;
             out->stream.zfree = Z_NULL;
             out->stream.opaque = Z_NULL;
-            if (Z_OK!=(out->inflate_state=deflateInit2(&out->stream, Z_BEST_SPEED, Z_DEFLATED, -MAX_WBITS, 8, Z_DEFAULT_STRATEGY))) {
+            int level=Z_DEFAULT_COMPRESSION;
+            switch ((segment->bit_flag>>1) & 0x3) {
+            default: 
+            case 0: level=Z_DEFAULT_COMPRESSION; 
+                break;
+            case 1: level=Z_BEST_COMPRESSION; 
+                break;
+            case 2: level=Z_BEST_SPEED; 
+                break;
+            case 3: level=Z_BEST_SPEED; 
+                break;
+            }
+            if (Z_OK!=(out->inflate_state=deflateInit2(&out->stream, level, Z_DEFLATED, -MAX_WBITS, 8, Z_DEFAULT_STRATEGY))) {
                 xmlFree(out); out=NULL;
             }
         }
