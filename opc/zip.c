@@ -175,6 +175,8 @@ void opcZipClose(opcZip *zip, opcZipSegmentReleaseCallback* releaseCallback) {
                 }
             }
         }
+        OPC_ASSERT(NULL!=zip->io->_ioclose);
+        OPC_ENSURE(0==zip->io->_ioclose(zip->io->iocontext));
         xmlFree(zip);
     }
 }
