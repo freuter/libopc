@@ -119,4 +119,9 @@
             <file path="mce_schema.c"/>
         </source>
     </tool>
+    <tool name="opc_proc" dep="opc" mode="c99">
+      <source root=".">
+        <file path="opc_proc.c"/>
+      </source>
+    </tool>
 </project>
