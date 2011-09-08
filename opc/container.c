@@ -911,6 +911,9 @@ opc_error_t opcContainerCloseOutputStream(opcContainerOutputStream* stream) {
     OPC_ASSERT(NULL!=first_segment);
     if (NULL!=first_segment) {
         ret=opcZipCloseOutputStream(stream->container->storage, stream->stream, first_segment);
+        if (NULL!=last_segment) {
+            *last_segment=*first_segment; 
+        }
         xmlFree(stream);
     }
     return ret;

@@ -128,6 +128,16 @@ def opc_generate_test(basepath, path):
 	test.call(test.build("opc_dump"), [], [test.tmp(path)], test.tmp(path+"_2.opc_generate.opc_dump"), [], {})
 	test.regr(test.tmp(path+"_1.opc_generate.opc_dump"), test.tmp(path+"_2.opc_generate.opc_dump"), False)
 
+def opc_proc_test(path, args, cmd):
+    test.rm(test.tmp(path))
+    test.cp(test.docs(path), test.tmp(path))
+    call_args=[test.tmp(path)]
+    call_args.extend(args)
+    out=path+".opc_proc."+cmd+".txt"
+    test.call(test.build("opc_proc"), [], call_args, test.tmp(out), [], {})
+    test.regr(test.docs(out), test.tmp(out), True)
+
+
 def usage():
 	print("usage:")
 	print(" test [--target=mode \"debug|release\"]")
@@ -241,6 +251,9 @@ if __name__ == "__main__":
 		mcepp_test("extLst.xml")
 		mcepp_test("mce-test-1.xml")
 		mcepp_test("mce-test-2.xml")
+
+		opc_proc_test("OOXMLI1.docx", ["--delete", "customXml/item1.xml", "--dump"], "delete")
+		opc_proc_test("OOXMLI1.docx", ["--create", "readme.txt", "text/plain", "0", test.docs("Readme.txt"), "--delete", "readme.txt", "--dump"], "create_delete")
 
 	else:
 		ignore_list = {  }

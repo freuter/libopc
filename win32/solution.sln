@@ -58,6 +58,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "opc_changes", "opc_changes\
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "mce_schema", "mce_schema\mce_schema.vcxproj", "{9554C82F-1ECB-59F1-B128-21B3AC7E99AD}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "opc_proc", "opc_proc\opc_proc.vcxproj", "{88832476-2EA5-5844-B4AC-583E1970A67E}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
@@ -180,6 +182,10 @@ Global
 		{9554C82F-1ECB-59F1-B128-21B3AC7E99AD}.Debug|Win32.Build.0 = Debug|Win32
 		{9554C82F-1ECB-59F1-B128-21B3AC7E99AD}.Release|Win32.ActiveCfg = Release|Win32
 		{9554C82F-1ECB-59F1-B128-21B3AC7E99AD}.Release|Win32.Build.0 = Release|Win32
+		{88832476-2EA5-5844-B4AC-583E1970A67E}.Debug|Win32.ActiveCfg = Debug|Win32
+		{88832476-2EA5-5844-B4AC-583E1970A67E}.Debug|Win32.Build.0 = Debug|Win32
+		{88832476-2EA5-5844-B4AC-583E1970A67E}.Release|Win32.ActiveCfg = Release|Win32
+		{88832476-2EA5-5844-B4AC-583E1970A67E}.Release|Win32.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

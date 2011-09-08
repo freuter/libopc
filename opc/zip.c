@@ -1133,6 +1133,13 @@ static void opcZipTrim(opcZip *zip, opc_ofs_t *append_ofs) {
             ofs+=zip->segment_array[i].segment_size;            
         }
     }
+    for(opc_uint32_t j=zip->segment_items;j>0 && zip->segment_array[j-1].deleted_segment;j--) {
+        zip->segment_array[j-1].stream_ofs=ofs;
+        zip->segment_array[j-1].segment_size=0; // make it a "ZOMBI" segment
+        zip->segment_array[j-1].header_size=0; 
+        zip->segment_array[j-1].padding=0;
+    }
+
     for(opc_uint32_t i=1;i<zip->segment_items;i++) {
         OPC_ASSERT(zip->segment_array[i-1].stream_ofs+zip->segment_array[i-1].segment_size==zip->segment_array[i].stream_ofs);
     }
