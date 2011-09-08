@@ -41,7 +41,9 @@ static opcPart opcPartOpenEx(opcContainer *container,
     opcContainerPart *part=opcContainerInsertPart(container, (absolutePath[0]=='/'?absolutePath+1:absolutePath), create_part);
     if (NULL!=part) {
         if (create_part && NULL==part->type) {
-            part->type=type;
+            opcContainerType *ct=insertType(container, type, OPC_TRUE);
+            OPC_ASSERT(NULL!=ct && 0==xmlStrcmp(ct->type, type));
+            part->type=ct->type;
         }
         return part->name;
     } else {
