@@ -177,6 +177,10 @@ void opcZipClose(opcZip *zip, opcZipSegmentReleaseCallback* releaseCallback) {
         }
         OPC_ASSERT(NULL!=zip->io->_ioclose);
         OPC_ENSURE(0==zip->io->_ioclose(zip->io->iocontext));
+        if (NULL!=zip->segment_array) {
+            xmlFree(zip->segment_array);
+            zip->segment_array=NULL;
+        }
         xmlFree(zip);
     }
 }
@@ -951,6 +955,7 @@ opc_error_t opcZipCloseInputStream(opcZip *zip, opcZipInputStream *stream) {
                                               segment->compressed_size, 
                                               segment->uncompressed_size, 
                                               &stream->inflateState);
+    xmlFree(stream); stream=NULL;
     return err;
 }
 

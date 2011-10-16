@@ -45,6 +45,9 @@
 #include <stdio.h>
 #include <time.h>
 #include <libxml/xmlsave.h>
+#ifdef WIN32
+#include <crtdbg.h>
+#endif
 
 static void add_visited_part(opcPart **visited_parts_array, opc_uint32_t *visited_parts_count, opcPart part) {
     *visited_parts_array=(opcPart*)xmlRealloc(*visited_parts_array, sizeof(opcPart)*(*visited_parts_count+1));
@@ -317,6 +320,10 @@ static void generate(opcContainer *c, FILE *out, const char *template_name, cons
 
 int main( int argc, const char* argv[] )
 {
+#ifdef WIN32
+     _CrtSetDbgFlag (_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
+#endif
+
     time_t start_time=time(NULL);
     opc_error_t err=OPC_ERROR_NONE;
     if (OPC_ERROR_NONE==opcInitLibrary() && argc>=2) {

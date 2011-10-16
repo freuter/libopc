@@ -1,6 +1,9 @@
 #include <opc/opc.h>
 #include <stdio.h>
 #include <time.h>
+#ifdef WIN32
+#include <crtdbg.h>
+#endif
 
 typedef void (paragraph_callback_t)(void *callback_ctx, int level, xmlChar *modeTxt, xmlChar *parTxt);
 
@@ -267,6 +270,9 @@ static void paragraph_callback(void *callback_ctx, int level, xmlChar *modeTxt, 
 
 int main( int argc, const char* argv[] )
 {
+#ifdef WIN32
+     _CrtSetDbgFlag (_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
+#endif
     opcInitLibrary();
     parseText(_X(argv[1]), paragraph_callback, stdout);
     opcFreeLibrary();

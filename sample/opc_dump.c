@@ -42,20 +42,27 @@
 #include <opc/opc.h>
 #include <stdio.h>
 #include <time.h>
-
+#ifdef WIN32
+#include <crtdbg.h>
+#endif
 
 int main( int argc, const char* argv[] )
 {
+#ifdef WIN32
+     _CrtSetDbgFlag (_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
+#endif
     time_t start_time=time(NULL);
     opc_error_t err=OPC_ERROR_NONE;
-    if (OPC_ERROR_NONE==opcInitLibrary() && 2==argc) {
-        opcContainer *c=NULL;
-        if (NULL!=(c=opcContainerOpen(_X(argv[1]), OPC_OPEN_READ_ONLY, NULL, NULL))) {
-            opcContainerDump(c, stdout);
-            opcContainerClose(c, OPC_CLOSE_NOW);
-        } else {
-            printf("ERROR: \"%s\" could not be opened.\n", argv[1]);
-            err=OPC_ERROR_STREAM;
+    if (OPC_ERROR_NONE==opcInitLibrary()) {
+        if (2==argc) {
+            opcContainer *c=NULL;
+            if (NULL!=(c=opcContainerOpen(_X(argv[1]), OPC_OPEN_READ_ONLY, NULL, NULL))) {
+                opcContainerDump(c, stdout);
+                opcContainerClose(c, OPC_CLOSE_NOW);
+            } else {
+                printf("ERROR: \"%s\" could not be opened.\n", argv[1]);
+                err=OPC_ERROR_STREAM;
+            }
         }
         opcFreeLibrary();
     } else if (2==argc) {

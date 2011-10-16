@@ -1,7 +1,9 @@
 #include <opc/opc.h>
 #include <stdio.h>
 #include <time.h>
-
+#ifdef WIN32
+#include <crtdbg.h>
+#endif
 
 static pbool_t specialChar(int ch) {
     return ch<'0' || (ch>'9' && ch<'A') || (ch>'Z' && ch<'a' && '_'!=ch) || ch>'z';
@@ -518,6 +520,9 @@ void parseSchema(xmlChar *filename) {
 
 int main( int argc, const char* argv[] )
 {
+#ifdef WIN32
+     _CrtSetDbgFlag (_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
+#endif
     opcInitLibrary();
     SourceContext sc;
     memset(&sc, 0, sizeof(sc));

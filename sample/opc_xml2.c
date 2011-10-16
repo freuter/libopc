@@ -42,6 +42,9 @@
 #include <opc/opc.h>
 #include <stdio.h>
 #include <string.h>
+#ifdef WIN32
+#include <crtdbg.h>
+#endif
 
 const char PROP_NS[]="http://schemas.openxmlformats.org/officeDocument/2006/extended-properties";
 
@@ -54,6 +57,10 @@ typedef struct {
 
 int main( int argc, const char* argv[] )
 {
+#ifdef WIN32
+     _CrtSetDbgFlag (_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
+#endif
+
     if (OPC_ERROR_NONE==opcInitLibrary() && 2==argc) {
         opcContainer *c=NULL;
         if (NULL!=(c=opcContainerOpen(_X(argv[1]), OPC_OPEN_READ_ONLY, NULL, NULL))) {

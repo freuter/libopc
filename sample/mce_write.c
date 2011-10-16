@@ -32,6 +32,9 @@
 #include <opc/opc.h>
 #include <mce/textwriter.h>
 #include <stdio.h>
+#ifdef WIN32
+#include <crtdbg.h>
+#endif
 
 const char v1_ns[]="http://schemas.openxmlformats.org/Circles/v1";
 const char v2_ns[]="http://schemas.openxmlformats.org/Circles/v2";
@@ -60,7 +63,9 @@ const char v3_ns[]="http://schemas.openxmlformats.org/Circles/v3";
 
 int main( int argc, const char* argv[] )
 {
-    
+#ifdef WIN32
+     _CrtSetDbgFlag (_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
+#endif
     if (OPC_ERROR_NONE==opcInitLibrary()) {
         if (2==argc) {
             opcContainer *c=opcContainerOpen(_X(argv[1]), OPC_OPEN_WRITE_ONLY, NULL, NULL);

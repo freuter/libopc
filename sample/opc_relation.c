@@ -47,6 +47,9 @@
 */
 
 #include <opc/opc.h>
+#ifdef WIN32
+#include <crtdbg.h>
+#endif
 
 static void traverse(opcContainer *c, opcPart source) {
     for(opcRelation rel=opcRelationFirst(c, source);OPC_RELATION_INVALID!=rel;rel=opcRelationNext(c, source, rel)) {
@@ -68,6 +71,10 @@ static void traverse(opcContainer *c, opcPart source) {
 
 int main( int argc, const char* argv[] )
 {
+#ifdef WIN32
+     _CrtSetDbgFlag (_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
+#endif
+
     opcInitLibrary();
     opcContainer *c=opcContainerOpen(_X(argv[1]), OPC_OPEN_READ_ONLY, NULL, NULL);
     if (NULL!=c) {

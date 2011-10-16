@@ -287,8 +287,8 @@ int mceTextReaderPostprocess(xmlTextReader *reader, mceCtx_t *ctx, int ret) {
     if (MCE_ERROR_NONE!=ctx->error) {
         ret=-1;
     } else {
-        ns=xmlTextReaderNamespaceUri(reader);
-        ln=xmlTextReaderLocalName(reader);
+        ns=xmlTextReaderConstNamespaceUri(reader);
+        ln=xmlTextReaderConstLocalName(reader);
         if (XML_READER_TYPE_ELEMENT==xmlTextReaderNodeType(reader)) {
             if (ctx->suspended_level>0 || NULL!=mceQNameLevelLookup(&ctx->suspended_set, ns, ln, PFALSE)) {
                 suspend=PTRUE;
@@ -317,8 +317,8 @@ int mceTextReaderPostprocess(xmlTextReader *reader, mceCtx_t *ctx, int ret) {
         }
         if (skip) {
             if (-1!=(ret=xmlTextReaderRead(reader))) { // skip element
-                ns=xmlTextReaderNamespaceUri(reader); // get next ns
-                ln=xmlTextReaderLocalName(reader);  // get net local name
+                ns=xmlTextReaderConstNamespaceUri(reader); // get next ns
+                ln=xmlTextReaderConstLocalName(reader);  // get net local name
             }
         }
         if (MCE_ERROR_NONE!=ctx->error) {

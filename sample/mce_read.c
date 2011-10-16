@@ -31,9 +31,16 @@
  */
 #include <mce/textreader.h>
 #include <stdio.h>
+#ifdef WIN32
+#include <crtdbg.h>
+#endif
+
 
 int main( int argc, const char* argv[] )
 {
+#ifdef WIN32
+     _CrtSetDbgFlag (_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
+#endif
     xmlInitParser();
     const char *src=NULL;
     const char *dst=NULL;
