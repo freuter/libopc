@@ -42,10 +42,16 @@
 #include <opc/opc.h>
 #include <stdio.h>
 #include <time.h>
-
+#ifdef WIN32
+#include <crtdbg.h>
+#endif
 
 int main( int argc, const char* argv[] )
 {
+#ifdef WIN32
+     _CrtSetDbgFlag (_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
+#endif
+
     time_t start_time=time(NULL);
     opc_error_t err=OPC_ERROR_NONE;
     if (OPC_ERROR_NONE==opcInitLibrary() && 2==argc) {

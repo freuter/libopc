@@ -36,6 +36,9 @@
 #include <time.h>
 #include <opc/zip.h> 
 #include <zlib.h> // for crc32 function
+#ifdef WIN32
+#include <crtdbg.h>
+#endif
 
 /*
     This module demonstrates the low-level opcZipLoader functionality. You can use this method to get very information about a
@@ -96,6 +99,10 @@ opc_error_t loadSegment(void *iocontext,
 
 int main( int argc, const char* argv[] )
 {
+#ifdef WIN32
+     _CrtSetDbgFlag (_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
+#endif
+
     time_t start_time=time(NULL);
     opc_error_t err=OPC_ERROR_NONE;
     if (OPC_ERROR_NONE==(err=opcInitLibrary())) {

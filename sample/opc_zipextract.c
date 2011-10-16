@@ -43,6 +43,9 @@
 #include <libxml/xmlstring.h>
 #include <time.h>
 #include <zlib.h> // for crc32 function
+#ifdef WIN32
+#include <crtdbg.h>
+#endif
 
 static opc_error_t loadSegment(void *iocontext, 
                                void *userctx, 
@@ -77,6 +80,10 @@ static opc_error_t releaseSegment(opcZip *zip, opc_uint32_t segment_id) {
 
 int main( int argc, const char* argv[] )
 {
+#ifdef WIN32
+     _CrtSetDbgFlag (_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
+#endif
+
     time_t start_time=time(NULL);
     opc_error_t err=OPC_ERROR_NONE;
     if (OPC_ERROR_NONE==(err=opcInitLibrary())) {

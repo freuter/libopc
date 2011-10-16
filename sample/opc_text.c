@@ -43,7 +43,9 @@
 #include <opc/opc.h>
 #include <stdio.h>
 #include <time.h>
-
+#ifdef WIN32
+#include <crtdbg.h>
+#endif
 
 static void dumpText(mceTextReader_t *reader) {
     mce_skip_attributes(reader);
@@ -84,6 +86,10 @@ static void dumpText(mceTextReader_t *reader) {
 
 int main( int argc, const char* argv[] )
 {
+#ifdef WIN32
+     _CrtSetDbgFlag (_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
+#endif
+
     opcInitLibrary();
     opcContainer *c=opcContainerOpen(_X(argv[1]), OPC_OPEN_READ_ONLY, NULL, NULL);
     if (NULL!=c) {

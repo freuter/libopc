@@ -39,9 +39,16 @@
     opc_type OOXMLI1.docx
 */
 #include <opc/opc.h>
+#ifdef WIN32
+#include <crtdbg.h>
+#endif
 
 int main( int argc, const char* argv[] )
 {
+#ifdef WIN32
+     _CrtSetDbgFlag (_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
+#endif
+
     opcInitLibrary();
     for(int i=1;i<argc;i++) {
         opcContainer *c=opcContainerOpen(_X(argv[1]), OPC_OPEN_READ_ONLY, NULL, NULL);

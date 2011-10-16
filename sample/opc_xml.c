@@ -42,6 +42,9 @@
 #include <opc/opc.h>
 #include <stdio.h>
 #include <time.h>
+#ifdef WIN32
+#include <crtdbg.h>
+#endif
 
 static void mce_def dumpElement(mceTextReader_t *reader) {
     xmlChar *ln=xmlStrdup(xmlTextReaderLocalName(reader->reader));
@@ -61,6 +64,10 @@ static void mce_def dumpElement(mceTextReader_t *reader) {
 
 int main( int argc, const char* argv[] )
 {
+#ifdef WIN32
+     _CrtSetDbgFlag (_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
+#endif
+
     time_t start_time=time(NULL);
     if (OPC_ERROR_NONE==opcInitLibrary() && 3==argc) {
         opcContainer *c=NULL;

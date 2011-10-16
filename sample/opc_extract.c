@@ -46,9 +46,16 @@
 #include <io.h>
 #include <fcntl.h>
 #endif
+#ifdef WIN32
+#include <crtdbg.h>
+#endif
 
 int main( int argc, const char* argv[] )
 {
+#ifdef WIN32
+     _CrtSetDbgFlag (_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
+#endif
+
 #ifdef WIN32
     _setmode( _fileno( stdout ), _O_BINARY ); // make sure LF are not translated to CR LF on windows...
 #endif

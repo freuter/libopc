@@ -41,9 +41,15 @@
 
 #include <opc/opc.h>
 #include <stdio.h>
+#ifdef WIN32
+#include <crtdbg.h>
+#endif
 
 int main( int argc, const char* argv[] )
 {
+#ifdef WIN32
+     _CrtSetDbgFlag (_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
+#endif
 	if (OPC_ERROR_NONE==opcInitLibrary()) {
 		printf("libopc as well as zlib and libxml2 are ready to use.\n");
 		opcFreeLibrary();

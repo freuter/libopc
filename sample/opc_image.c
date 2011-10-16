@@ -44,6 +44,9 @@
 #include <opc/opc.h>
 #include <stdio.h>
 #include <time.h>
+#ifdef WIN32
+#include <crtdbg.h>
+#endif
 
 static void extract(opcContainer *c, opcPart p, const char *path) {
     char filename[OPC_MAX_PATH];
@@ -69,6 +72,9 @@ static void extract(opcContainer *c, opcPart p, const char *path) {
 
 int main( int argc, const char* argv[] )
 {    
+#ifdef WIN32
+     _CrtSetDbgFlag (_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
+#endif
     opcInitLibrary();
     opcContainer *c=opcContainerOpen(_X(argv[1]), OPC_OPEN_READ_ONLY, NULL, NULL);
     const char *path=(argc>1?argv[2]:"");

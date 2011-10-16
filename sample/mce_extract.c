@@ -43,6 +43,9 @@
 #include <stdio.h>
 #include <time.h>
 #include <libxml/xmlwriter.h>
+#ifdef WIN32
+#include <crtdbg.h>
+#endif
 
 
 static int  xmlOutputWrite(void * context, const char * buffer, int len) {
@@ -71,6 +74,9 @@ static void dumpPartsAsJSON(opcContainer *c, int indent) {
 
 int main( int argc, const char* argv[] )
 {
+#ifdef WIN32
+     _CrtSetDbgFlag (_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
+#endif
     int ret=-1;
     time_t start_time=time(NULL);
     FILE *file=NULL;
