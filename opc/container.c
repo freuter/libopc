@@ -134,6 +134,12 @@ opc_error_t opcContainerDeletePart(opcContainer *container, const xmlChar *name)
         if (-1!=container->part_array[i].rel_segment_id) {
             opcContainerDeletePartEx(container, name, OPC_TRUE);
         }
+        if (NULL!=container->part_array[i].relation_array){
+            xmlFree(container->part_array[i].relation_array);
+        }
+        if (NULL!=container->part_array[i].name){
+            xmlFree(container->part_array[i].name);   
+        }
         deleteItem(container->part_array, container->part_items, i);
     }
     return ret;

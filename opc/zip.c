@@ -1432,6 +1432,7 @@ opc_error_t opcZipCloseOutputStream(opcZip *zip, opcZipOutputStream *stream, opc
     OPC_ASSERT(segment->compressed_size==stream->stream.total_out);
     segment->uncompressed_size=stream->stream.total_in;
     segment->crc32=stream->crc32;
+    deflateEnd(&stream->stream);
     xmlFree(stream); stream=NULL;
     return zip->io->state.err;
 }
