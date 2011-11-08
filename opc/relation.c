@@ -145,9 +145,9 @@ void opcRelationGetInformation(opcContainer *container, opcPart part, opcRelatio
 opc_error_t opcRelationDelete(opcContainer *container, opcPart part, const xmlChar *relationId, const xmlChar *mimeType) {
     opcRelation relation=opcRelationFind(container, part, relationId, mimeType);
     if (OPC_PART_INVALID==part) {
-        return opcContainerDeleteRelation(container, container->relation_array, container->relation_items, relation);
+        return opcContainerDeleteRelation(container, &container->relation_array, &container->relation_items, relation);
     } else {
         opcContainerPart *cp=opcContainerInsertPart(container, part, OPC_FALSE);
-        return (cp!=NULL?opcContainerDeleteRelation(container, cp->relation_array, cp->relation_items, relation):OPC_ERROR_STREAM);
+        return (cp!=NULL?opcContainerDeleteRelation(container, &cp->relation_array, &cp->relation_items, relation):OPC_ERROR_STREAM);
     }
 }
