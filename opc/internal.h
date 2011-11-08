@@ -210,7 +210,7 @@ extern "C" {
     opcContainerPart *opcContainerInsertPart(opcContainer *container, const xmlChar *name, opc_bool_t insert);
     opc_error_t opcContainerDeletePart(opcContainer *container, const xmlChar *name);
     opcContainerRelation *opcContainerFindRelation(opcContainer *container, opcContainerRelation *relation_array, opc_uint32_t relation_items, opcRelation relation);
-    opc_error_t opcContainerDeleteRelation(opcContainer *container, opcContainerRelation *relation_array, opc_uint32_t relation_items, opcRelation relation);
+    opc_error_t opcContainerDeleteRelation(opcContainer *container, opcContainerRelation **relation_array, opc_uint32_t *relation_items, opcRelation relation);
     opcContainerRelation *opcContainerInsertRelation(opcContainerRelation **relation_array, opc_uint32_t *relation_items, 
                                                      opc_uint32_t relation_id,
                                                      xmlChar *relation_type,

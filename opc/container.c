@@ -309,12 +309,12 @@ opcContainerRelation *opcContainerFindRelation(opcContainer *container, opcConta
     return (ret?&relation_array[i]:NULL);
 }
 
-opc_error_t opcContainerDeleteRelation(opcContainer *container, opcContainerRelation *relation_array, opc_uint32_t relation_items, opcRelation relation) {
+opc_error_t opcContainerDeleteRelation(opcContainer *container, opcContainerRelation **relation_array, opc_uint32_t *relation_items, opcRelation relation) {
     opc_error_t err=OPC_ERROR_NONE;
     opc_uint32_t i=0;
-    opc_bool_t ret=findItem(relation_array, relation_items, NULL, relation, relation_cmp_fct, &i);
+    opc_bool_t ret=findItem(*relation_array, *relation_items, NULL, relation, relation_cmp_fct, &i);
     if (ret) {
-        deleteItem(relation_array, relation_items, i);
+        deleteItem((*relation_array), (*relation_items), i);
     }
     return err;
 }
