@@ -131,6 +131,9 @@ int main( int argc, const char* argv[] )
         printf("opc_extract FILENAME.\n\n");
         printf("Sample: opc_extract test.docx word/document.xml\n");
     }
+#ifdef WIN32
+    OPC_ASSERT(!_CrtDumpMemoryLeaks());
+#endif
     return 0;
 }
 

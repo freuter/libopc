@@ -47,7 +47,7 @@
 #endif
 
 static void mce_def dumpElement(mceTextReader_t *reader) {
-    xmlChar *ln=xmlStrdup(xmlTextReaderLocalName(reader->reader));
+    xmlChar *ln=xmlTextReaderLocalName(reader->reader);
     printf("<%s>\n", ln);
     mce_start_attributes(reader) {
     } mce_end_attributes(reader);
@@ -97,5 +97,8 @@ int main( int argc, const char* argv[] )
     }
     time_t end_time=time(NULL);
     fprintf(stderr, "time %.2lfsec\n", difftime(end_time, start_time));
+#ifdef WIN32
+    OPC_ASSERT(!_CrtDumpMemoryLeaks());
+#endif
     return 0;
 }

@@ -276,5 +276,8 @@ int main( int argc, const char* argv[] )
     opcInitLibrary();
     parseText(_X(argv[1]), paragraph_callback, stdout);
     opcFreeLibrary();
+#ifdef WIN32
+    OPC_ASSERT(!_CrtDumpMemoryLeaks());
+#endif
     return 0;
 }

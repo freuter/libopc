@@ -131,6 +131,7 @@ static void mceTextReaderProcessAttributes(xmlTextReader *reader, mceCtx_t *ctx,
                             if (NULL!=ns_ && NULL==mceQNameLevelLookup(&ctx->understands_set, ns_, NULL, PFALSE)) {
                                 PENSURE(mceQNameLevelAdd(&ctx->ignorable_set, ns_, NULL, level));
                             }
+                            xmlFree(ns_);
                         }
                         xmlFree(v);
                 } else if (0==xmlStrcmp(_X("ProcessContent"), xmlTextReaderConstLocalName(reader)) &&
