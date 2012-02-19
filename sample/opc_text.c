@@ -112,6 +112,9 @@ int main( int argc, const char* argv[] )
         opcContainerClose(c, OPC_CLOSE_NOW);
     }
     opcFreeLibrary();
+#ifdef WIN32
+    OPC_ASSERT(!_CrtDumpMemoryLeaks());
+#endif
     return 0;
 }
 

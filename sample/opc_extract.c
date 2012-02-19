@@ -89,5 +89,8 @@ int main( int argc, const char* argv[] )
         fprintf(stderr, "opc_extract FILENAME PART\n\n");
         fprintf(stderr, "Sample: opc_extract test.docx word/document.xml\n");
     }
+#ifdef WIN32
+    OPC_ASSERT(!_CrtDumpMemoryLeaks());
+#endif
     return 0;
 }

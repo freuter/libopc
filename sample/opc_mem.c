@@ -81,6 +81,9 @@ int main( int argc, const char* argv[] )
     }
     time_t end_time=time(NULL);
     fprintf(stderr, "time %.2lfsec\n", difftime(end_time, start_time));
+#ifdef WIN32
+    OPC_ASSERT(!_CrtDumpMemoryLeaks());
+#endif
     return (OPC_ERROR_NONE==err?0:3);	
 }
 
