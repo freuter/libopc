@@ -124,6 +124,18 @@ opcContainerPart *opcContainerInsertPart(opcContainer *container, const xmlChar 
     items_--;\
 }
 
+
+static opc_error_t opcContainerDeleteAllRelationsToPart(opcContainer *container, opcPart part, opcContainerRelation **relation_array, opc_uint32_t *relation_items) {
+    for(opc_uint32_t i=0;i<*relation_items;) {
+        if (0==(*relation_array)[i].target_mode && part==(*relation_array)[i].target_ptr) {
+            deleteItem((*relation_array), (*relation_items), i);
+        } else {
+            i++;
+        }
+    }
+    return OPC_ERROR_NONE;
+}
+
 opc_error_t opcContainerDeletePart(opcContainer *container, const xmlChar *name) {
     opc_error_t ret=OPC_ERROR_NONE;
     opc_uint32_t i=0;
@@ -133,6 +145,10 @@ opc_error_t opcContainerDeletePart(opcContainer *container, const xmlChar *name)
         }
         if (-1!=container->part_array[i].rel_segment_id) {
             opcContainerDeletePartEx(container, name, OPC_TRUE);
+        }
+        OPC_ENSURE(OPC_ERROR_NONE==opcContainerDeleteAllRelationsToPart(container, container->part_array[i].name, &container->relation_array, &container->relationtype_items));
+        for(opc_uint32_t j=0;j<container->part_items;j++) {
+            OPC_ENSURE(OPC_ERROR_NONE==opcContainerDeleteAllRelationsToPart(container, container->part_array[i].name, &container->part_array[j].relation_array, &container->part_array[j].relation_items));
         }
         if (NULL!=container->part_array[i].relation_array){
             xmlFree(container->part_array[i].relation_array);
