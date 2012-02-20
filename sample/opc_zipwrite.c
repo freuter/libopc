@@ -119,8 +119,9 @@ int main( int argc, const char* argv[] )
                         }
                     }
                     opcZipClose(zip, releaseSegment);
+                } else {
+                    OPC_ENSURE(OPC_ERROR_NONE==opcFileCleanupIO(&io));
                 }
-                OPC_ENSURE(OPC_ERROR_NONE==opcFileCleanupIO(&io));
             }
         }
         if (OPC_ERROR_NONE==err) err=opcFreeLibrary();
