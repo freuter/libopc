@@ -181,6 +181,16 @@ static opc_uint32_t insertRelPrefix(opcContainer *container, const xmlChar *relP
     }
 }
 
+static opc_uint32_t findRelPrefix(opcContainer *container, const xmlChar *relPrefix, opc_uint32_t relPrefixLen) {
+    for(opc_uint32_t i=0;i<=container->relprefix_items;i++) {
+        if (0==xmlStrncmp(container->relprefix_array[i].prefix, relPrefix, relPrefixLen) && 0==container->relprefix_array[i].prefix[relPrefixLen]) {
+            return i;
+        }
+    }
+    return -1; // not found
+}
+
+
 static opc_uint32_t splitRelPrefix(opcContainer *container, const xmlChar *rel, opc_uint32_t *counter) {
     opc_uint32_t len=xmlStrlen(rel);
     while(len>0 && rel[len-1]>='0' && rel[len-1]<='9') len--;
@@ -194,13 +204,17 @@ static opc_uint32_t splitRelPrefix(opcContainer *container, const xmlChar *rel, 
     return len;
 }
 
-static opc_uint32_t createRelId(opcContainer *container, const xmlChar *relPrefix, opc_uint16_t relCounter) {
-    opc_uint32_t ret=-1;
-    opc_uint32_t prefix=insertRelPrefix(container, relPrefix);
+static opc_uint32_t assembleRelId(opc_uint32_t prefix, opc_uint16_t relCounter) {
+    opc_uint32_t ret=relCounter;
     if (-1!=prefix) {
-        ret=relCounter;
         ret|=prefix<<16;
     } 
+    return ret;
+}
+
+static opc_uint32_t createRelId(opcContainer *container, const xmlChar *relPrefix, opc_uint16_t relCounter) {
+    opc_uint32_t prefix=insertRelPrefix(container, relPrefix);
+    opc_uint32_t ret=assembleRelId(prefix, relCounter);
     return ret;
 }
 
@@ -277,13 +291,13 @@ static inline int relation_cmp_fct(const void *key, opc_uint32_t v, const void *
     opcRelation r1=v;
     opcRelation r2=((opcContainerRelation*)array_)[item].relation_id;
     if (OPC_CONTAINER_RELID_PREFIX(r1)==OPC_CONTAINER_RELID_PREFIX(r2)) {
-        if (-1==OPC_CONTAINER_RELID_COUNTER(r1)) {
-            return (-1==OPC_CONTAINER_RELID_COUNTER(r2)?0:-1);
-        } else if (-1==OPC_CONTAINER_RELID_COUNTER(r2)) {
-            OPC_ASSERT(-1!=OPC_CONTAINER_RELID_COUNTER(r1));
+        if (OPC_CONTAINER_RELID_COUNTER_NONE==OPC_CONTAINER_RELID_COUNTER(r1)) {
+            return (OPC_CONTAINER_RELID_COUNTER_NONE==OPC_CONTAINER_RELID_COUNTER(r2)?0:-1);
+        } else if (OPC_CONTAINER_RELID_COUNTER_NONE==OPC_CONTAINER_RELID_COUNTER(r2)) {
+            OPC_ASSERT(OPC_CONTAINER_RELID_COUNTER_NONE!=OPC_CONTAINER_RELID_COUNTER(r1));
             return 1;
         } else {
-            OPC_ASSERT(-1!=OPC_CONTAINER_RELID_COUNTER(r1) && -1!=OPC_CONTAINER_RELID_COUNTER(r2));
+            OPC_ASSERT(OPC_CONTAINER_RELID_COUNTER_NONE!=OPC_CONTAINER_RELID_COUNTER(r1) && OPC_CONTAINER_RELID_COUNTER_NONE!=OPC_CONTAINER_RELID_COUNTER(r2));
             return OPC_CONTAINER_RELID_COUNTER(r1)-OPC_CONTAINER_RELID_COUNTER(r2);
         }
     } else {
@@ -335,45 +349,24 @@ opc_error_t opcContainerDeleteRelation(opcContainer *container, opcContainerRela
     return err;
 }
 
-struct OPC_CONTAINER_FIND_RELATIONBYID_CONTEXT {
-    opcContainer *c;
-    opc_uint32_t counter;
-    const xmlChar *id;
-    opc_uint32_t id_len;
-};
-
-static inline int relation_ctx_cmp_fct(const void *key, opc_uint32_t v, const void *array_, opc_uint32_t item) {
-    struct OPC_CONTAINER_FIND_RELATIONBYID_CONTEXT *ctx=(struct OPC_CONTAINER_FIND_RELATIONBYID_CONTEXT*)key;
-    opcRelation r2=((opcContainerRelation*)array_)[item].relation_id;
-    OPC_ASSERT(OPC_CONTAINER_RELID_PREFIX(r2)>=0 && OPC_CONTAINER_RELID_PREFIX(r2)<ctx->c->relprefix_items);
-    const xmlChar *id2=ctx->c->relprefix_array[OPC_CONTAINER_RELID_PREFIX(r2)].prefix;
-    int cmp=xmlStrncmp(ctx->id, id2, ctx->id_len) && 0==id2[ctx->id_len];
-    if (0==cmp) {
-        if (-1==ctx->counter) {
-            return (-1==OPC_CONTAINER_RELID_COUNTER(r2)?0:-1);
-        } else if (-1==OPC_CONTAINER_RELID_COUNTER(r2)) {
-            OPC_ASSERT(-1!=ctx->counter);
-            return 1;
-        } else {
-            OPC_ASSERT(-1!=ctx->counter && -1!=OPC_CONTAINER_RELID_COUNTER(r2));
-            return ctx->counter-OPC_CONTAINER_RELID_COUNTER(r2);
-        }
-    } else {
-        return 0;
-    }
-}
-
 
 opcContainerRelation *opcContainerFindRelationById(opcContainer *container, opcContainerRelation *relation_array, opc_uint32_t relation_items, const xmlChar *relation_id) {
-    opc_uint32_t i=0;
-    struct OPC_CONTAINER_FIND_RELATIONBYID_CONTEXT ctx;
-    ctx.c=container;
-    ctx.counter=-1;
-    ctx.id=relation_id;
-    ctx.id_len=splitRelPrefix(container, relation_id, &ctx.counter);
-    opc_bool_t ret=findItem(relation_array, relation_items, &ctx, 0, relation_ctx_cmp_fct, &i);
-    return (ret?&relation_array[i]:NULL);
+    opc_uint32_t counter=-1;
+    opc_uint32_t id_len=splitRelPrefix(container, relation_id, &counter);
+    opc_uint32_t rel=-1;
+    if (id_len>0) {
+        opc_uint32_t prefix=findRelPrefix(container, relation_id, id_len);
+        if (-1!=prefix) {
+            rel=assembleRelId(prefix, counter);
+        }
+    } else {
+        rel=assembleRelId(-1, counter);
+    }
+
+    opcContainerRelation *ret=(-1!=rel?opcContainerFindRelation(container, relation_array, relation_items, rel):NULL);
+    return ret;
 }
+
 
 
 static void opc_container_normalize_part_to_helper_buffer(xmlChar *buf, int buf_len,
@@ -1197,7 +1190,7 @@ static void opcContainerWriteRels(opcContainer *c, const xmlChar *part_name, opc
         for(opc_uint32_t i=0;i<relation_items;i++) {
             opcContainerWriteUtf8Raw(out, _X("<Relationship Id=\""));
             opcContainerWriteUtf8(out, c->relprefix_array[OPC_CONTAINER_RELID_PREFIX(relation_array[i].relation_id)].prefix);
-            if (-1!=OPC_CONTAINER_RELID_COUNTER(relation_array[i].relation_id)) {
+            if (OPC_CONTAINER_RELID_COUNTER_NONE!=OPC_CONTAINER_RELID_COUNTER(relation_array[i].relation_id)) {
                 char buf[20];
                 snprintf(buf, sizeof(buf), "%i", OPC_CONTAINER_RELID_COUNTER(relation_array[i].relation_id));
                 opcContainerWriteUtf8Raw(out, _X(buf));

@@ -165,6 +165,7 @@ extern "C" {
         xmlChar *prefix;
     } opcContainerRelPrefix;
 
+    #define OPC_CONTAINER_RELID_COUNTER_NONE 0xFFFF
     #define OPC_CONTAINER_RELID_COUNTER(rel) ((rel)&0xFFFF)
     #define OPC_CONTAINER_RELID_PREFIX(rel) (((rel)>>16)&0xFFFF)
 
