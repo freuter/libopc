@@ -146,7 +146,7 @@ opc_error_t opcContainerDeletePart(opcContainer *container, const xmlChar *name)
         if (-1!=container->part_array[i].rel_segment_id) {
             opcContainerDeletePartEx(container, name, OPC_TRUE);
         }
-        OPC_ENSURE(OPC_ERROR_NONE==opcContainerDeleteAllRelationsToPart(container, container->part_array[i].name, &container->relation_array, &container->relationtype_items));
+        OPC_ENSURE(OPC_ERROR_NONE==opcContainerDeleteAllRelationsToPart(container, container->part_array[i].name, &container->relation_array, &container->relation_items));
         for(opc_uint32_t j=0;j<container->part_items;j++) {
             OPC_ENSURE(OPC_ERROR_NONE==opcContainerDeleteAllRelationsToPart(container, container->part_array[i].name, &container->part_array[j].relation_array, &container->part_array[j].relation_items));
         }
