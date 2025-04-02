@@ -74,7 +74,7 @@ static puint32_t opcHelperEncodeFilename(const xmlChar *name, char *buf, int buf
         default:
             if ((ch>='A' && ch<='Z') || (ch>='a' && ch<='z') || (ch>='0' && ch<='9')) {
                 if (NULL!=buf) buf[buf_ofs]=ch; buf_ofs++;
-            } else if (NULL==buf || (buf_ofs+3<=buf_len && 3==snprintf(buf+buf_ofs, 3, "%%%02X", ch))) {
+            } else if (NULL==buf || (buf_ofs+3<=buf_len && 3==snprintf(buf+buf_ofs, 4, "%%%02X", ch))) {
                 buf_ofs+=3;
             } else {
                 buf_ofs=0; buf_len=0; // indicate error
